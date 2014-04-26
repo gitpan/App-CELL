@@ -15,11 +15,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.066
+Version 0.069
 
 =cut
 
-our $VERSION = '0.066';
+our $VERSION = '0.069';
 
 
 
@@ -228,7 +228,7 @@ If the first argument is blessed, assume we're being called as an
 instance method: return true if status is OK, false otherwise.
 
 Otherwise, assume we're being called as a class method: return a 
-new OK status object if class is 'App::CELL::Status', undef otherwise.
+new OK status object.
 
 =cut
 

@@ -13,11 +13,11 @@ App::CELL::Util - various reuseable functions
 
 =head1 VERSION
 
-Version 0.066
+Version 0.069
 
 =cut
 
-our $VERSION = '0.066';
+our $VERSION = '0.069';
 
 
 
@@ -53,5 +53,6 @@ our @EXPORT_OK = qw( timestamp );
 sub timestamp {
    return uc time2str("%Y-%b-%d %H:%M", time, 'GMT');
 }
+
 
 1;

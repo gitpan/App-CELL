@@ -16,11 +16,11 @@ App::CELL::Load -- find and load configuration files
 
 =head1 VERSION
 
-Version 0.066
+Version 0.069
 
 =cut
 
-our $VERSION = '0.066';
+our $VERSION = '0.069';
 
 
 

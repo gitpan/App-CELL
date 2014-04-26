@@ -248,3 +248,19 @@ later are in the perl-CELL project repo.
   2014-JAN-30 15:26
 - rename to App::CELL (from just plain CELL) 
 
+  2014-JAN-31 16:54
+- refactored Localization Guide
+- drafted Apologia
+
+  2014-APR-25 17:21
+- started implementing shared 'config' directory in App::CELL using
+  File::ShareDir (App::CELL ticket #17)
+
+0.068  2014-APR-26 22:11
+- some minor changes left over on laptop from months ago
+- fix bug in Perl script used by release.sh to determine the current version
+
+0.069  2014-APR-26 22:48
+- finished adding File::ShareDir support 
+- passes unit tests
+

@@ -2,6 +2,9 @@ use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 use ExtUtils::MakeMaker;
+use File::ShareDir::Install;
+
+install_share 'config';
 
 WriteMakefile(
     NAME             => 'App::CELL',
@@ -23,3 +26,7 @@ WriteMakefile(
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'CELL-*' },
 );
+
+package MY;
+use File::ShareDir::Install qw(postamble);
+

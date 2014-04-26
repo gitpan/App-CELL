@@ -8,6 +8,7 @@ use Carp;
 use Config::General;
 use Data::Printer;
 use File::HomeDir;
+use File::ShareDir;
 use File::Spec;
 
 use App::CELL::Load;
@@ -23,11 +24,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.066
+Version 0.069
 
 =cut
 
-our $VERSION = '0.066';
+our $VERSION = '0.069';
 
 
 
@@ -246,6 +247,9 @@ sub get_siteconfdir {
             last GET_CANDIDATE_DIR if _is_viable( $candidate );
         }
 
+        # look in CPAN distribution share directory provided by File::ShareDir
+        $cellconf = File::ShareDir::dist_dir('App-CELL');
+
         # fall back to /etc/CELL
         $candidate = File::Spec->catfile (
                                     File::Spec->rootdir(),
@@ -412,7 +416,7 @@ sub get_param {
 
 By definition, meta parameters are changeable. Use this function to change
 them. Takes two arguments: parameter name and new value. If the parameter
-didn't exist before, it will be created. Returns a true value.
+didn't exist before, it will be created. Returns 'ok' status object.
 
 =cut
 
@@ -424,7 +428,7 @@ sub set_meta {
         log_info( "Setting meta parameter $param for the first time" );
     }
     $meta->{$param} = $value;
-    return 1;
+    return App::CELL::Status->ok;
 }
 
 # END OF App::CELL::Config MODULE

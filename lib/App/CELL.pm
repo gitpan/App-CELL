@@ -13,17 +13,17 @@ use App::CELL::Util qw( timestamp );
 
 =head1 NAME
 
-CELL - Configuration, Error-handling, Localization, and Logging
+App::CELL - Configuration, Error-handling, Localization, and Logging
 
 
 
 =head1 VERSION
 
-Version 0.066
+Version 0.069
 
 =cut
 
-our $VERSION = '0.066';
+our $VERSION = '0.069';
 
 
 
@@ -36,8 +36,8 @@ our $VERSION = '0.066';
    App::CELL->init;
 
    # write arbitrary, non-localized strings to syslog
-   App::CELL::log_debug( "DEBUG level message" );
-   App::CELL::log_info( "INFO level message" );
+   App::CELL->log_debug( "DEBUG level message" );
+   App::CELL->log_info( "INFO level message" );
 
    # use status objects as return values: success
    return App::CELL->status_ok;
@@ -232,8 +232,8 @@ Takes one argument: string to be used as identifier (C<ident>) for syslog.
 This string, usually the application name, will be pre-pended to all
 messages and can be used to configure syslog to put all log messages
 related to your application in a separate file within C</var/log>, or
-elsewhere. Returns a C<App::CELL::Status> object with level either "OK" (on
-success) or "CRIT" (on failure).
+elsewhere. Returns an C<App::CELL::Status> object with level either "OK"
+(on success) or "CRIT" (on failure).
 
 On success, it also sets the C<META_CELL_STATUS_BOOL> and
 C<META_CELL_STATUS_DATETIME> meta parameters.
@@ -324,7 +324,7 @@ Wrapper for App::CELL::Status::new
 =cut
 
 sub status {
-    my $throw_away = shift;  # throw away the class
+    shift();  # throw away the class
     App::CELL::Status::new( @_ );
 }
 
@@ -338,7 +338,7 @@ arrayref, or hashref) to assign to the parameter. Returns a status object.
 =cut
 
 sub set_meta {
-    my $throw_away = shift;  # throw away the class
+    shift();  # throw away the class
     if ( @_ ) {
         return App::CELL::Config::set_meta( @_ );
     } else {
