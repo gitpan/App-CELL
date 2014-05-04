@@ -5,7 +5,7 @@ use warnings FATAL => 'all';
 use Test::More;
 use Data::Printer;
 
-plan tests => 20;
+plan tests => 21;
 
 BEGIN {
     use_ok( 'Carp' );
@@ -19,6 +19,7 @@ BEGIN {
 
     use_ok( 'Config::General' );
     use_ok( 'File::HomeDir' );
+    use_ok( 'File::ShareDir' );
     use_ok( 'File::Next' );
     use_ok( 'File::Spec' );
     use_ok( 'File::Touch' );

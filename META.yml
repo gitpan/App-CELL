@@ -3,9 +3,11 @@ abstract: 'Configuration, Error-handling, Localization, and Logging'
 author:
   - 'Smithfarm <presnypreklad@gmail.com>'
 build_requires:
+  Data::Printer: 0
   Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
+  File::ShareDir::Install: 0
 dynamic_config: 1
 generated_by: 'ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.120921'
 license: unknown
@@ -18,5 +20,15 @@ no_index:
     - t
     - inc
 requires:
-  perl: 0
-version: 0.069
+  Config::General: 0
+  Date::Easter: 0
+  Date::Holidays::CZ: 0.06
+  Date::Simple: 0
+  File::HomeDir: 0
+  File::Next: 0
+  File::ShareDir: 0
+  File::Spec: 0
+  File::Touch: 0
+  Log::Fast: 0
+  perl: 5.01
+version: 0.070

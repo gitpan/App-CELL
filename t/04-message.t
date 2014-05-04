@@ -3,6 +3,7 @@ use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 use Data::Printer;
+use File::ShareDir;
 use App::CELL::Log qw( log_debug log_info );
 use App::CELL::Message;
 use Test::More;

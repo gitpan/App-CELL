@@ -264,3 +264,7 @@ later are in the perl-CELL project repo.
 - finished adding File::ShareDir support 
 - passes unit tests
 
+0.070  2014-MAY-03 12:05
+- add dependencies to Makefile.PL
+- add File::ShareDir to testing dependencies in t/00-dependencies.t
+
