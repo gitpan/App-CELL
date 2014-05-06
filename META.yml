@@ -9,7 +9,7 @@ configure_requires:
   ExtUtils::MakeMaker: 0
   File::ShareDir::Install: 0
 dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.120921'
+generated_by: 'ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -21,14 +21,12 @@ no_index:
     - inc
 requires:
   Config::General: 0
-  Date::Easter: 0
-  Date::Holidays::CZ: 0.06
-  Date::Simple: 0
+  Date::Format: 0
   File::HomeDir: 0
   File::Next: 0
   File::ShareDir: 0
   File::Spec: 0
   File::Touch: 0
   Log::Fast: 0
-  perl: 5.01
-version: 0.070
+  perl: 5.018001
+version: 0.076

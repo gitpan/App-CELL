@@ -24,11 +24,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.070
+Version 0.076
 
 =cut
 
-our $VERSION = '0.070';
+our $VERSION = '0.076';
 
 
 
@@ -218,7 +218,7 @@ sub get_siteconfdir {
         # look in the environment 
         if ( $candidate = $ENV{ 'CELL_CONFIGDIR' } ) {
             $log_message = "Found viable CELL configuration directory"
-                           . " in environment variable";
+                           . " in environment (CELL_CONFIGDIR)";
             last GET_CANDIDATE_DIR if _is_viable( $candidate );
         }
     
@@ -248,7 +248,11 @@ sub get_siteconfdir {
         }
 
         # look in CPAN distribution share directory provided by File::ShareDir
-        $cellconf = File::ShareDir::dist_dir('App-CELL');
+        if ( $candidate = File::ShareDir::dist_dir('App-CELL') ) {
+            $log_message = "Found viable CELL configuration directory "
+                           . $candidate . " in App::CELL distro";
+            last GET_CANDIDATE_DIR if _is_viable( $candidate );
+        }
 
         # fall back to /etc/CELL
         $candidate = File::Spec->catfile (
@@ -257,7 +261,7 @@ sub get_siteconfdir {
                                     'CELL',
                                          );
         $log_message = "Found viable CELL configuration directory"
-                        . " in /etc/CELL";
+                        . " /etc/CELL";
         last GET_CANDIDATE_DIR if _is_viable( $candidate );
 
         # FAIL

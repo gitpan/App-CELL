@@ -245,26 +245,51 @@ later are in the perl-CELL project repo.
 - Message.pm: make init be re-entrant and report errors
 - put unit test of CELL::Message::init in the right file
 
-  2014-JAN-30 15:26
+0.065  2014-JAN-30 15:26
 - rename to App::CELL (from just plain CELL) 
 
-  2014-JAN-31 16:54
-- refactored Localization Guide
+0.066  2014-JAN-31 16:54
+- refactor Localization Guide
 - drafted Apologia
 
-  2014-APR-25 17:21
-- started implementing shared 'config' directory in App::CELL using
-  File::ShareDir (App::CELL ticket #17)
+0.067  2014-APR-25 17:21
+- start work on File::ShareDir based 'config' directory (ticket #17)
 
 0.068  2014-APR-26 22:11
 - some minor changes left over on laptop from months ago
 - fix bug in Perl script used by release.sh to determine the current version
 
 0.069  2014-APR-26 22:48
-- finished adding File::ShareDir support 
-- passes unit tests
+- initial File::ShareDir support 
 
 0.070  2014-MAY-03 12:05
-- add dependencies to Makefile.PL
-- add File::ShareDir to testing dependencies in t/00-dependencies.t
+- dependencies to Makefile.PL
+- File::ShareDir to testing dependencies in t/00-dependencies.t
+
+0.071  2014-MAY-04 23:22
+- basic ShareDir functionality (ticket #17) 
+
+0.071  2014-MAY-05 16:30
+- separate CELL and site configuration directories (rewrite config/README)
+- trying to pass CPAN Testers smoke test
+
+0.072  2014-MAY-05 21:20
+- edit Changes file for style
+- clean up comments in release script
+
+0.073  2014-MAY-05 22:10
+- App::CELL->init wasn't processing argument correctly: fixed 
+- note that dist/dev.sh bump depends on Perl::Version
+
+0.074  2014-MAY-05 22:10
+- oops (no changes)
+
+0.075  2014-MAY-06 12:26
+- remove obsolete dependencies 
+
+0.076  2014-MAY-06 17:33
+- added some error-checking to the release script
+- use regexp quote-like operator instead of single-quotes (Load.pm)
+- changed App::CELL::Load::find_file so it can walk multiple directories
+  (ticket #18)
 

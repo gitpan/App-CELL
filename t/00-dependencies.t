@@ -5,18 +5,14 @@ use warnings FATAL => 'all';
 use Test::More;
 use Data::Printer;
 
-plan tests => 21;
+plan tests => 19;
 
 BEGIN {
     use_ok( 'Carp' );
     use_ok( 'Exporter', qw( import ) );
     use_ok( 'Scalar::Util', qw( blessed ) );
 
-    # Date::Holidays::CZ depends on Date::Simple and Date::Easter
-    use_ok( 'Date::Simple' );
-    use_ok( 'Date::Easter' );
-    use_ok( 'Date::Holidays::CZ' );
-
+    use_ok( 'Date::Format' );
     use_ok( 'Config::General' );
     use_ok( 'File::HomeDir' );
     use_ok( 'File::ShareDir' );
@@ -35,11 +31,8 @@ BEGIN {
     use_ok( 'App::CELL::Test' );
 }
 
-p( %INC );
+#p( %INC );
 #diag( "Testing Carp $Carp::VERSION, Perl $], $^X" );
-#diag( "Testing Date::Simple $Date::Simple::VERSION, Perl $], $^X" );
-#diag( "Testing Date::Easter $Date::Easter::VERSION, Perl $], $^X" );
-#diag( "Testing Date::Holidays::CZ $Date::Holidays::CZ::VERSION, Perl $], $^X" );
 #diag( "Testing Config::Simple $Config::Simple::VERSION, Perl $], $^X" );
 #diag( "Testing CELL $App::CELL::VERSION, Perl $], $^X" );
 #diag( "Testing App::CELL::Config $App::CELL::Config::VERSION, Perl $], $^X" );

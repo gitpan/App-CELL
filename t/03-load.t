@@ -18,9 +18,7 @@ log_info("-------------------------------------------------------- ");
 log_info("---                   03-load.t                      ---");
 log_info("-------------------------------------------------------- ");
 
-# Since we haven't run App::CELL::Config::init, this will just
-# initialize a single, hard-coded message CELL_UNKNOWN_MESSAGE_CODE/en
-App::CELL::Message::init();
+#App::CELL::Message::init();
 
 log_info("*****");
 log_info("***** TESTING find_files for 'message' type" );

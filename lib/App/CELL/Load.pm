@@ -16,11 +16,11 @@ App::CELL::Load -- find and load configuration files
 
 =head1 VERSION
 
-Version 0.070
+Version 0.076
 
 =cut
 
-our $VERSION = '0.070';
+our $VERSION = '0.076';
 
 
 
@@ -28,17 +28,17 @@ our $VERSION = '0.070';
  
     use App::CELL::Load;
 
-    # assemble a list of configuration files (full paths) of a given type
-    # under the given directory
-    my @metafiles = App::CELL::Load::find_files( '/etc/CELL', 'meta' );
+    # get a reference to a list of configuration files (full paths) of a
+    # given type under the given directory
+    my $metafiles = App::CELL::Load::find_files( '/etc/CELL', 'meta' );
    
-    # get a parameter value (returns value or undef)
-    my $value = App::CELL::Config::get_param( 'meta', 'MY_PARAM' );
-    my $value = App::CELL::Config::get_param( 'core', 'MY_PARAM' );
-    my $value = App::CELL::Config::get_param( 'site', 'MY_PARAM' );
+    # load messages from message file (full path)
+    my $count = App::CELL::Load::parse_message_file( File => $msgfile,
+                                                     Dest => $msghashref );
 
-    # set a meta parameter
-    App::CELL::Config::set_meta( 'MY_PARAM', 42 );
+    # load config params from configuration file (full path)
+    $count = App::CELL::Load::parse_config_file( File => $file,
+                                                 Dest => ${ $type } );
 
 
 =head1 DESCRIPTION
@@ -58,66 +58,86 @@ be empty.
 How it works: first, the function checks a state variable to see if the
 "work" of walking the configuration directory has already been done.  If
 so, then the function simply returns the corresponding array reference from
-its cache (the state hash C<%resultlist>). If this is the first invocation,
-the function walks the directory (and all its subdirectories) to find
-files matching one of the four regular expressions corresponding to the
-four types of configuration files('meta', 'core', 'site', 'message'). For
-each matching file, the full path is pushed onto the corresponding array in
-the cache.
+its cache (the state hash C<%resultlist>). If this is the first invocation
+for this directory, the function walks the directory (and all its
+subdirectories) to find files matching one of the four regular expressions
+corresponding to the four types of configuration files('meta', 'core',
+'site', 'message'). For each matching file, the full path is pushed onto
+the corresponding array in the cache.
 
+Note that only CELL_MAX_CONFIG_FILES will be loaded.
 =cut
+
+# regular expressions for each file type
+our $typeregex = {
+       'meta'    => qr/^.+_MetaConfig.pm$/a ,
+       'core'    => qr/^.+_Config.pm$/a     ,
+       'site'    => qr/^.+_SiteConfig.pm$/a ,
+       'message' => qr/^.+_Message(_[^_]+){0,1}.conf$/a ,
+};
+
+# MAX_FILES puts a limit on how many files we will look at in our directory
+# tree walk
+our $CELL_MAX_CONFIG_FILES = 1000;
 
 sub find_files {
     my ( $type, $dirpath ) = @_;
 
     # re-entrant function
     use feature "state";
-    state $firsttime = 1;
-    state %resultlist;
-    if ( $firsttime ) {
-        %resultlist = (  'meta' => [],
-                         'core' => [],
-                         'site' => [],
-                         'message' => [],
-                      );
-        log_debug( "Entering find_files for the first time (type '$type')" );
-    } else {
-        log_debug( "Entering find_files again (type '$type')" );
-        return $resultlist{ $type };
+    state $resultcache = {};
+
+    # If $dirpath key exists in %resultcache, we are re-entering.
+    # In other words, $dirpath has already been walked and all the 
+    # filepaths are already in the array stored within %resultcache
+    if ( exists ${ $resultcache }{ $dirpath } ) {
+        log_debug( "Re-entering find_files for $dirpath (type '$type')" );
+        return ${ $resultcache }{ $dirpath }{ $type };
+    } else { # create it
+        ${ $resultcache }{ $dirpath } = {  
+              'meta' => [],
+              'core' => [],
+              'site' => [],
+              'message' => [],
+        };
+        log_debug( "Preparing to walk $dirpath" );
     }
 
-    # first invocation
-    my $regex1 = '^.+_MetaConfig.pm$';
-    my $regex2 = '^.+_Config.pm$';
-    my $regex3 = '^.+_SiteConfig.pm$';
-    my $regex4 = '^.+_Message(_[^_]+){0,1}.conf$';
-
-    # walk the directory
-    # (do we need some error checking here?)
+    # walk the directory (do we need some error checking here?)
     log_debug( "find_files: directory path is $dirpath" );
     my $iter = File::Next::files( $dirpath );
 
-    # populate the hash
+    # while we are walking, go ahead and populate the result cache for _all
+    # four_ types (even though we were asked for just one type)
+    my $walk_counter = 0;
     while ( defined ( my $file = $iter->() ) ) {
+        $walk_counter += 1;
+        if ( $walk_counter > $CELL_MAX_CONFIG_FILES ) {
+            App::CELL::Status->new ( level => 'ERROR', code =>
+                "Maximum number of configuration file candidates " .
+                "($App::CELL::Load::CELL_MAX_CONFIG_FILES) " .
+                "exceeded in $dirpath" );
+            last; # stop looping if there are so many files
+        }
         if ( not -r $file ) {
             App::CELL::Status->new ( level => 'WARN', code => 
                 "find_files passed over ->$file<- (not readable)" );
-        } elsif ( $file =~ m/$regex1/a ) { 
-            push @{ $resultlist{ 'meta' } }, $file;
-        } elsif ( $file =~ m/$regex2/a ) {
-            push @{ $resultlist{ 'core' } }, $file;
-        } elsif ( $file =~ m/$regex3/a ) {
-            push @{ $resultlist{ 'site' } }, $file;
-        } elsif ( $file =~ m/$regex4/a ) {
-            push @{ $resultlist{ 'message' } }, $file;
-        } else {
+            next; # jump to next file
+        }
+        my $counter = 0;
+        foreach my $type ( 'meta', 'core', 'site', 'message' ) {
+            if ( $file =~ /${ $App::CELL::Load::typeregex }{ $type }/ ) { 
+                push @{ ${ $resultcache }{ $dirpath}{ $type } }, $file;
+                $counter += 1;
+            }
+        }
+        if ( not $counter ) {
             App::CELL::Status->new ( level => 'WARN', code => 
                 "find_files passed over ->$file<- (unknown"
                 . " file type)" );
         }
     }
-    $firsttime = 0;
-    return $resultlist{ $type };
+    return ${ $resultcache }{ $dirpath }{ $type };
 }
 
 
@@ -240,16 +260,17 @@ generated, the existing parameter is not overwritten, and processing
 continues. 
 
 This function doesn't care what type of configuration parameters
-are in the file, except that they must be scalar values. In other words,
-the value can be a number, a string, or a reference to an array, a hash, 
-or a subroutine.
+are in the file, except that they must be scalar values. Since the
+configuration files are actually Perl modules, the value can even be
+a reference (to an array, a hash, or a subroutine, or any other complex
+data structure).
 
 The technique used in the C<eval>, derived from Request Tracker, can be
 described as follows: a local typeglob "set" is defined, containing a
-reference to an anonymous subroutine. Subsequently, a config file
-consisting of calls to this "set" subroutine is C<require>d.
+reference to an anonymous subroutine. Subsequently, a config file (Perl
+module) consisting of calls to this "set" subroutine is C<require>d.
 
-If even one call to C<set> fails to compile, the entire file will be
+Note: If even one call to C<set> fails to compile, the entire file will be
 rejected and no configuration parameters from that file will be loaded.
 
 The C<parse_config_file> function takes a PARAMHASH consisting of:
@@ -258,7 +279,7 @@ The C<parse_config_file> function takes a PARAMHASH consisting of:
 
 =item C<File> - filename (full path)
 
-=item C<Dest> - hash reference (where to store the message templates).
+=item C<Dest> - hash reference (where to store the config params).
 
 =back
 

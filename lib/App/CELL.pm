@@ -19,11 +19,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.070
+Version 0.076
 
 =cut
 
-our $VERSION = '0.070';
+our $VERSION = '0.076';
 
 
 
@@ -242,16 +242,17 @@ C<META_CELL_STATUS_DATETIME> meta parameters.
 
 sub init {
 
-    my $app_name = shift;
+    my $app_name = $_[1];
 
     my ( $reentering, $status );
 
     # meta parameters are initialized to their defaults automatically on
     # the first call to C<App::CELL::Config::get_param>
     $reentering = App::CELL::Config::get_param( 'meta', 'META_CELL_STATUS_BOOL' );
+    App::CELL->log_debug("Reentering App::CELL->init") if $reentering;
     return App::CELL::Status->ok if $reentering;
 
-    App::CELL->log_debug( "CELL will now configure logging" );
+    App::CELL->log_debug( "CELL will now configure logging with ident $app_name" );
 
     # open and configure syslog connection
     if ( not App::CELL::Log::configure( $app_name ) ) {

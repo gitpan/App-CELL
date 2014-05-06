@@ -11,7 +11,7 @@ plan tests => 5;
 
 my $status = App::CELL::Log::configure( 'CELLtest' );
 log_info("-------------------------------------------------------- ");
-log_info("---               05-status.t PRE-INIT               ---");
+log_info("---               06-status.t PRE-INIT               ---");
 log_info("-------------------------------------------------------- ");
 
 # test functions in Status.pm "in a vacuum" (just the functions with

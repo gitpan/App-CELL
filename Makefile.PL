@@ -1,4 +1,4 @@
-use 5.10.0;
+use 5.018001;
 use strict;
 use warnings FATAL => 'all';
 use ExtUtils::MakeMaker;
@@ -12,7 +12,7 @@ WriteMakefile(
     VERSION_FROM     => 'lib/App/CELL.pm',
     ABSTRACT_FROM    => 'lib/App/CELL.pm',
     PL_FILES         => {},
-    MIN_PERL_VERSION => 5.010,
+    MIN_PERL_VERSION => 5.018001,
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,
         'File::ShareDir::Install' => 0,
@@ -22,9 +22,7 @@ WriteMakefile(
         'Data::Printer' => 0,
     },
     PREREQ_PM => {
-        'Date::Simple'       => 0,
-        'Date::Easter'       => 0,
-        'Date::Holidays::CZ' => 0.06,
+        'Date::Format'       => 0,
         'Config::General'    => 0,
         'File::HomeDir'      => 0,
         'File::ShareDir'     => 0,

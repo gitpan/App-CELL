@@ -8,6 +8,7 @@ use App::CELL::Log qw( log_debug log_info );
 plan tests => 8;
 
 my $status = App::CELL::Log::configure( 'CELLtest' );
+diag("Problem with syslog") if not $status;
 log_info("-------------------------------------------------------- ");
 log_info("---                   01-log.t                       ---");
 log_info("-------------------------------------------------------- ");

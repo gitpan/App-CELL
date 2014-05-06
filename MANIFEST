@@ -18,10 +18,11 @@ t/00-dependencies.t
 t/01-log.t
 t/02-util.t
 t/03-load.t
-t/04-message.t
-t/05-status.t
-t/06-config.t
-t/07-cell.t
+t/04-share.t
+t/05-message.t
+t/06-status.t
+t/07-config.t
+t/08-cell.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

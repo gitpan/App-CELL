@@ -11,7 +11,7 @@ plan tests => 4;
 
 my $status = App::CELL::Log::configure( 'CELLtest' );
 log_info("-------------------------------------------------------- ");
-log_info("---                   06-config.t                    ---");
+log_info("---                   07-config.t                    ---");
 log_info("-------------------------------------------------------- ");
 
 my $configdir = $ENV{'CELL_CONFIGDIR'} = $ENV{'PWD'} . "/config";
