@@ -4,7 +4,7 @@
       "Smithfarm <presnypreklad@gmail.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -23,12 +23,11 @@
       "build" : {
          "requires" : {
             "Data::Printer" : "0",
-            "Test::More" : "0"
+            "Log::Any::Test" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "0",
             "File::ShareDir::Install" : "0"
          }
       },
@@ -39,13 +38,13 @@
             "File::HomeDir" : "0",
             "File::Next" : "0",
             "File::ShareDir" : "0",
-            "File::Spec" : "0",
             "File::Touch" : "0",
-            "Log::Fast" : "0",
-            "perl" : "5.018001"
+            "Log::Any" : "0",
+            "Try::Tiny" : "0",
+            "perl" : "5.014001"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.076"
+   "version" : "0.088"
 }

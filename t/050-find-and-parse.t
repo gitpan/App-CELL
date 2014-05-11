@@ -5,23 +5,23 @@ use warnings FATAL => 'all';
 use Data::Printer;
 use App::CELL::Load;
 use App::CELL::Log qw( log_debug log_info );
-use App::CELL::Message;
 use App::CELL::Test;
 use File::Spec;
 use File::Touch;
 use Test::More;
 
-plan tests => 14;
+plan tests => 15;
 
 my $status = App::CELL::Log::configure( 'CELLtest' );
 log_info("-------------------------------------------------------- ");
-log_info("---                   03-load.t                      ---");
+log_info("---              050-find_and_parse.t                ---");
 log_info("-------------------------------------------------------- ");
-
-#App::CELL::Message::init();
 
 log_info("*****");
 log_info("***** TESTING find_files for 'message' type" );
+$status = App::CELL::Test::cleartmpdir();
+ok( $status, "Temporary directory not present" );
+
 my $tmpdir = App::CELL::Test::mktmpdir();
 my @file_list = qw{ 
                      CELL_Message.conf
@@ -39,7 +39,7 @@ my $return_list = App::CELL::Load::find_files( 'message', $tmpdir );
 
 # how many matched the regex?
 my $count2 = keys( @$return_list );
-diag( "Touched $count1 files; $count2 of them match the regex" );
+#diag( "Touched $count1 files; $count2 of them match the regex" );
 ok( $count2 == 2, "find_files found the right number of files" );
 
 # which ones?
@@ -72,8 +72,8 @@ my $stuff = <<'EOS';
 
 TEST_MESSAGE
 OK
-
-
+ 
+    
    TEST_MESSAGE
 OKAY
 
@@ -119,3 +119,4 @@ ok( exists $params{ 'TEST_PARAM_1' }, "TEST_PARAM_1 loaded from file" );
 is( $params{ 'TEST_PARAM_1' }->{ 'Value' }, "Fine and dandy", "TEST_PARAM_1 has the right value" );
 is_deeply( $params{ 'TEST_PARAM_2' }->{ 'Value' }, [ 0, 1, 2], "TEST_PARAM_2 has the right value" );
 is_deeply( $params{ 'TEST_PARAM_3' }->{ 'Value' }, { 'one' => 1, 'two' => 2 }, "TEST_PARAM_3 has the right value" );
+#BAIL_OUT("just because");

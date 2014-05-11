@@ -24,11 +24,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.076
+Version 0.088
 
 =cut
 
-our $VERSION = '0.076';
+our $VERSION = '0.088';
 
 
 
@@ -36,10 +36,6 @@ our $VERSION = '0.076';
  
     use App::CELL::Config;
 
-    # load meta, core, and site parameters from files
-    my $status = App::CELL::Config::init();
-    return $status unless $status->ok;
-   
     # get a parameter value (returns value or undef)
     my $value = App::CELL::Config::get_param( 'meta', 'MY_PARAM' );
     my $value = App::CELL::Config::get_param( 'core', 'MY_PARAM' );
@@ -51,11 +47,12 @@ our $VERSION = '0.076';
 
 =head1 DESCRIPTION
 
-The purpose of the App::CELL::Config module is to maintain and provide
+The purpose of the C<App::CELL::Config> module is to maintain and provide
 access to three blessed hashrefs: C<$meta>, C<$core>, and C<$site>,
 which hold the names, values, and other information related to the
-configuration parameters loaded from files in the site configuration
-directory.
+configuration parameters loaded from files in the App::CELL distro sharedir
+and the site configuration directory, if any. These values are loaded by
+the C<App::CELL::Load> module.
 
 
 =head2 C<$meta>
@@ -66,7 +63,7 @@ changeable.
 
 =cut
 
-our $meta;
+our $meta = {};
 
 
 =head2 C<$core>
@@ -78,7 +75,7 @@ for site parameters.
 
 =cut
 
-our $core;
+our $core = {};
 
 
 =head2 C<$site>
@@ -89,7 +86,7 @@ These are intended to be set by the site administrator.
 
 =cut
 
-our $site;
+our $site = {};
 
 
 
@@ -118,268 +115,25 @@ details, see the C<CELL_MetaConfig.pm> module in the CELL distribution.
 
 =head1 PUBLIC FUNCTIONS AND METHODS
 
-=head2 init
 
-Re-entrant initialization function.
+=head2 config
 
-On first call, initializes all three site configuration hashes by
-performing the following actions:
+The C<config> method provides clients access to site
+configuration parameters. A simple logic is applied: if the parameter is
+defined in 'site', we're done: that is the value. If the parameter is not
+defined in 'site', check 'core' and use that value, if available.
 
-=over
-
-=item 0. checks meta parameter CELL_CONFIG_INITIALIZED -- returns "OK"
-status if true.
-
-=item 1. get CELL_CONFIGDIR configuration parameter by consulting (a) the
-environment, (b) C<~/.cell/CELL.conf>, and (c) C</etc/sysconfig/perl-CELL>,
-in that order, and if none of these options is viable, default to
-C</etc/CELL>.
-
-=item 2. load meta parameters and their default values from files whose
-names match C<[...]_MetaConfig.pm> -- store these in C<$meta>
-
-=item 3. load core parameters and their default values from files whose
-names match C<[...]_Config.pm> -- store these in C<$core>
-
-=item 4. load site parameters and their default values from files whose
-names match C<[...]_SiteConfig.pm> -- store these in C<$site>
-
-=back
-
-Takes: nothing, returns status object. To be called like this:
-
-    my $status = App::CELL::Config::init();
-
-Sets CELL_SITECONF_DIR and CELL_CONFIG_INITIALIZED meta parameters.
+If neither 'site' nor 'core' has a definition for the parameter, undef is
+returned.
 
 =cut
 
-sub init {
-
-    # re-entrant function
-    use feature "state";
-    state $firsttime = 1;
-    return App::CELL::Status->ok if not $firsttime;
-
-    my ( $status, $siteconfdir );
-    my ( $quantfiles, $count ) = 0;
-
-    # get site configuration directory 
-    $siteconfdir = get_siteconfdir();
-    if ( not $siteconfdir ) {
-        return App::CELL::Status->new (
-                    level => 'CRIT',
-                    code => 'NO_SITE_CONFIGURATION_DIRECTORY',
-                                 );
-    }
-    set_meta( 'CELL_SITECONF_DIR', $siteconfdir );
-
-    # 2. get and load meta, core, and site config files
-    foreach my $type ( 'meta', 'core', 'site' ) {
-        no strict 'refs';
-        my $file_list = App::CELL::Load::find_files( $type, $siteconfdir );
-        foreach my $file ( @$file_list ) {
-            $quantfiles += 1;
-            $count += App::CELL::Load::parse_config_file( File => $file,
-                                            Dest => ${ $type } );
-        }
-    }
-
-    # successful completion
-    App::CELL::Status->new (
-                 level => 'NOTICE',
-                 code => "Imported $count config parameters from"
-                         . " $quantfiles files"
-                      );
-    $firsttime = 0;
-    return App::CELL::Status->ok;
-}
-
-
-=head2 get_siteconfdir
-
-Look in various places (in a pre-defined order) for the site
-configuration directory. Stop as soon as we come up with a plausible
-candidate. On success, returns a string containing an absolute
-directory path. On failure, returns undef.
-
-=cut
-
-sub get_siteconfdir {
-
-    # re-entrant function
-    use feature "state";
-    state $siteconfdir = '';
-    return $siteconfdir if $siteconfdir;
-
-    # first invocation
-    my ( $candidate, $log_message );
-    GET_CANDIDATE_DIR: {
-        # look in the environment 
-        if ( $candidate = $ENV{ 'CELL_CONFIGDIR' } ) {
-            $log_message = "Found viable CELL configuration directory"
-                           . " in environment (CELL_CONFIGDIR)";
-            last GET_CANDIDATE_DIR if _is_viable( $candidate );
-        }
-    
-        # look in the home directory
-        my $cellconf = File::Spec->catfile ( 
-                                    File::HomeDir::home(), 
-                                    '.cell',
-                                    'CELL.conf' 
-                                           );
-        if ( $candidate = _import_cellconf( $cellconf ) ) {
-            $log_message = "Found viable CELL configuration directory"
-                           . " in ~/.cell/CELL.conf";
-            last GET_CANDIDATE_DIR if _is_viable( $candidate );
-        }
-
-        # look in /etc/sysconfig/perl-CELL
-        $cellconf = File::Spec->catfile ( 
-                                    File::Spec->rootdir(),
-                                    'etc',
-                                    'sysconfig',
-                                    'perl-CELL'
-                                        );
-        if ( $candidate = _import_cellconf( $cellconf ) ) {
-            $log_message = "Found viable CELL configuration directory"
-                           . " in /etc/sysconfig/perl-CELL";
-            last GET_CANDIDATE_DIR if _is_viable( $candidate );
-        }
-
-        # look in CPAN distribution share directory provided by File::ShareDir
-        if ( $candidate = File::ShareDir::dist_dir('App-CELL') ) {
-            $log_message = "Found viable CELL configuration directory "
-                           . $candidate . " in App::CELL distro";
-            last GET_CANDIDATE_DIR if _is_viable( $candidate );
-        }
-
-        # fall back to /etc/CELL
-        $candidate = File::Spec->catfile (
-                                    File::Spec->rootdir(),
-                                    'etc',
-                                    'CELL',
-                                         );
-        $log_message = "Found viable CELL configuration directory"
-                        . " /etc/CELL";
-        last GET_CANDIDATE_DIR if _is_viable( $candidate );
-
-        # FAIL
-        #App::CELL::Status->new(
-        #     level => 'CRIT',
-        #     code => 'Failed to find a viable CELL configuration directory',
-        #                 );
-        return undef;
-    }
-
-    # SUCCEED
-    log_info( $log_message );
-    $siteconfdir = $candidate;
-    return $siteconfdir;
-}
-
-
-=head3 _import_cellconf
-
-Takes cellconf candidate (full path). Returns site configuration
-directory on success, undef on failure.
-
-=cut
-
-sub _import_cellconf {
-    my $candidate = shift;
-    my ( $problem, $siteconfdir );
-    log_debug( "_import_cellconf: candidate ->$candidate<-" ); 
-    KONTROLA: {
-        if ( not -f $candidate ) {
-            $problem = "cellconf candidate ->$candidate<- doesn't exist";
-            last KONTROLA;
-        }
-        if ( -z $candidate ) {
-            $problem = "cellconf candidate ->$candidate<- has zero size";
-            last KONTROLA;
-        }
-        if ( not -r $candidate ) {
-            $problem = "cellconf candidate ->$candidate<- is not readable";
-            last KONTROLA;
-        }
-
-        # now we attempt to import configuration from the candidate
-        #log_debug("Attempting to parse cellconf candidate ->$candidate<-" );
-        my $conf = Config::General->new( $candidate );
-        my %cellconf_hash = $conf->getall;
-        #log_debug("Loaded " . keys(%cellconf_hash) . " hash elements" );
-        if ( not $cellconf_hash{SITECONF_PATH} ) {
-            $problem = "No SITECONF_PATH value in cellconf candidate ->$candidate<-";
-            last KONTROLA;
-        }
-        log_info("SITECONF_PATH value from cellconf candidate ->$candidate<-"
-                 . " is ->" . $cellconf_hash{'SITECONF_PATH'} . "<-");
-        # Config::General doesn't strip quotes
-        if ( $cellconf_hash{'SITECONF_PATH'} =~ m/'(?<value>[^']*)'/ ) {
-            $cellconf_hash{'SITECONF_PATH'} = $+{'value'};
-            log_info("Single quotes stripped from SITECONF_PATH value");
-        }
-        if ( $cellconf_hash{'SITECONF_PATH'} =~ m/"(?<value>[^"]*)"/ ) {
-            $cellconf_hash{'SITECONF_PATH'} = $+{'value'};
-            log_info("Double quotes stripped from SITECONF_PATH value");
-        }
-        log_info( $cellconf_hash{'SITECONF_PATH'} );
-        if ( not File::Spec->file_name_is_absolute(
-                             $cellconf_hash{'SITECONF_PATH'}) ) {
-            $problem = "SITECONF_PATH value is not an absolute path";
-            last KONTROLA;
-        }
-        if ( not -d $cellconf_hash{'SITECONF_PATH'} ) {
-            $problem = "SITECONF_PATH value "
-                       . $cellconf_hash{'SITECONF_PATH'}
-                       . " is not a directory";
-            last KONTROLA;
-        }
-
-        # we passed all the checks
-        $siteconfdir = $cellconf_hash{'SITECONF_PATH'};
-    } # KONTROLA
-
-    if ( $problem ) {
-        App::CELL::Log::arbitrary( 'NOTICE', $problem );
-        return undef;
-    } else {
-        App::CELL::Log::arbitrary( 'NOTICE', "SITECONF_PATH candidate is now ->$siteconfdir<-" );
-        return $siteconfdir;
-    }
-}
-
-
-=head4 _is_viable
-
-Run viability checks on siteconf candidate. Siteconf candidate _must_ pass
-these checks; otherwise, we give up.
-
-=cut
-
-sub  _is_viable {
-    my $confdir = shift;
-    my $problem;
-    CRIT_CHECK: {
-        if ( not -d $confdir ) {
-            $problem = "Site configuration directory candidate ->$confdir<- is not a directory";
-            last CRIT_CHECK;
-        }
-        if ( not -r $confdir or 
-             not -x $confdir ) {
-            $problem = "permissions problem on site configuration directory "
-            . "candidate ->$confdir<-: we need both 'read' and 'execute'";
-            last CRIT_CHECK;
-        }
-    } # CRIT_CHECK
-
-    if ( $problem ) {
-        App::CELL::Log::arbitrary( 'WARN', $problem );
-        return 0;
-    } else {
-        return 1;
-    }
+sub config {
+    my $value = get_param( 'site', $_[0] );
+    return $value if defined( $value );
+    $value = get_param( 'core', $_[0] );
+    return $value if defined( $value );
+    return; # returns undef in scalar context
 }
 
 
@@ -398,41 +152,122 @@ when parameter is not defined).
 sub get_param {
     no strict 'refs';
     my ( $type, $param ) = @_;
-    if ( not $type or not $param ) {
-        App::CELL::Status->new( 
-            level => 'CRIT',
-            code => 'App::CELL::Config::get_param called without proper parameters',
+
+    # sanity
+    if ( not defined($$type) or not ref($$type) ) {
+        App::CELL::Status->new(
+            level => 'ERR',
+            code => 'CELL_BAD_PARAM_TYPE',
+            args => [ $type, 'get_param', 'Load.pm' ],
             caller => [ caller ],
-                         );
-        return undef;
+        );
+        return; # returns undef in scalar context
     }
+
+    # logic
     if ( exists $$type->{$param} ) {
-        log_debug( "get_param: returning value ->$$type->{$param}<-"
-                   . " for $type config parameter $param" );
-        return $$type->{$param};
+        log_debug( "get_param: type is $type");
+        log_debug( "get_param: param is $param");
+        log_debug( "get_param: value is " . $$type->{$param}->{'Value'} );
+        return $$type->{$param}->{'Value'};
     } else {
-        return undef;
+        App::CELL::Status->new(
+            level => 'INFO',
+            code => 'CELL_CONFIG_PARAM_UNKNOWN',
+            args => [ $type, $param ],
+            caller => [ caller ],
+        );
+        return; # returns undef in scalar context
     }
 }
 
 
 =head2 set_meta
 
-By definition, meta parameters are changeable. Use this function to change
-them. Takes two arguments: parameter name and new value. If the parameter
-didn't exist before, it will be created. Returns 'ok' status object.
+By definition, meta parameters are mutable. Use this function to set or
+change them. Takes two arguments: parameter name and new value. If the
+parameter didn't exist before, it will be created. Returns 'ok' status
+object.
+
+TO_DO: check value to make sure it's a scalar.
 
 =cut
 
 sub set_meta {
     my ( $param, $value ) = @_;
     if ( exists $meta->{$param} ) {
-        log_info( "Overwriting existing meta parameter $param with new value" );
+        App::CELL::Status->new(
+            level => 'NOTICE',
+            code => 'CELL_OVERWRITE_META_PARAM',
+            args => [ $param ],
+            caller => [ caller ],
+        );
     } else {
         log_info( "Setting meta parameter $param for the first time" );
     }
-    $meta->{$param} = $value;
+    $meta->{$param} = {
+           'File' => '<INTERNAL>',
+           'Line' => 0,
+           'Value' => $value,
+    };
     return App::CELL::Status->ok;
+}
+
+
+=head2 set_core
+
+Sets core parameter, provided it doesn't already exist. Wrapper.
+
+=cut
+
+sub set_core {
+    my ( $param, $value ) = @_;
+    return _set_core_site( 'core', $param, $value );
+}
+
+
+=head2 set_site
+
+Sets site parameter, provided it doesn't already exist. Wrapper.
+
+=cut
+
+sub set_site {
+    my ( $param, $value ) = @_;
+    return _set_core_site( 'site', $param, $value );
+}
+
+
+=head3 _set_core_site
+
+Core and site parameters are immutable. This function can be used to set
+them, provided they don't already exist. Takes three arguments: param type,
+param name and new value. If the parameter didn't exist before, it will be
+created.  Returns 'ok' status object on success, or error object on
+failure.
+
+TO_DO: 
+- check value to make sure it's a scalar.
+
+=cut
+
+sub _set_core_site {
+    no strict 'refs';
+    my ( $type, $param, $value ) = @_;
+    if ( exists $$type->{$param} ) {
+        return App::CELL::Status->new( level => 'ERR', 
+            code => 'Core param ->%s<- already exists and core params are immutable',
+            args => [ $param ],
+        );
+    } else {
+        log_info( "Setting $type parameter $param" );
+        $$type->{$param} = {
+           'File' => '<INTERNAL>',
+           'Line' => 0,
+           'Value' => $value,
+        };
+        return App::CELL::Status->ok;
+    }
 }
 
 # END OF App::CELL::Config MODULE

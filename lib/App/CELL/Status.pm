@@ -3,6 +3,7 @@ package App::CELL::Status;
 use 5.10.0;
 use strict;
 use warnings;
+use App::CELL::Log;
 use Scalar::Util qw( blessed );
 
 
@@ -15,11 +16,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.076
+Version 0.088
 
 =cut
 
-our $VERSION = '0.076';
+our $VERSION = '0.088';
 
 
 
@@ -27,8 +28,11 @@ our $VERSION = '0.076';
 
     use App::CELL::Status;
 
-    # as a return value: in function XYZ
-    return App::CELL::Status->new( ... );
+    # simplest usage
+    my $status = App::CELL::Status->ok;
+    print "ok" if ( $status->ok );
+    $status = App::CELL::Status->not_ok;
+    print "NOT ok" if ( $status->not_ok );
 
     # as a return value: in the caller
     my $status = $XYZ( ... );
@@ -48,13 +52,13 @@ This module inherits from C<App::CELL::Message>
 
 =cut
 
-use base qw( App::CELL::Message );
+use parent qw( App::CELL::Message );
 
 
 
 =head1 DESCRIPTION
 
-A App::CELL::Status object is a reference to a hash containing some or
+An App::CELL::Status object is a reference to a hash containing some or
 all of the following keys (attributes):
 
 =over 
@@ -77,25 +81,12 @@ The typical use cases for this object are:
 
 =item As a return value from a function call
 
-=item To trigger a higher-level log message
+=item To trigger a higher-severity log message
 
 =back
 
 All calls to C<< App::CELL::Status->new >> with a status other than OK
 trigger a log message.
-
-
-
-=head1 CONSTANTS
-
-
-=head2 C<@permitted_levels>
-
-The C<@permitted_levels> array contains a list of permissible log levels.
-
-=cut 
-
-our @permitted_levels = ( 'OK', 'NOTICE', 'WARN', 'ERR', 'CRIT' );
 
 
 
@@ -154,7 +145,8 @@ on hand):
                            msg_obj => $my_msg;
                          );
 
-The C<level> can be one of the following: OK, NOTICE, WARN, ERR, CRIT.
+Permitted levels are listed in the C<@permitted_levels> package
+variable in C<App::CELL::Log>.
 
 =cut
 
@@ -164,13 +156,16 @@ sub new {
     my %ARGS = (
                     # only level is mandatory
                     level    => '<NO_LEVEL>',
+                    code     => '<NO_CODE>',
                     @_,
                ); 
 
-    if ( $ARGS{ level } ne 'OK' )
+    # 'OK' and 'NOT_OK' status objects have an optional payload, but
+    # nothing else
+    if ( $ARGS{level} ne 'OK' and $ARGS{level} ne 'NOT_OK' )
     {
         # default to ERR level
-        if ( not grep { $ARGS{level} eq $_ } @permitted_levels ) {
+        if ( not grep { $ARGS{level} eq $_ } @App::CELL::Log::permitted_levels ) {
             $ARGS{level} = 'ERR';
         }
 
@@ -193,13 +188,14 @@ sub new {
         } else {
             ( undef, $ARGS{filename}, $ARGS{line} ) = caller;
         }
+
     }
 
     # bless into objecthood
-    $self = bless \%ARGS;
+    $self = bless \%ARGS, 'App::CELL::Status';
 
     # Log the message
-    $self->log;
+    $self->log if ( $ARGS{level} ne 'OK' and $ARGS{level} ne 'NOT_OK' );
 
     # return the created object
     return $self;
@@ -228,7 +224,8 @@ If the first argument is blessed, assume we're being called as an
 instance method: return true if status is OK, false otherwise.
 
 Otherwise, assume we're being called as a class method: return a 
-new OK status object.
+new OK status object with optional payload (optional parameter to the
+method call, must be a scalar).
 
 =cut
 
@@ -241,24 +238,69 @@ sub ok {
         # instance method
         $self = $_[0];
 
-        if ( not $self->isa( 'App::CELL::Status' ) ) {
-            # we can't return a status object, but we can at least
-            # complain to the log
-            App::CELL::Status->new( level => 'ERR',
-                                   code => 'IMPROPER_STATUS'
-                                 );
-            return 0;
-        }
+        #if ( not $self->isa( 'App::CELL::Status' ) ) {
+        #    # we can't return a status object, but we can at least
+        #    # complain to the log
+        #    App::CELL::Status->new( level => 'ERR',
+        #                           code => 'CELL_IMPROPER_STATUS'
+        #                         );
+        #    return 0;
+        #}
         # if it's not an error, it will have status level OK
         return 1 if ( $self->level eq 'OK' );
         # otherwise
         return 0;
 
-    } else {
+    } else { # class method
 
-        # class method
-        return App::CELL::Status->new( level => 'OK' );
+        # check for payload
+        if ( $_[1] ) {
+            return App::CELL::Status->new(
+                level => 'OK',
+                payload => $_[1],
+            );
+        } else {
+            return App::CELL::Status->new( level => 'OK' );
+        }
+    }
+}
 
+
+=head2 not_ok
+
+If the first argument is blessed, assume we're being called as an
+instance method: return true if status is OK, false otherwise.
+
+Otherwise, assume we're being called as a class method: return a 
+new non-OK status object with optional payload (optional parameter to the
+method call, must be a scalar).
+
+=cut
+
+sub not_ok {
+
+    my ( $class, $self );
+
+    if ( blessed $_[0] ) 
+    { # instance method
+
+        $self = $_[0];
+        return 1 if ( $self->level ne 'OK' );
+        return 0;
+
+    } 
+    else 
+    { # class method
+
+        # check for payload
+        if ( $_[1] ) {
+            return App::CELL::Status->new(
+                level => 'NOT_OK',
+                payload => $_[1],
+            );
+        } else {
+            return App::CELL::Status->new( level => 'NOT_OK' );
+        }
     }
         
 }
@@ -280,15 +322,25 @@ sub level {
 
 =head2 payload
 
-Accessor method.
+When called with no arguments, acts like an accessor method.
+When called with a scalar argument, either adds that as the payload or
+changes the payload to that.
+
+Generates a warning if an existing payload is changed.
+
+Returns the (new) payload or undef.
 
 =cut
 
 sub payload {
     my $self = $_[0];
+    my $new_payload = $_[1];
 
+    if ( defined( $new_payload ) ) {
+        $self->{payload} = $new_payload;
+    }
     return $self->{payload} if exists $self->{payload};
-    return "<NO_PAYLOAD>";
+    return; # returns undef in scalar context
 }
 
 
@@ -302,7 +354,7 @@ sub msgobj {
     my $self = $_[0];
 
     return $self->{msgobj} if exists $self->{msgobj};
-    return undef;
+    return; # returns undef in scalar context
 }
 
 1;

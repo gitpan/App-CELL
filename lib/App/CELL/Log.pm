@@ -6,23 +6,23 @@ use warnings;
 
 # IMPORTANT: this module must not depend on any other CELL modules
 use File::Spec;
-use Log::Fast;
+use Log::Any qw( $log );
 
 
 
 =head1 NAME
 
-App::CELL::Log - basic logging to syslog facility
+App::CELL::Log - the Logging part of CELL
 
 
 
 =head1 VERSION
 
-Version 0.076
+Version 0.088
 
 =cut
 
-our $VERSION = '0.076';
+our $VERSION = '0.088';
 
 
 
@@ -30,8 +30,8 @@ our $VERSION = '0.076';
 
     use App::CELL::Log qw( log_debug log_info );
 
-    # configure logging -- need only be done once
-    my $status = App::CELL::Log::configure();  
+    # configure logging for application FooBar -- need only be done once
+    my $status = App::CELL::Log::configure('FooBar');  
     return $status unless $status->ok;
 
     # Info and debug messages are created by calling log_info and
@@ -68,6 +68,28 @@ our @EXPORT_OK = qw( log_debug log_info );
 
 
 
+=head1 PACKAGE VARIABLES
+
+=over
+
+=item C<$ident> - the name of our application
+
+=item C<$log_level> - value linked to the C<CELL_DEBUG_MODE> site param;
+must be a level recognized by C<Log::Fast>
+
+=item C<@permitted_levels> - list of permissible log levels
+
+=back 
+
+=cut
+
+our $ident;
+our $log_level = 'INFO';
+our @permitted_levels =
+       ( 'OK', 'NOT_OK', 'DEBUG', 'INFO', 'NOTICE', 'WARN', 'ERR', 'CRIT' );
+
+
+
 =head1 DESCRIPTION
 
 The C<App::CELL::Log> module provides for "log-only messages" (see
@@ -95,41 +117,20 @@ Returns: true on success, false on failure
 =cut
 
 sub configure {
-    my $ident = shift;
+    my $local_ident = shift || 'CELLtest';
 
     # re-entrant function: run only if (a) we haven't been initialized
     # at all yet, or (b) we were initialized under a different ident
     # string
-    use feature "state";
-    state $initialized = '';
-    if ( $ident eq $initialized ) {
-        log_info( "Logging already configured" );
+    if ( $ident and ( $local_ident eq $ident ) ) {
+        $log->info( "Logging already configured" );
         return 1;
     }
-
     # first invocation or change of ident
-    if ( eval {
-            my $LOG = Log::Fast->global();
-            $LOG->config(
-                { 
-                    ident  => $ident,
-                    level  => 'DEBUG',
-                    prefix => '[%L] ',
-                    type   => 'unix', 
-                }
-            );
-            1;
-        } )
-    { 
-        $initialized = $ident;
-        return 1;
-    }
-    else
-    { 
-        # this might happen if syslog is not running
-        print STDERR "CELL WARNING LOGGER_INIT_FAIL: $@";
-        return 0;
-    }
+    $log = Log::Any->get_logger(category => $local_ident);
+    $ident = $local_ident;
+
+    return 1;
 }
 
 
@@ -141,16 +142,8 @@ level "DEBUG". Always returns true.
 =cut
 
 sub log_debug {
-    
-    # get argument
-    my $msg_text = $_[0];
-
-    # get Log::Fast object
-    my $LOG = Log::Fast->global();
-
-    # write message
-    $LOG->DEBUG( _assemble_log_message( $msg_text, caller ) );
-
+    my $msg_text = shift;
+    $log->debug( _assemble_log_message( $msg_text, caller ) );
     return 1;
 }
 
@@ -163,16 +156,8 @@ level "INFO". Always returns true.
 =cut
 
 sub log_info {
-    
-    # get argument
-    my $msg_text = $_[0];
-
-    # get Log::Fast object
-    my $LOG = Log::Fast->global();
-
-    # write message
-    $LOG->INFO( _assemble_log_message( $msg_text, caller ) );
-
+    my $msg_text = shift;
+    $log->info( _assemble_log_message( $msg_text, caller ) );
     return 1;
 }
 
@@ -185,29 +170,18 @@ log level and message to write.
 =cut
 
 sub arbitrary {
-    # get arguments
     my ( $level, $msg_text ) = @_;
     $level = uc $level;
-
-    # get Log::Fast object
-    my $LOG = Log::Fast->global();
-
-    # ensure sanity
     if ( not $msg_text ) { $msg_text = '<NONE>'; }
-    if ( not grep { $level eq $_ } 
-             ( 'DEBUG', 'INFO', 'NOTICE', 'WARN', 'ERR', 'CRIT' ) ) 
+    if ( not grep { $level eq $_ } @permitted_levels )
     {
         my ( $pkg, $file, $line ) = caller;
         $msg_text .= " <- detected attempt to to log this message at"
         . " unknown level $level in $pkg ($file) line $line";
         $level = 'WARN';
     }
-    if ( $level eq 'CRIT' ) {
-        $level = 'ERR';
-        $msg_text = "CRITICAL: " . $msg_text;
-    }
-    $LOG->$level( $msg_text );
-
+    ( $level, $msg_text ) = _sanitize_level( $level, $msg_text );
+    $log->$level( $msg_text );
     return 1;
 }
 
@@ -219,21 +193,32 @@ Take a status object and log it.
 =cut
 
 sub status_obj {
-    my $status_obj = $_[0];
-    my $LOG = Log::Fast->global();
+    my $status_obj = shift;
     my $level = $status_obj->{level};
     my $msg_text = $status_obj->text;
     my $pkg = undef;
     my $file = $status_obj->{filename};
     my $line = $status_obj->{line};
 
-    if ( $level eq 'CRIT' ) {
-        $msg_text = 'CRITICAL: ' . $msg_text;
-        $level = 'ERR';
-    }
+    ( $level, $msg_text ) = _sanitize_level( $level, $msg_text );
 
-    $LOG->$level( 
+    $log->$level( 
         _assemble_log_message( $msg_text, $pkg, $file, $line ) );
+}
+
+sub _sanitize_level {
+    my ( $level, $msg_text ) = @_;
+    if ( $level eq 'OK' ) {
+        $level = 'INFO';
+        $msg_text = "OK: " . $msg_text;
+    } elsif ( $level eq 'NOT_OK' ) {
+        $level = 'INFO';
+        $msg_text = "NOT_OK: " . $msg_text;
+    } elsif ( $level eq 'CRIT' ) {
+        $level = 'ERR';
+        $msg_text = "CRITICAL: " . $msg_text;
+    }
+    return ( lc $level, $msg_text );
 }
 
 sub _assemble_log_message {

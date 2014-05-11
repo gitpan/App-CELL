@@ -17,11 +17,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.076
+Version 0.088
 
 =cut
 
-our $VERSION = '0.076';
+our $VERSION = '0.088';
 
 
 
@@ -71,7 +71,7 @@ This module provides the following public functions and methods:
 
 =head1 DESCRIPTION
 
-A App::CELL::Message object is a reference to a hash containing some or
+An App::CELL::Message object is a reference to a hash containing some or
 all of the following keys (attributes):
 
 =over 
@@ -79,6 +79,8 @@ all of the following keys (attributes):
 =item C<code> - message code (see below)
 
 =item C<text> - message text
+
+=item C<error> - error (if any) related to this message
 
 =item C<language> - message language (e.g., English)
 
@@ -103,7 +105,7 @@ are localizable.
 =head2 C<@min_supp_lang>)
 
 The minimal list of supported languages, specified by their respective
-language tags (currently 'en-US' only).
+language tags (currently 'en' only).
 
 See the W3C's "Language tags in HTML and XML" white paper for a
 detailed explanation of language tags:
@@ -133,77 +135,6 @@ our $mesg;
 =head1 FUNCTIONS AND METHODS
 
 
-=head2 init
-
-Load messages (keys and values) from the relevant configuration file(s).
-Be re-entrant.
-
-=cut
-
-sub init {
-
-    # re-entrant function
-    use feature "state";
-    state $firsttime = 1;
-    return App::CELL::Status->ok if not $firsttime;
-
-    my ( $status, $count );
-
-    INIT_BLOCK: {
-
-        my $quantfiles = 0;
-        # get site configuration directory 
-        my $configdir = App::CELL::Config::get_siteconfdir();
-        if ( not $configdir ) {
-            $status = App::CELL::Status->new (
-                    level => 'CRIT',
-                    code => 'NO_SITE_CONFIGURATION_DIRECTORY',
-                                        );
-            last INIT_BLOCK;
-        }
-
-        # initialize $mesg
-        $mesg = {};
-
-        # find message files in $configdir
-        my $message_files = App::CELL::Load::find_files( 'message', $configdir );
-    
-        foreach my $file ( @$message_files ) {
-            $quantfiles += 1;
-            $count = App::CELL::Load::parse_message_file( File => $file,
-                                            Dest => $mesg );
-            App::CELL::Log::arbitrary ( 'NOTICE',
-                      "Imported $count messages from file $file" );
-        }
-        if ( not $count ) {
-            $status = App::CELL::Status->new (
-                    level => 'WARN',
-                    code => 'CELL_NO_MESSAGES_LOADED',
-                                        );
-            last INIT_BLOCK;
-        }
-
-        # success
-        $firsttime = 0;
-        App::CELL::Status->new (
-                    level => 'NOTICE',
-                    code => "Imported $count messages from"
-                            . " $quantfiles files"
-                          );
-        return App::CELL::Status->ok;
-
-    }
-
-    # if, for some reason, we fail to get configured . . .
-    $mesg->{ 'CELL_UNKNOWN_MESSAGE_CODE' } = { 
-                                                'en' => { 
-                        'Text' => "Unknown message code ->%s<-" 
-                                                        }
-                                             };
-    return $status;
-}
-
-
 =head2 new
   
 Construct a message object. Takes a message code and, optionally, a
@@ -212,44 +143,100 @@ reference to an array of arguments. Returns the object. See L</SYNOPSIS>.
 =cut
 
 sub new {
-    my $class = shift;
-    my %ARGS = (
-                code => '<NO_CODE>',
-                @_,
-               ); 
-    my $text;
 
-    if ( App::CELL::Config::get_param('meta','CELL_CONFIG_INITIALIZED') )
-    {
-        # if code not found, deal with it
-        if ( not exists $mesg->{ $ARGS{code} } ) {
-            $ARGS{args} = [ $ARGS{code} || '<NO_CODE>' ];
-            $ARGS{code} = 'CELL_UNKNOWN_MESSAGE_CODE';
-        }
-        $text = $mesg->{ $ARGS{code} }->{ 'en' }->{ 'Text' };
+    use Try::Tiny;
+
+    my $class = shift;
+    my %ARGS = ( @_); 
+    my $saved_caller = [ caller ];
+    my $status;
+   
+    if ( not exists( $ARGS{'code'} ) ) {
+        my $stringified_args = _stringify_args( \%ARGS );
+        $ARGS{'code'} = 'CELL_MESSAGE_NO_CODE';
+        $ARGS{'error'} = $ARGS{'code'} . " $stringified_args";
     }
-    else 
-    {
-        # special regime if running before config initialization
-        $text = $ARGS{code};
+    if ( not defined( $ARGS{'code'} ) ) {
+        delete $ARGS{'code'};
+        my $stringified_args = _stringify_args( \%ARGS );
+        $ARGS{'code'} = 'CELL_MESSAGE_CODE_UNDEFINED';
+        $ARGS{'error'} = $ARGS{'code'} . " $stringified_args";
     }
+
+    # This next line is important: it may happen that the developer wants
+    # to quickly code some messages/statuses without formally assigning
+    # codes in the site configuration. In these cases, the $mesg lookup
+    # will fail. Instead of throwing an error, we just generate a message
+    # text from the value of 'code'.
+    my $text = $mesg->{ $ARGS{code} }->{ 'en' }->{ 'Text' } || $ARGS{code};
 
     # strip out anything that resembles a newline
     $text =~ s/\n//g;
     $text =~ s/\o{12}/ -- /g;
 
-    $ARGS{text} = sprintf( $text, @{ $ARGS{args} || [] } );
+    # insert the arguments into the message text -- needs to be in an eval
+    # block because we have no control over what crap the application
+    # programmer might send us
+    try { 
+        local $SIG{__WARN__} = sub {
+            die;
+        };
+        $ARGS{text} = sprintf( $text, @{ $ARGS{args} || [] } ); 
+    }
+    catch {
+        my $errmsg = $_;
+        $errmsg =~ s/\o{12}/ -- /ag;
+        log_debug( $errmsg );
+        App::CELL::Status->new( level => 'ERR',
+                                code => 'CELL_MESSAGE_ARGUMENT_MISMATCH',
+                                args => [ $ARGS{'code'} ], 
+                                caller => $saved_caller,
+        );
+    };
+
+    # log everything -- check a site configuration parameter for this?
+    App::CELL::Log::log_debug( "Creating message object ->" . $ARGS{code} .  "<-");
 
     # bless into objecthood
-    my $self = bless \%ARGS;
-
-    # Log everything -- check a site configuration parameter for this?
-    App::CELL::Log::log_debug( "Message object " . $ARGS{code} . " created" );
+    my $self = bless \%ARGS, 'App::CELL::Message';
 
     # return the created object
     return $self;
 }
 
+=head3 _stringify_args
+
+Convert args into a string for error reporting
+
+=cut
+
+sub _stringify_args {
+    use Data::Dumper;
+    local $Data::Dumper::Terse = 1;
+    my $args = shift;
+    my $args_as_string;
+    if ( %$args ) {
+        $args_as_string = Dumper( $args );
+    } else {
+        $args_as_string = 'CELL_MESSAGE_NO_ARGUMENTS';
+    }
+    return $args_as_string;
+}
+
+
+=head2 stringify
+
+Generate a string representation of a message object using Data::Dumper.
+
+=cut
+
+sub stringify {
+    use Data::Dumper;
+    local $Data::Dumper::Terse = 1;
+    my $self = shift;
+    my %u_self = %$self;
+    return Dumper( \%u_self );
+}
 
 =head2 code
 
@@ -258,13 +245,9 @@ Accessor method for the 'code' attribute.
 =cut
 
 sub code {
-    my $self = $_[0];
-
-    if ( not $self->{code} ) {
-        return 'CELL_UNKNOWN_MESSAGE_CODE';
-    } else {
-        return $self->{code};
-    }
+    my $self = shift;
+    return if not $self->{code}; # returns undef in scalar context
+    return $self->{code};
 }
 
 
@@ -276,12 +259,8 @@ Accessor method for the 'args' attribute.
 
 sub args {
     my $self = $_[0];
-
-    if ( not $self->{args} ) {
-        return [];
-    } else {
-        return $self->{args};
-    }
+    return [] if not $self->{args};
+    return $self->{args};
 }
 
 
@@ -294,12 +273,8 @@ attribute, or "<NO_TEXT>" if it can't find any content.
 
 sub text {
     my $self = $_[0];
-    
-    if ( not $self->{text} ) {
-        return "<NO_TEXT>";
-    } else {
-        return $self->{text};
-    }
+    return "<NO_TEXT>" if not $self->{text};
+    return $self->{text};
 }
 
 1;

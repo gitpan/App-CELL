@@ -5,7 +5,6 @@ use strict;
 use warnings;
 use App::CELL::Log qw( log_debug log_info );
 use File::Spec;
-use File::Touch;
 
 =head1 NAME
 
@@ -14,11 +13,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.076
+Version 0.088
 
 =cut
 
-our $VERSION = '0.076';
+our $VERSION = '0.088';
 
 
 
@@ -26,10 +25,15 @@ our $VERSION = '0.076';
 
     use App::CELL::Test;
 
-
-
-#use Exporter qw( import );
-#our @EXPORT_OK = qw( log_debug log_info );
+    App::CELL::Test::cleartmpdir();
+    my $tmpdir = App::CELL::Test::mktmpdir();
+    App::CELL::Test::touch_files( $tmpdir, 'foo', 'bar', 'baz' );
+    my $booltrue = App::CELL::Test::cmp_arrays(
+        [ 0, 1, 2 ], [ 0, 1, 2 ]
+    );
+    my $boolfalse = App::CELL::Test::cmp_arrays(
+        [ 0, 1, 2 ], [ 'foo', 'bar', 'baz' ]
+    );
 
 
 =head1 DESCRIPTION
@@ -39,11 +43,12 @@ use in CELL's test suite.
 
 
 
-=head1 CONSTANTS
+=head1 PACKAGE VARIABLES
 
 =cut
 
-use constant CELLTESTDIR => 'CELLtest';
+our $app_cell_test_dir_name = 'App-CELLtest';
+our $app_cell_test_dir_full = '';
 
 
 
@@ -52,30 +57,61 @@ use constant CELLTESTDIR => 'CELLtest';
 
 =head2 mktmpdir
 
-First wipes, and then creates, the 'CELLtest' directory in C</tmp> and
-returns the path to this directory or "undef" on failure.
+Creates the App::CELL testing directory in the system temporary directory
+(e.g. C</tmp>) and returns the path to this directory or "undef" on
+failure.
 
 =cut
 
 sub mktmpdir {
-    my $tmpdir = File::Spec->catfile( 
-                        File::Spec->rootdir, 
-                        'tmp', 
-                        CELLTESTDIR,
-                                    );
-    eval { mkdir $tmpdir; };
-    if ( $@ ) {
-        my $errmsg = $@;
+
+    use Try::Tiny;
+
+    $app_cell_test_dir_full = File::Spec->catfile( 
+                                  File::Spec->tmpdir, 
+                                  $app_cell_test_dir_name,
+                              );
+    try { 
+        mkdir $app_cell_test_dir_full; 
+    }
+    catch {
+        my $errmsg = $_ || '';
         $errmsg =~ s/\n//g;
         $errmsg =~ s/\o{12}/ -- /g;
-        $errmsg = "Attempting to create $tmpdir . . . failure: $errmsg";
+        $errmsg = "Attempting to create $app_cell_test_dir_full . . . failure: $errmsg";
         log_debug( $errmsg );
         print STDERR $errmsg, "\n";
-        return undef;
-    } else {
-        log_debug( "Attempting to create $tmpdir . . . success" );
-        return $tmpdir;
-    }
+        return; # returns undef in scalar context
+    };
+
+    log_debug( "Attempting to create $app_cell_test_dir_full . . . success" );
+
+    return $app_cell_test_dir_full;
+}
+
+
+=head2 cleartmpdir
+
+Wipes (rm -rf) the App::CELL testing directory, if it exists. Returns:
+
+=over
+
+=item C<true> App::CELL testing directory successfully wiped or not there in the first
+place
+
+=item C<false> directory still there even after C<rm -rf> attempt
+
+=back
+
+=cut
+
+sub cleartmpdir {
+    require ExtUtils::Command;
+    return 1 if not -e $app_cell_test_dir_full;
+    local $ARGV[0] = $app_cell_test_dir_full;
+    ExtUtils::Command::rm_rf();
+    return 1 if not -e $app_cell_test_dir_full;
+    return 0;
 }
 
 
@@ -87,27 +123,29 @@ that directory. Returns number of files successfully touched.
 =cut
 
 sub touch_files {
+
+    use Try::Tiny;
+
     my ( $dirspec, @file_list ) = @_;
     my $count = @file_list;
-    eval { 
-        touch( map { 
-                        File::Spec->catfile( $dirspec, $_ ); 
-                   } @file_list );
-    };
-    if ( $@ ) {
-        my $errmsg = $@;
+    try {
+        use File::Touch;
+        File::Touch::touch( 
+            map { File::Spec->catfile( $dirspec, $_ ); }
+            @file_list 
+        );
+    }
+    catch {
+        my $errmsg = $_;
         $errmsg =~ s/\n//g;
         $errmsg =~ s/\o{12}/ -- /g;
         $errmsg = "Attempting to 'touch' $count files in $dirspec . . . failure: $errmsg";
         log_debug( $errmsg );
         print STDERR $errmsg, "\n";
         return 0;
-    } else {
-        log_debug( 
-            "Attempting to 'touch' $count files in $dirspec . . .  success" 
-                 );
-        return $count;
-    }
+    };
+    log_debug( "Attempting to 'touch' $count files in $dirspec . . .  success" );
+    return $count;
 }
 
 

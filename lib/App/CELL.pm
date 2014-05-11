@@ -8,7 +8,7 @@ use Carp;
 use App::CELL::Config;
 use App::CELL::Status qw( is_error );
 use App::CELL::Log;
-use App::CELL::Util qw( timestamp );
+use App::CELL::Util qw( utc_timestamp );
 
 
 =head1 NAME
@@ -19,11 +19,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.076
+Version 0.088
 
 =cut
 
-our $VERSION = '0.076';
+our $VERSION = '0.088';
 
 
 
@@ -32,21 +32,13 @@ our $VERSION = '0.076';
    use App::CELL;
 
    # initialization (set up logging, load config params and messages from
-   # configuration directory)
-   App::CELL->init;
+   # configuration directory) of an application called FooBar
+   App::CELL->init('FooBar');
 
    # write arbitrary, non-localized strings to syslog
    App::CELL->log_debug( "DEBUG level message" );
    App::CELL->log_info( "INFO level message" );
 
-   # use status objects as return values: success
-   return App::CELL->status_ok;
-
-   # use status objects as return values: failure
-   return App::CELL->status( level => 'ERR',
-                        code => 'MY_ERROR_MESSAGE_CODE',
-                      );
-   
    # process status objects returned by invoked function
    my $status = Function::invocation( ... );
    return $status unless $status->ok;
@@ -122,25 +114,33 @@ details.
 This module provides CELL's Configuration functionality.
 
 
-=head2 C<lib/App/CELL/Status.pm>
+=head2 C<lib/App/CELL/Load.pm>
 
-C<Status.pm> provides CELL's Error-handling functionality. Since status
-objects inherit from message objects, the application programmer can
-instruct CELL to generate localized status messages (errors, warnings,
-notices) if she wishes.
-
-
-=head2 C<lib/App/CELL/Message.pm>
-
-Localization is on the wish-list of many software projects. With CELL, I
-can easily design and write my application to be localizable from the very
-beginning, without having to invest much effort.
+C<Load.pm> encapsulates all the complexity of loading messages and
+config params from files in two directories: (1) the App::CELL distro
+sharedir containing App::CELL's own configuration, and (2) the site
+configuration directory, if present.
 
 
 =head2 C<lib/App/CELL/Log.pm>
 
 Logging is simple in Perl, thanks to CPAN modules like C<Log::Fast>, but
 CELL tries to make it even simpler.
+
+
+=head2 C<lib/App/CELL/Message.pm>
+
+Localization is on the wish-list of many software projects. With App::CELL,
+I can easily design and write my application to be localizable from the
+very beginning, without having to invest much effort.
+
+
+=head2 C<lib/App/CELL/Status.pm>
+
+C<Status.pm> provides CELL's Error-handling functionality. Since status
+objects inherit from message objects, the application programmer can
+instruct CELL to generate localized status messages (errors, warnings,
+notices) if she wishes.
 
 
 
@@ -163,10 +163,6 @@ objects.
 
 =item C<log_info> - send INFO-level message to syslog
 
-=item C<status_ok> - construct an "OK" status object
-
-=item C<status> - construct an arbitrary status object
-
 =item C<set_meta> - set a meta parameter to an arbitrary value
 
 =item C<meta> - get value of a meta parameter
@@ -178,6 +174,14 @@ objects.
 Each of these methods is described in somewhat more detail in the
 L</METHODS> section, which contains links to the actual functions for those
 methods that are merely wrappers.
+
+
+
+=head1 PACKAGE VARIABLES
+
+=cut
+
+our $initialized = 0;
 
 
 
@@ -235,51 +239,36 @@ related to your application in a separate file within C</var/log>, or
 elsewhere. Returns an C<App::CELL::Status> object with level either "OK"
 (on success) or "CRIT" (on failure).
 
-On success, it also sets the C<META_CELL_STATUS_BOOL> and
-C<META_CELL_STATUS_DATETIME> meta parameters.
+On success, it also sets the C<CELL_META_INIT_STATUS_BOOL> and
+C<CELL_META_START_DATETIME> meta parameters.
 
 =cut
 
 sub init {
 
-    my $app_name = $_[1];
+    my ( $class, $app_name ) = $_;
 
-    my ( $reentering, $status );
+    my $status;
 
-    # meta parameters are initialized to their defaults automatically on
-    # the first call to C<App::CELL::Config::get_param>
-    $reentering = App::CELL::Config::get_param( 'meta', 'META_CELL_STATUS_BOOL' );
-    App::CELL->log_debug("Reentering App::CELL->init") if $reentering;
-    return App::CELL::Status->ok if $reentering;
-
-    App::CELL->log_debug( "CELL will now configure logging with ident $app_name" );
+    App::CELL->log_debug("Reentering App::CELL->init") if $initialized;
+    return App::CELL::Status->ok if $initialized; # nothing to do
 
     # open and configure syslog connection
-    if ( not App::CELL::Log::configure( $app_name ) ) {
-        App::CELL::Status->new( level => 'WARN', code => 'CELL_WARN_TROUBLE_WITH_SYSLOG' );
-    }
-
-    App::CELL->log_info( "**************** CELL STARTED AT " . timestamp() );
+    App::CELL::Log::configure( $app_name );
 
     # load site configuration parameters
-    $status = App::CELL::Config::init();
+    $status = App::CELL::Load::init();
     return $status unless $status->ok;
-    App::CELL->log_info( "CELL has completed initialization of configuration parameters" );
+    App::CELL->log_info( "App::CELL has finished loading messages and site conf params" );
 
-    # load message templates
-    $status = App::CELL::Message::init();
-    return $status unless $status->ok;
-    App::CELL->log_info( "CELL has completed initialization of message templates" );
+    App::CELL::Config::set_meta( 'CELL_META_INIT_STATUS_BOOL', 1 );
+    App::CELL::Config::set_meta( 'CELL_META_START_DATETIME', utc_timestamp() );
+    App::CELL->log_info( "**************** CELL started at "
+                    . App::CELL->meta( 'CELL_META_START_DATETIME' )
+                    . " (UTC)" );
 
-    App::CELL::Config::set_meta( 'META_CELL_STATUS_BOOL', 1 );
-    App::CELL::Config::set_meta( 'META_CELL_STATUS_DATETIME', timestamp() );
-    App::CELL->log_info( "CELL started at "
-                    . App::CELL->meta( 'META_CELL_STATUS_DATETIME' )
-                    . " GMT" );
-
-    # return the status object returned by the last call to
-    # App::CELL::Config::set_meta
-    return App::CELL->status_ok;
+    $initialized = 1;
+    return App::CELL::Status->ok;
 }
 
 
@@ -304,29 +293,6 @@ Send an INFO-level message to syslog. Takes a string. Returns nothing.
 sub log_info {
     # use $_[1] because $_[0] is the class name
     App::CELL::Log::arbitrary( 'info', $_[1] || "<NO_MESSAGE>" );
-}
-
-
-=head2 status_ok
-
-Wrapper for App::CELL::Status::ok
-
-=cut
-
-sub status_ok {
-    App::CELL::Status::ok;
-}
-
-
-=head2 status
-
-Wrapper for App::CELL::Status::new
-
-=cut
-
-sub status {
-    shift();  # throw away the class
-    App::CELL::Status::new( @_ );
 }
 
 
@@ -359,7 +325,7 @@ of meta parameter if the parameter exists, otherwise undef.
 
 sub meta {
     # use $_[1] because $_[0] is the class name
-    return undef if not $_[1];
+    return if not $_[1]; # returns undef in scalar context
     App::CELL::Config::get_param( 'meta', $_[1] );
 }
 
@@ -372,19 +338,14 @@ defined in 'site', we're done: that is the value. If the parameter is not
 defined in 'site', check 'core' and use that value, if available.
 
 If neither 'site' nor 'core' has a definition for the parameter, undef is
-
+returned.
 
 =cut
 
 sub config {
     # use $_[1] because $_[0] is the class name
-    return undef if not $_[1];
-    my $value = App::CELL::Config::get_param( 'site', $_[1] );
-    if ( defined $value ) {
-        return $value;
-    } else {
-        return App::CELL::Config::get_param( 'core', $_[1] );
-    }
+    return if not $_[1]; # returns undef in scalar context
+    return App::CELL::Config::config( $_[1] );
 }
 
 # END OF CELL MODULE

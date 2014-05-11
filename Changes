@@ -293,3 +293,84 @@ later are in the perl-CELL project repo.
 - changed App::CELL::Load::find_file so it can walk multiple directories
   (ticket #18)
 
+0.077  2014-MAY-07 22:46
+- add tickets/ directory with README
+- Status.pm: croak on CRIT errors
+- start implementing major design change:
+  first, load App::CELL's own internal configuration from the distro
+  sharedir and _then_ load from site configuration directory if it exists
+
+0.078  2014-MAY-08 21:16
+- Status.pm: remove croaking on CRIT errors
+- move directory functions from Config.pm to Load.pm
+- move is_directory_viable() to Util.pm
+- major refactoring to implement design change referred to in 0.077
+
+0.079  2014-MAY-08 22:33
+- clean up unit test files
+- add new unit test 003-debug.t
+- minor POD fix in CELL.pm
+- Config.pm: initialize meta, core, site package variables; fix bug in
+  get_param
+- Load.pm: improve error checking; more useful debugging messages
+
+0.080  2014-MAY-08 23:09
+- Config.pm: get_param, set_meta, and _set_core_site were not respecting hash
+  structure -- fixed
+
+0.081  2014-MAY-09 10:23
+- general cleanup
+
+0.082  2014-MAY-09 14:16
+- Test.pm: 
+  - new cleartmpdir function, use it in unit tests
+  - write proper SYNOPSIS
+  - new unit tests (t/003-test.t)
+- expand t/030-status.t (unit tests for Status.pm)
+- update dependencies in t/000-dependencies.t and Makefile.PL
+- expand release/README
+
+0.083  2014-MAY-09 17:15
+- CELL.pm: removed 'status_ok' and 'status' wrappers
+- CELL_Config.pm and CELL_MetaConfig.pm: prefixed all params with 'CELL_',
+  added comments
+- Message.pm: 'new' method suffered from flawed logic -- fixed
+
+0.084  2014-MAY-09 17:47
+- CELL.pm: move 'config' logic to Config.pm and make it a wrapper
+- Message.pm: add some comments
+- t/100-cell.t: add a test, fix a test
+
+0.085  2014-MAY-09 22:23
+- Config.pm: improve error-checking in get_param
+- Log.pm: add $log_level package variable, add 'set_log_level' subroutine,
+- Load.pm: revamp SYNOPSIS, fix POD for 'init' subroutine (close ticket
+  #19), fix white-space bug in parse_message_file
+- CELL.pm: change re-entrancy processing, avoid referring to config params
+  and messages before they have been loaded
+- CELL_Message_en.pm: prefix all messages with CELL_ (close ticket #9)
+
+0.086  2014-MAY-09 23:21
+- t/050-find-and-parse.t: add whitespace to reproduce bug in event of a
+  regression
+- config/CELL_Message_en.conf: add CELL_OVERWRITE_META_PARAM message
+- Config.pm: use CELL_OVERWRITE_META_PARAM
+- Load.pm: make functions and log messages easier to follow
+- open bug #23 Put sprintf into eval block in Message->new
+
+0.087  2014-MAY-11 13:36
+- (Perl::Critic) add .perlcriticrc, disable "no strict 'refs'" warnings
+- (Perl::Critic) use two-argument form of 'bless' 
+- (Perl::Critic) convert nested subroutine into anonymous subroutine 
+- (Perl::Critic) avoid explicit 'return undef'
+- replace 'eval' with Try::Tiny, update dependencies
+- Message.pm turn warnings into exceptions in 'new' (close ticket #23)
+
+0.088  2014-MAY-11 17:15
+- add 'Testing with Perl::Critic' section to release README
+- (Perl::Critic) unpack @_ in CELL.pm
+- (Perl::Critic) use @ARGV with 'local' in Test.pm
+- Log.pm: remember $ident and re-use it when necessary
+- Message.pm: add 'error' attribute to message class, add 'stringify'
+  method to message class revamp error checking in 'new'
+

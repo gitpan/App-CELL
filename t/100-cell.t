@@ -1,0 +1,30 @@
+#!perl
+use 5.10.0;
+use strict;
+use warnings FATAL => 'all';
+use Data::Printer;
+use File::ShareDir;
+use Test::More;
+use App::CELL;
+use App::CELL::Log qw( log_debug log_info );
+
+plan tests => 4;
+
+my $status = App::CELL::Log::configure( 'CELLtest' );
+log_info("------------------------------------------------------- ");
+log_info("---                   100-cell.t                    ---");
+log_info("------------------------------------------------------- ");
+
+my $bool = App::CELL->meta( 'META_CELL_STATUS_BOOL' );
+ok( ! defined($bool), "CELL should not think it is initialized" );
+
+# first try without pointing to site config directory -- CELL will
+# configure itself from the distro's ShareDir
+$status = App::CELL->init('CELLtest'); 
+ok( $status->ok, "CELL initialization from ShareDir ok" );
+
+my $sharedir = App::CELL->config('CELL_DISTRO_SHAREDIR_FULLPATH');
+ok( defined( $sharedir ), "CELL_DISTRO_SHAREDIR_FULLPATH is defined" );
+
+is( $sharedir, File::ShareDir::dist_dir('App-CELL'),
+    "CELL_DISTRO_SHAREDIR_FULLPATH is properly set to the ShareDir");
