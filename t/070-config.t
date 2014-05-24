@@ -1,38 +1,128 @@
 #!perl
+
+#
+# t/070-config.t
+#
+# Run Config.pm through its paces
+#
+
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use Data::Printer;
-use App::CELL::Load;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Config;
+use App::CELL::Log qw( $log );
 use App::CELL::Test;
-use App::CELL::Util;
-use File::Spec;
+use Data::Printer;
 use Test::More;
 
-plan tests => 4;
+#
+# To activate debugging, uncomment the following line
+#
+use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
 
-my $status = App::CELL::Log::configure( 'CELLtest' );
-log_info("--------------------------------------------------------- ");
-log_info("---                   070-config.t                    ---");
-log_info("--------------------------------------------------------- ");
+plan tests => 26;
 
-$status = App::CELL::Test::cleartmpdir();
-ok( $status, "Temp directory not present" );
-my $configdir = App::CELL::Test::mktmpdir();
-my $siteconfigfile = File::Spec->catfile( $configdir, "siteconfig.conf" );
-open(my $fh, '>', $siteconfigfile ) or die "Could not open file: $!";
-my $stuff = <<EOS;
-# This is a test
-SITECONF_PATH="$configdir";
-EOS
-print $fh $stuff;
-close $fh;
-#diag( "Test siteconfigfile is $siteconfigfile" );
-is( App::CELL::Load::_read_siteconfdir_from_file($siteconfigfile), $configdir, "_import_cellconf" );
+my $status;
+$log->init( ident => 'CELLtest', debug_mode => 1 );
+$log->info("-------------------------------------------------------");
+$log->info("---                  070-config.t                   ---");
+$log->info("-------------------------------------------------------");
 
-ok( App::CELL::Util::is_directory_viable($configdir), "Configuration directory is viable" );
+#
+# META
+#
 
-$status = App::CELL::Load::init;
-ok( $status->ok, "App::CELL::Load::init OK" );
+$status = exists $App::CELL::Config::meta{ 'CELL_META_TEST_PARAM_BLOOEY' };
+ok( ! $status, "No blooey" );
+
+$status = App::CELL::Config::get_param( 'meta', 'CELL_META_TEST_PARAM_BLOOEY' );
+ok( ! defined($status), "Still no blooey" );
+
+$status = App::CELL::Config::set_meta( 'CELL_META_TEST_PARAM_BLOOEY', 'Blooey' );
+ok( $status->ok, "Blooey create succeeded" );
+
+# 'exists' returns undef on failure
+$status = exists $App::CELL::Config::meta->{ 'CELL_META_TEST_PARAM_BLOOEY' };
+ok( defined( $status ), "Blooey exists after its creation" );
+
+$status = App::CELL::Config::get_param( 'meta', 'CELL_META_TEST_PARAM_BLOOEY' );
+is( $status, "Blooey", "Blooey has the right value via get_param" );
+
+$status = App::CELL::Load::init( appname => 'CELLtest' );
+ok( $status->ok, "CELLtest load OK" );
+
+# 'exists' returns undef on failure
+$status = exists $App::CELL::Config::meta->{ 'CELL_META_UNIT_TESTING' };
+ok( defined( $status ), "Meta unit testing param exists" );
+
+my $value = $App::CELL::Config::meta->{ 'CELL_META_UNIT_TESTING' }->{'Value'};
+is( ref( $value ), "ARRAY", "Meta unit testing param is an array reference" );
+
+my $expected_value = [ 1, 2, 3, 'a', 'b', 'c' ];
+$status = App::CELL::Test::cmp_arrays( $expected_value, $value );
+ok( $status, "Meta unit testing param, obtained by cheating, has expected value" );
+
+my $result = App::CELL::Config::get_param( 'meta', 'CELL_META_UNIT_TESTING' );
+$status = App::CELL::Test::cmp_arrays( $result, $expected_value );
+ok( $status, "Meta unit testing param, obtained via get_param, has expected value" );
+
+$status = App::CELL::Config::set_meta( 'CELL_META_UNIT_TESTING', "different foo" );
+ok( $status->ok, "set_meta says OK" );
+
+$result = undef;
+$result = App::CELL::Config::get_param( 'meta', 'CELL_META_UNIT_TESTING' );
+is( $result, "different foo", "set_meta really changed the value" );
+# (should also test that this triggers a log message !)
+
+#
+# CORE
+#
+
+# 'exists' returns undef on failure
+$status = exists $App::CELL::Config::core->{ 'CELL_CORE_UNIT_TESTING' };
+ok( defined( $status ), "Core unit testing param exists" );
+
+$value = $App::CELL::Config::core->{ 'CELL_CORE_UNIT_TESTING' }->{'Value'};
+is( ref( $value ), "ARRAY", "Core unit testing param is an array reference" );
+
+$expected_value = [ 'nothing special' ];
+$status = App::CELL::Test::cmp_arrays( $expected_value, $value );
+ok( $status, "Core unit testing param, obtained by cheating, has expected value" );
+
+$result = App::CELL::Config::get_param( 'core', 'CELL_CORE_UNIT_TESTING' );
+$status = App::CELL::Test::cmp_arrays( $result, $expected_value );
+ok( $status, "Core unit testing param, obtained via get_param, has expected value" );
+
+$status = App::CELL::Config::set_core( 'CELL_CORE_UNIT_TESTING', "different bar" );
+ok( $status->err, "Attempt to set existing core param triggered ERR" );
+
+my $new_result = App::CELL::Config::get_param( 'core', 'CELL_CORE_UNIT_TESTING' );
+isnt( $new_result, "different bar", "set_core did not change the value" );
+is( $new_result, $result, "the value stayed the same" );
+
+#
+# SITE
+#
+
+# 'exists' returns undef on failure
+$status = exists $App::CELL::Config::site->{ 'CELL_SITE_UNIT_TESTING' };
+ok( defined( $status ), "Site unit testing param exists" );
+
+$value = $App::CELL::Config::site->{ 'CELL_SITE_UNIT_TESTING' }->{'Value'};
+is( ref( $value ), "ARRAY", "Site unit testing param is an array reference" );
+
+$expected_value = [ 'Om mane padme hum' ];
+$status = App::CELL::Test::cmp_arrays( $expected_value, $value );
+ok( $status, "Site unit testing param, obtained by cheating, has expected value" );
+
+$result = App::CELL::Config::get_param( 'site', 'CELL_SITE_UNIT_TESTING' );
+$status = App::CELL::Test::cmp_arrays( $result, $expected_value );
+ok( $status, "Site unit testing param, obtained via get_param, has expected value" );
+
+$status = App::CELL::Config::set_site( 'CELL_SITE_UNIT_TESTING', "different baz" );
+ok( $status->err, "Attempt to set existing site param triggered ERR" );
+
+$new_result = App::CELL::Config::get_param( 'site', 'CELL_SITE_UNIT_TESTING' );
+isnt( $new_result, "different baz", "set_site did not change the value" );
+is( $new_result, $result, "the value stayed the same" );
 

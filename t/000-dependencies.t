@@ -5,7 +5,7 @@ use warnings FATAL => 'all';
 use Test::More;
 use Data::Printer;
 
-plan tests => 25;
+plan tests => 24;
 
 BEGIN {
 
@@ -19,7 +19,6 @@ BEGIN {
     use_ok( 'Test::More' );
 
     # non-core (CPAN) modules
-    use_ok( 'Config::General' );
     use_ok( 'Data::Printer' );
     use_ok( 'Date::Format' );
     use_ok( 'File::HomeDir' );
@@ -35,7 +34,7 @@ BEGIN {
     use_ok( 'App::CELL::Config' );
     use_ok( 'App::CELL::Status' );
     use_ok( 'App::CELL::Load' );
-    use_ok( 'App::CELL::Log', qw( log_debug log_info ) );
+    use_ok( 'App::CELL::Log', qw( $log ) );
     use_ok( 'App::CELL::Message' );
     use_ok( 'App::CELL::Util', qw( utc_timestamp is_directory_viable ) );
     use_ok( 'App::CELL::Test' );

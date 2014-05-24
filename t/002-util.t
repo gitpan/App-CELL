@@ -2,7 +2,7 @@
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use App::CELL::Log qw( log_info );
+use App::CELL::Log qw( $log );
 use App::CELL::Status;
 use App::CELL::Util qw( utc_timestamp is_directory_viable );
 use File::Spec;
@@ -10,10 +10,11 @@ use Test::More;
 
 plan tests => 4;
 
-my $status = App::CELL::Log::configure( 'CELLtest' );
-log_info("-------------------------------------------------------- ");
-log_info("---                   002-util.t                     ---");
-log_info("-------------------------------------------------------- ");
+my $status;
+$log->init( ident => 'CELLtest' );
+$log->info("-------------------------------------------------------- ");
+$log->info("---                   002-util.t                     ---");
+$log->info("-------------------------------------------------------- ");
 
 # test that App::CELL::Util::timestamp returns something that looks
 # like a timestamp

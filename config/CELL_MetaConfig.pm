@@ -11,13 +11,16 @@
 # meant to be edited by the user.
 #
 
+# unique value used by App::CELL::Load->init for sanity check
+set('CELL_META_UNIQUE_VALUE', 'uniq');
+
 # boolean value whether App::CELL distro sharedir has been loaded
 # (defaults to 1 since the param is initialized only when distro sharedir
 # is loaded)
-set('CELL_META_DISTRO_SHAREDIR_LOADED', 1);
+set('CELL_META_SHAREDIR_LOADED', 1);
 
 # boolean value whether site config dir has been loaded
-set('CELL_META_SITECONF_DIR_LOADED', 0);
+set('CELL_META_SITEDIR_LOADED', 0);
 
 # boolean value whether App::CELL has been initialized
 set('CELL_META_INIT_STATUS_BOOL', 0);
@@ -25,4 +28,6 @@ set('CELL_META_INIT_STATUS_BOOL', 0);
 # date and time when App::CELL was initialized
 set('CELL_META_START_DATETIME', '');
 
+# for unit testing
+set( 'CELL_META_UNIT_TESTING', [ 1, 2, 3, 'a', 'b', 'c' ] );
 

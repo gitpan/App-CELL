@@ -1,38 +1,65 @@
-#!perl -T
+#!perl
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 
 use Data::Printer;
 use Log::Any::Test;
-our $log = Log::Any->get_logger(category => 'CELLtest');
-use App::CELL::Log qw( log_debug log_info );
-use Test::More tests => 10;
+use App::CELL::Log qw( $log );
+use App::CELL::Load;
+use Test::More tests => 18;
 
-# This test must come before any calls to log_debug / log_info
-my $bool = App::CELL::Log::configure( 'CELLtest' );
-diag("Problem with syslog") if not $bool;
-ok( $bool, "Configure logging" );
+# Initialize the logger
+$log->init( ident => 'CELLtest', debug_mode => 1 );
 
-log_info("-------------------------------------------------------- ");
-log_info("---                   001-log.t                      ---");
-log_info("-------------------------------------------------------- ");
+# This is cheating, but we need the Log::Any object so we can call the
+# testing methods
+our $log_any_obj = Log::Any->get_logger(category => 'CELLtest');
+
+$log->info("-------------------------------------------------------- ");
+$log->info("---                   001-log.t                      ---");
+$log->info("-------------------------------------------------------- ");
 $log->clear();
-log_debug( "Testing: DEBUG log message" );
-$log->contains_only_ok( "DEBUG log message", 'log_debug works');
-log_info( "Testing: INFO log message" ); 
-$log->contains_only_ok( "INFO log message", 'log_info works');
-App::CELL::Log::arbitrary( "NOTICE", "Testing: NOTICE log message" );
-$log->contains_only_ok( "NOTICE log message", 'arbitrary NOTICE works' );
-App::CELL::Log::arbitrary( "WARN", "Testing: WARN log message" );
-$log->contains_only_ok( "WARN log message", 'arbitrary WARN works' );
-App::CELL::Log::arbitrary( "ERR", "Testing: ERR log message" ); 
-$log->contains_only_ok( "ERR log message", 'arbitrary ERR works' );
-App::CELL::Log::arbitrary( "CRIT", "Testing: CRIT log message" );
-$log->contains_only_ok( "CRIT log message", 'arbitrary CRIT works' );
-App::CELL::Log::arbitrary( "OK", "Testing: OK log message" ); 
-$log->contains_only_ok( "OK log message", 'arbitrary OK works' );
-App::CELL::Log::arbitrary( "NOT_OK", "Testing: NOT_OK log message" );
-$log->contains_only_ok( "NOT_OK log message", 'arbitrary NOT_OK works' );
-App::CELL::Log::arbitrary( "FUNKY", "Testing: FUNKY log message" ); 
-$log->contains_only_ok( "FUNKY log message", 'arbitrary FUNKY works' );
+$log->trace                   ( "TRACE log message" );
+$log->contains_only_ok( "TRACE log message", 'trace works');
+$log->debug                   ( "DEBUG log message" );
+$log->contains_only_ok( "DEBUG log message", 'debug works');
+$log->info                    ( "INFO log message" ); 
+$log->contains_only_ok( "INFO log message", 'info works');
+$log->notice                  ( "NOTICE log message" );
+$log->contains_only_ok( "NOTICE log message", 'notice works' );
+$log->warn                    ( "WARN log message" );
+$log->contains_only_ok( "WARN log message", 'warn works' );
+$log->err                     ( "ERR log message" ); 
+$log->contains_only_ok( "ERR log message", 'err works' );
+$log->crit                    ( "CRIT log message" );
+$log->contains_only_ok( "CRIT log message", 'crit works' );
+$log->alert                   ( "ALERT log message" );
+$log->contains_only_ok( "ALERT log message", 'alert works' );
+$log->emergency               ( "EMERGENCY log message" );
+$log->contains_only_ok( "EMERGENCY log message", 'emergency works' );
+$log->ok                      ( "OK log message" ); 
+$log->contains_only_ok( "OK log message", 'ok works' );
+$log->not_ok                  ( "NOT_OK log message" ); 
+$log->contains_only_ok( "NOT_OK log message", 'not_ok works' );
+
+my $status = App::CELL::Load::init( appname => 'CELLtest' );
+ok( $status->ok, "Messages from sharedir loaded" );
+
+$log->clear();
+$status = App::CELL::Status->new( level => 'NOTICE', 
+              code => 'CELL_TEST_MESSAGE' );
+$log->contains_ok( 'DEBUG: Creating message object' );
+$log->contains_only_ok( "NOTICE: This is a test message", "NOTICE test message ok" );
+
+$log->init( debug_mode => 0 );
+$log->trace("foo");
+$log->empty_ok("No trace when debug_mode off");
+$log->debug("bar");
+$log->empty_ok("No debug when debug_mode off");
+$log->info("baz");
+$log->contains_only_ok( "baz", "INFO messages log even if debug_mode is off" );
+
+$log->init( debug_mode => 1 );
+$log->debug("bar");
+$log->contains_only_ok( "bar", "debug_mode back on" );

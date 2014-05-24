@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Data::Printer;
 use App::CELL::Config;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Log qw( $log );
 
 
 
@@ -17,11 +17,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.088
+Version 0.110
 
 =cut
 
-our $VERSION = '0.088';
+our $VERSION = '0.110';
 
 
 
@@ -100,12 +100,12 @@ are localizable.
 
 
 
-=head1 CONSTANTS
+=head1 PACKAGE VARIABLES
 
-=head2 C<@min_supp_lang>)
+=head2 C<@supp_lang>)
 
-The minimal list of supported languages, specified by their respective
-language tags (currently 'en' only).
+The list of supported languages, specified by their respective
+language tags. Set by App::CELL->init, or might not be set at all.
 
 See the W3C's "Language tags in HTML and XML" white paper for a
 detailed explanation of language tags:
@@ -116,9 +116,20 @@ And see here for list of all language tags:
 
     http://www.langtag.net/registries/lsr-language.txt
 
+=head2 C<@min_supp_lang>
+
+Minimal list of languages (tags) all applications using C<App::CELL> are
+required to support.
+
+=head2 C<$language_tag>
+
+Language tag indicating which language messages are to be displayed in.
+
 =cut
 
+our @supp_lang;
 our @min_supp_lang = ( 'en' );
+our $language_tag = 'en';
 
 
 =head2 C<$mesg>
@@ -138,7 +149,8 @@ our $mesg;
 =head2 new
   
 Construct a message object. Takes a message code and, optionally, a
-reference to an array of arguments. Returns the object. See L</SYNOPSIS>.
+reference to an array of arguments. Returns a status object. If the status
+is ok, then the message object will be in the payload. See L</SYNOPSIS>.
 
 =cut
 
@@ -146,29 +158,38 @@ sub new {
 
     use Try::Tiny;
 
-    my $class = shift;
-    my %ARGS = ( @_); 
-    my $saved_caller = [ caller ];
-    my $status;
+    my ( $class, %ARGS ) = @_; 
+    my $stringified_args = _stringify_args( \%ARGS );
+    my $my_caller;
+
+    if ( $ARGS{called_from_status} ) {
+        $my_caller = $ARGS{caller};
+    } else {
+        $my_caller = [ caller ];
+    }
    
     if ( not exists( $ARGS{'code'} ) ) {
-        my $stringified_args = _stringify_args( \%ARGS );
-        $ARGS{'code'} = 'CELL_MESSAGE_NO_CODE';
-        $ARGS{'error'} = $ARGS{'code'} . " $stringified_args";
+        return App::CELL::Status->new( level => 'ERR', 
+            code => 'CELL_MESSAGE_NO_CODE', 
+            args => [ $stringified_args ],
+            caller => $my_caller,
+        );
     }
     if ( not defined( $ARGS{'code'} ) ) {
-        delete $ARGS{'code'};
-        my $stringified_args = _stringify_args( \%ARGS );
-        $ARGS{'code'} = 'CELL_MESSAGE_CODE_UNDEFINED';
-        $ARGS{'error'} = $ARGS{'code'} . " $stringified_args";
+        return App::CELL::Status->new( level => 'ERR', 
+            code => 'CELL_MESSAGE_CODE_UNDEFINED',
+            args => [ $stringified_args ],
+            caller => $my_caller,
+        );
     }
+    @supp_lang = @min_supp_lang if ( not @supp_lang );
 
     # This next line is important: it may happen that the developer wants
     # to quickly code some messages/statuses without formally assigning
     # codes in the site configuration. In these cases, the $mesg lookup
     # will fail. Instead of throwing an error, we just generate a message
     # text from the value of 'code'.
-    my $text = $mesg->{ $ARGS{code} }->{ 'en' }->{ 'Text' } || $ARGS{code};
+    my $text = $mesg->{ $ARGS{code} }->{ $language_tag || 'en' }->{ 'Text' } || $ARGS{code};
 
     # strip out anything that resembles a newline
     $text =~ s/\n//g;
@@ -186,22 +207,30 @@ sub new {
     catch {
         my $errmsg = $_;
         $errmsg =~ s/\o{12}/ -- /ag;
-        log_debug( $errmsg );
-        App::CELL::Status->new( level => 'ERR',
-                                code => 'CELL_MESSAGE_ARGUMENT_MISMATCH',
-                                args => [ $ARGS{'code'} ], 
-                                caller => $saved_caller,
+        return App::CELL::Status->new( level => 'ERR',
+            code => 'CELL_MESSAGE_ARGUMENT_MISMATCH',
+            args => [ $ARGS{code}, $errmsg ],
+            caller => $my_caller,
         );
+        #my $buffer = $mesg->{ 'CELL_MESSAGE_ARGUMENT_MISMATCH' }->{ 'en' }->{ 'Text' };
+        #if ( $buffer ) {
+        #    $buffer = sprintf( $buffer, $ARGS{code}, $errmsg );
+        #} else {
+        #    $buffer = "CELL_MESSAGE_ARGUMENT_MISMATCH on " . $ARGS{code} .
+        #              " (sprintf said ->$errmsg<-)";
+        #}
+        #$log->err( $buffer );
     };
 
-    # log everything -- check a site configuration parameter for this?
-    App::CELL::Log::log_debug( "Creating message object ->" . $ARGS{code} .  "<-");
+    $log->debug( "Creating message object ->" . $ARGS{code} .  "<-", caller => $my_caller);
 
     # bless into objecthood
     my $self = bless \%ARGS, 'App::CELL::Message';
 
-    # return the created object
-    return $self;
+    # return ok status with created object in payload
+    return App::CELL::Status->new( level => 'OK',
+        payload => $self,
+    );
 }
 
 =head3 _stringify_args
@@ -212,13 +241,14 @@ Convert args into a string for error reporting
 
 sub _stringify_args {
     use Data::Dumper;
+    local $Data::Dumper::Indent = 0;
     local $Data::Dumper::Terse = 1;
     my $args = shift;
     my $args_as_string;
     if ( %$args ) {
         $args_as_string = Dumper( $args );
     } else {
-        $args_as_string = 'CELL_MESSAGE_NO_ARGUMENTS';
+        $args_as_string = '';
     }
     return $args_as_string;
 }

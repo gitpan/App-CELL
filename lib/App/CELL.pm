@@ -6,8 +6,8 @@ use warnings;
 
 use Carp;
 use App::CELL::Config;
-use App::CELL::Status qw( is_error );
-use App::CELL::Log;
+use App::CELL::Status;
+use App::CELL::Log qw( $log );
 use App::CELL::Util qw( utc_timestamp );
 
 
@@ -19,28 +19,29 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.088
+Version 0.110
 
 =cut
 
-our $VERSION = '0.088';
+our $VERSION = '0.110';
 
 
 
 =head1 SYNOPSIS
 
    use App::CELL;
+   use App::CELL::Log qw( $log );
 
    # initialization (set up logging, load config params and messages from
    # configuration directory) of an application called FooBar
-   App::CELL->init('FooBar');
+   App::CELL->init( ident => 'FooBar' );
 
-   # write arbitrary, non-localized strings to syslog
-   App::CELL->log_debug( "DEBUG level message" );
-   App::CELL->log_info( "INFO level message" );
+   # log messages (see L<App::CELL::Log> for details)
+   $log->debug( "Debug-level log message" );
+   $log->info( "Info-level log message" );
 
-   # process status objects returned by invoked function
-   my $status = Function::invocation( ... );
+   # process status objects returned by function Foo::fn
+   my $status = Foo::fn( ... );
    return $status unless $status->ok;
 
    # set the value of a meta parameter META_MY_PARAM to 42
@@ -53,7 +54,8 @@ our $VERSION = '0.088';
    $value = App::CELL->config( 'MY_PARAM' );
 
    # note: site configuration parameters are read-only: to change
-   # them, edit the core and site configuration files.
+   # them, edit the core and site configuration files and run your
+   # application again.
    # 
    # For details, see the CELL Guide (in C<doc/>)
    
@@ -62,93 +64,16 @@ our $VERSION = '0.088';
 =head1 DESCRIPTION
 
 This is the top-level module of App::CELL, the Configuration,
-Error-handling, Localization, and Logging framework for Perl
-applications running under Unix-like systems such as SUSE Linux
-Enterprise.
+Error-handling, Localization, and Logging framework for
+applications written in Perl.
 
-Configuration, error-handling, localization, and logging may seem like
-diverse topics. In the author's experience, however, applications written
-for "users" (however that term may be defined) frequently need to:
+App::CELL is released under the GNU Affero General Public License Version 3
+in the hopes that it will be useful, but with no warrany of any kind. For
+details, see the C<LICENSE> file in the top-level distro directory.
 
-=over
-
-=item 1. be configurable by the user or site administrator
-
-=item 2. handle errors robustly, without hangs and crashes
-
-=item 3. potentially display messages in various languages
-
-=item 4. log various types of messages to syslog
-
-=back
-
-Since these basic functions seem to work well together, CELL is designed to
-provide them in an integrated, well-documented, straightforward, and
-reusable package.
-
-For details, see the CELL Guide (in C<doc/>)
-
-
-=head1 HISTORY
-
-CELL was written by Smithfarm in late 2013 and early 2014, initially as
-part of the Dochazka project [[ link to SourceForge ]]. Due to its generic
-nature, it was spun off into a separate project.
-
-
-
-=head1 COMPONENTS
-
-
-=head2 C<lib/App/CELL.pm>
-
-This top-level module is all the application programmer needs to gain
-access to the CELL's key functions.
-
-See L</SYNOPSIS> for code snippets, and L</METHODS> for
-details.
-
-
-=head2 C<lib/App/CELL/Config.pm>
-
-This module provides CELL's Configuration functionality.
-
-
-=head2 C<lib/App/CELL/Load.pm>
-
-C<Load.pm> encapsulates all the complexity of loading messages and
-config params from files in two directories: (1) the App::CELL distro
-sharedir containing App::CELL's own configuration, and (2) the site
-configuration directory, if present.
-
-
-=head2 C<lib/App/CELL/Log.pm>
-
-Logging is simple in Perl, thanks to CPAN modules like C<Log::Fast>, but
-CELL tries to make it even simpler.
-
-
-=head2 C<lib/App/CELL/Message.pm>
-
-Localization is on the wish-list of many software projects. With App::CELL,
-I can easily design and write my application to be localizable from the
-very beginning, without having to invest much effort.
-
-
-=head2 C<lib/App/CELL/Status.pm>
-
-C<Status.pm> provides CELL's Error-handling functionality. Since status
-objects inherit from message objects, the application programmer can
-instruct CELL to generate localized status messages (errors, warnings,
-notices) if she wishes.
-
-
-
-=head1 HOW TO USE THIS MODULE
-
-This module, C<lib/App/CELL.pm>, provides a number of public methods. For the
-sake of uniformity, no functions are exported: the methods are designed to
-be called using "arrow" notation, i.e.:
+This module provides a number of public methods. For the sake of
+uniformity, no functions are exported: the methods are designed to be
+called using "arrow" notation, i.e.:
 
     App::CELL->method_name( args );
 
@@ -158,10 +83,6 @@ objects.
 =over 
 
 =item C<init> - initialize App::CELL
-
-=item C<log_debug> - send DEBUG-level message to syslog
-
-=item C<log_info> - send INFO-level message to syslog
 
 =item C<set_meta> - set a meta parameter to an arbitrary value
 
@@ -201,10 +122,15 @@ tasks:
 
 =item - configure logging
 
-CELL uses the syslog facility to log its activities, and provides logging
-methods to enable the application to do the same. It is recommended that
-syslog be configured to send CELL-related log messages to a separate file,
-e.g. C</var/log/[APP]>.
+App::CELL uses C<Log::Any> to log its activities. WIP
+
+=item - load message templates
+
+CELL message templates are a special type of meta parameter that is loaded
+from files whose names look like C<[...]_Message_en.pm>, where C<en> can be
+any language tag (actually, any string, but you should stick to real
+language tags at all if possible). See the CELL Guide for more information
+on using CELL for localization.
 
 =item - load meta parameters
 
@@ -222,77 +148,84 @@ parameters are designed to work together, with core parameters providing
 defaults and site parameters providing site-specific overrides. See
 the CELL Guide for more information on using CELL for configuration.
 
-=item - load message templates
+=back
 
-CELL message templates are a special type of meta parameter that is loaded
-from files whose names look like C<[...]_Message_en.pm>, where C<en> can be
-any language tag (actually, any string, but you should stick to real
-language tags at all if possible). See the CELL Guide for more information
-on using CELL for localization.
+Optionally takes arguments as a PARAMHASH. The following params are
+recognized:
+
+=over
+
+=item C<appname> - name of the application (used to set the C<Log::Any>
+logger category and also in the site directory search (see
+C<App::CELL::Load>)
+
+=item C<sitedir> - full path to the site directory (when C<App::CELL::Load>
+conducts its site dir search, it will look here first)
 
 =back
 
-Takes one argument: string to be used as identifier (C<ident>) for syslog.
-This string, usually the application name, will be pre-pended to all
-messages and can be used to configure syslog to put all log messages
-related to your application in a separate file within C</var/log>, or
-elsewhere. Returns an C<App::CELL::Status> object with level either "OK"
-(on success) or "CRIT" (on failure).
-
-On success, it also sets the C<CELL_META_INIT_STATUS_BOOL> and
-C<CELL_META_START_DATETIME> meta parameters.
+Returns an C<App::CELL::Status> object with level either "OK"
+(on success) or "CRIT" (on failure). On success, it also sets the
+C<CELL_META_INIT_STATUS_BOOL> and C<CELL_META_START_DATETIME> meta
+parameters.
 
 =cut
 
 sub init {
 
-    my ( $class, $app_name ) = $_;
+    my ( $class, %Args ) = @_;
 
     my $status;
 
-    App::CELL->log_debug("Reentering App::CELL->init") if $initialized;
-    return App::CELL::Status->ok if $initialized; # nothing to do
+    if ( $initialized ) {
+        $log->debug("Reentering App::CELL->init");
+        App::CELL::Status->new( level => 'INFO',
+            code => 'CELL_ALREADY_INITIALIZED',
+        );
+        return App::CELL::Status->ok;
+    }
 
-    # open and configure syslog connection
-    App::CELL::Log::configure( $app_name );
+    # determine the application name
+    my $appname;
+    if ( $Args{appname} ) {
+        $appname = $Args{appname} ;
+    } else {
+        $appname = 'CELLtest';
+    }
+
+    # determine debugging mode
+    my $debug_mode;
+    if ( $Args{debug} ) {
+        $debug_mode = 1;
+    } else {
+        $debug_mode = 0;
+    }
+
+    # set logger category
+    $log->init( ident => $appname, debug_mode => $debug_mode );
 
     # load site configuration parameters
-    $status = App::CELL::Load::init();
+    $status = App::CELL::Load::init( %Args );
     return $status unless $status->ok;
-    App::CELL->log_info( "App::CELL has finished loading messages and site conf params" );
+    $log->info( "App::CELL has finished loading messages and site conf params" );
 
-    App::CELL::Config::set_meta( 'CELL_META_INIT_STATUS_BOOL', 1 );
+    # set $App::CELL::Log::show_caller
+    App::CELL::Log->init( show_caller => App::CELL::Config::config( 'CELL_LOG_SHOW_CALLER' ) );
+
+    # initialize package variables in Message.pm
+    @App::CELL::Message::supp_lang = 
+        @{ App::CELL::Config::config( 'CELL_SUPPORTED_LANGUAGES' ) };
+    $App::CELL::Message::language_tag = 
+        App::CELL::Config::config( 'CELL_LANGUAGE' ) || 'en';
+
+    $initialized = 1;
+    App::CELL::Config::set_meta( 'CELL_META_INIT_STATUS_BOOL', $initialized );
     App::CELL::Config::set_meta( 'CELL_META_START_DATETIME', utc_timestamp() );
-    App::CELL->log_info( "**************** CELL started at "
+    $log->info( "**************** CELL started at "
                     . App::CELL->meta( 'CELL_META_START_DATETIME' )
                     . " (UTC)" );
 
-    $initialized = 1;
     return App::CELL::Status->ok;
-}
-
-
-=head2 log_debug
-
-Send a DEBUG-level message to syslog. Takes a string. Returns nothing.
-
-=cut
-
-sub log_debug {
-    # use $_[1] because $_[0] is the class name
-    App::CELL::Log::arbitrary( 'debug', $_[1] || "<NO_MESSAGE>" );
-}
-
-
-=head2 log_info
-
-Send an INFO-level message to syslog. Takes a string. Returns nothing.
-
-=cut
-
-sub log_info {
-    # use $_[1] because $_[0] is the class name
-    App::CELL::Log::arbitrary( 'info', $_[1] || "<NO_MESSAGE>" );
 }
 
 

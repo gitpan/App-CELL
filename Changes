@@ -23,10 +23,10 @@ later are in the perl-CELL project repo.
 - lots of work on CELL::Config
 
 0.006   2014-JAN-03 15:23
-- finished _import_sysconfig in CELL::Config
+- finish _import_sysconfig in CELL::Config
 
 0.007   2014-JAN-03 23:01
-- refactored _import_sysconfig ( broke it into pieces, 
+- refactor _import_sysconfig ( broke it into pieces, 
   iterate over array of subroutine references )
 
 0.008   2014-JAN-04 17:00
@@ -36,12 +36,12 @@ later are in the perl-CELL project repo.
 - point release
 
 0.010    2014-JAN-07 16:57
-- refactored CELL.pm
-- refactored and merged Error.pm and Log.pm
-- started refactoring Config.pm
+- refactor CELL.pm
+- refactor and merged Error.pm and Log.pm
+- start refactoring Config.pm
 
 0.011    2014-JAN-08 03:28
-- got 'make test' running on refactored modules
+- get 'make test' running on refactored modules
 - WIP: ticket #25
 
 0.012    2014-JAN-08 10:38
@@ -71,7 +71,7 @@ later are in the perl-CELL project repo.
 - close tickets #13 and #17
 
 0.020  2014-JAN-12 15:50
-- started testing api/bin/release.sh
+- start testing api/bin/release.sh
 
 0.021  2014-JAN-12 15:56
 - minor change to api/bin/release.sh
@@ -88,7 +88,7 @@ later are in the perl-CELL project repo.
 - add more unit tests and configuration parameters 
 
 0.025  2014-JAN-13 09:00  
-- working on ticket #38
+- work on ticket #38
 
 0.026  2014-JAN-13 10:29
 - move former api/bin/ to api-dev/ to keep api/ free of distractions
@@ -97,7 +97,7 @@ later are in the perl-CELL project repo.
 - another tweak on api-dev/release.sh
 
 0.028  2014-JAN-13 12:09
-- Make API pass manifest.t
+- make API pass manifest.t
 
 0.029  2014-JAN-13 12:52
 - add unit test for CELL::Util and fix bug in that module
@@ -110,7 +110,7 @@ later are in the perl-CELL project repo.
   HEAD state
 
 0.032  2014-JAN-14 10:14
-- revamped Status.pm to enable "OK" status level 
+- revamp Status.pm to enable "OK" status level 
 
 0.033  2014-JAN-14 11:58
 - add class diagram
@@ -121,17 +121,16 @@ later are in the perl-CELL project repo.
 - revamp Status.pm 
 
 0.035  2014-JAN-14 16:56
-- started splitting off CELL::Config::Meta
+- start splitting off CELL::Config::Meta
 
 0.036  2014-JAN-14 21:31
-- finished initial write-up of Meta.pm 
-- NEXT: modify Config.pm to use it
+- finish initial write-up of Meta.pm 
 
 0.037  2014-JAN-15 11:00
-- working on ticket #44 
+- work on ticket #44 
 
 0.038  2014-JAN-15 16:21
-- working tickets
+- work on tickets
 
 0.039  2014-JAN-15 17:07
 - now passing all unit tests
@@ -145,13 +144,13 @@ later are in the perl-CELL project repo.
 - change all occurrences of 'dochazka' to 'CELL'
 
 0.042  2014-JAN-17 19:21
-- debugging release scripts
+- debug release scripts
 
 0.043  2014-JAN-17 23:19
-- started initial write-up of CELL.pm (mainly POD)
+- start initial write-up of CELL.pm (mainly POD)
 
 0.044  2014-JAN-21 09:44
-- started implementing new features:
+- start implementing new features:
   - multiple config files
   - flexible names
   - config files can be in subdirectories of config dir
@@ -169,8 +168,8 @@ later are in the perl-CELL project repo.
 - start testing Message.pm
 
 0.048  2014-JAN-22 20:07
-- implemented unit test for CELL::Load::find_files
-- fixed some bugs found by unit testing
+- implement unit test for CELL::Load::find_files
+- fix some bugs found by unit testing
 
 0.049  2014-JAN-22 22:42
 - move get_and_load_config_files to CELL::Load and prepare for use with
@@ -187,8 +186,8 @@ later are in the perl-CELL project repo.
 
 0.052  2014-JAN-25 11:58
 - put message file parsing code into Load.pm
-- wrote some unit tests for parsing message files and configuration files
-- started CELL Localization Guide (in staging/)
+- write some unit tests for parsing message files and configuration files
+- start CELL Localization Guide (in staging/)
 
 0.053  2014-JAN-27 11:39
 - implement caching in find_files
@@ -203,12 +202,12 @@ later are in the perl-CELL project repo.
 - fixed a weird glitch in dist/dev.sh
 
 0.056  2014-JAN-28 12:44
-- debugging 
+- fix bugs
 
 0.057  2014-JAN-28 15:22
 - in Load.pm, make parse_message_file get language tag from the
   filename, so the user doesn't have to enter a language tag for each
-  and every message she defines
+  message she defines
 
 0.058  2014-JAN-28 15:23
 - fix release script
@@ -218,7 +217,7 @@ later are in the perl-CELL project repo.
 - work on Localization Guide 
 
 0.060  2014-JAN-29 09:53
-- caressing Load.pm and getting ready to start testing CELL::Config::init 
+- caress Load.pm and get ready to start testing CELL::Config::init 
 
 0.061  2014-JAN-29 11:40
 - unit tests for Load.pm more or less done
@@ -250,7 +249,7 @@ later are in the perl-CELL project repo.
 
 0.066  2014-JAN-31 16:54
 - refactor Localization Guide
-- drafted Apologia
+- draft Apologia (attempt to justify App::CELL's existence to CPAN gurus)
 
 0.067  2014-APR-25 17:21
 - start work on File::ShareDir based 'config' directory (ticket #17)
@@ -271,14 +270,14 @@ later are in the perl-CELL project repo.
 
 0.071  2014-MAY-05 16:30
 - separate CELL and site configuration directories (rewrite config/README)
-- trying to pass CPAN Testers smoke test
+- try to pass CPAN Testers smoke test
 
 0.072  2014-MAY-05 21:20
 - edit Changes file for style
 - clean up comments in release script
 
 0.073  2014-MAY-05 22:10
-- App::CELL->init wasn't processing argument correctly: fixed 
+- fix bug: "App::CELL->init not processing argument correctly"
 - note that dist/dev.sh bump depends on Perl::Version
 
 0.074  2014-MAY-05 22:10
@@ -288,17 +287,17 @@ later are in the perl-CELL project repo.
 - remove obsolete dependencies 
 
 0.076  2014-MAY-06 17:33
-- added some error-checking to the release script
+- add some error-checking to the release script
 - use regexp quote-like operator instead of single-quotes (Load.pm)
-- changed App::CELL::Load::find_file so it can walk multiple directories
+- chang App::CELL::Load::find_file so it can walk multiple directories
   (ticket #18)
 
 0.077  2014-MAY-07 22:46
 - add tickets/ directory with README
 - Status.pm: croak on CRIT errors
-- start implementing major design change:
-  first, load App::CELL's own internal configuration from the distro
-  sharedir and _then_ load from site configuration directory if it exists
+- start implementing major design change: first, load App::CELL's own
+  internal configuration from the distro sharedir and _then_ load from site
+  configuration directory if it exists
 
 0.078  2014-MAY-08 21:16
 - Status.pm: remove croaking on CRIT errors
@@ -315,8 +314,8 @@ later are in the perl-CELL project repo.
 - Load.pm: improve error checking; more useful debugging messages
 
 0.080  2014-MAY-08 23:09
-- Config.pm: get_param, set_meta, and _set_core_site were not respecting hash
-  structure -- fixed
+- Config.pm: fix bug "get_param, set_meta, and _set_core_site do not
+  respect hash structure"
 
 0.081  2014-MAY-09 10:23
 - general cleanup
@@ -326,15 +325,15 @@ later are in the perl-CELL project repo.
   - new cleartmpdir function, use it in unit tests
   - write proper SYNOPSIS
   - new unit tests (t/003-test.t)
-- expand t/030-status.t (unit tests for Status.pm)
+- t/030-status.t: add more tests
 - update dependencies in t/000-dependencies.t and Makefile.PL
 - expand release/README
 
 0.083  2014-MAY-09 17:15
-- CELL.pm: removed 'status_ok' and 'status' wrappers
-- CELL_Config.pm and CELL_MetaConfig.pm: prefixed all params with 'CELL_',
-  added comments
-- Message.pm: 'new' method suffered from flawed logic -- fixed
+- CELL.pm: remove 'status_ok' and 'status' wrappers
+- CELL_Config.pm and CELL_MetaConfig.pm: prefix all params with 'CELL_',
+  add comments
+- Message.pm: fix bug "'new' method suffers from flawed logic"
 
 0.084  2014-MAY-09 17:47
 - CELL.pm: move 'config' logic to Config.pm and make it a wrapper
@@ -351,7 +350,7 @@ later are in the perl-CELL project repo.
 - CELL_Message_en.pm: prefix all messages with CELL_ (close ticket #9)
 
 0.086  2014-MAY-09 23:21
-- t/050-find-and-parse.t: add whitespace to reproduce bug in event of a
+- t/050-find-and-parse.t: add whitespace to trigger bug in event of
   regression
 - config/CELL_Message_en.conf: add CELL_OVERWRITE_META_PARAM message
 - Config.pm: use CELL_OVERWRITE_META_PARAM
@@ -373,4 +372,145 @@ later are in the perl-CELL project repo.
 - Log.pm: remember $ident and re-use it when necessary
 - Message.pm: add 'error' attribute to message class, add 'stringify'
   method to message class revamp error checking in 'new'
+
+0.089  2014-MAY-11 20:01
+- implement major design change: migrate to Log::Any (ticket #27)
+- t/001-log.t: rewrite to use Log::Any::Test
+- remove dependency on Log::Fast
+
+0.090  2014-MAY-11 21:23
+- Log.pm: rename 'configure' subroutine to 'init', tweak POD,
+  expand permitted levels (ticket #28)
+- audit all calls to App::CELL::Status->new (ticket #5)
+
+0.091  2014-MAY-11 22:29
+- CELL_Config.pm, Message.pm: add CELL_SUPPORTED_LANGUAGES and
+  CELL_LANGUAGE core params (ticket #15)
+- CELL.pm, t/100-cell.t: initialize package variables in Message.pm
+- Config.pm: unpack @_ in 'config' subroutine
+
+0.092  2014-MAY-12 13:18
+- Load.pm: improve error checking in 'init' (ticket #21); tweak variable
+  names, subroutine names, param names, message names; fix return status
+- tweak param names, variable names, message names in unit test files
+- t/004-debug.t: indicate how to activate logging in a test
+
+0.093  2014-MAY-12 16:48
+- completely revamp logging in light of migration to Log::Any
+
+0.094  2014-MAY-12 23:36
+- t/004-log.t: use $ENV{'HOME'} instead of ~
+- CELL.pm, Load.pm: optionally take PARAMHASH (appname, sitedir)
+
+0.095  2014-MAY-13 17:10
+- add bin/ directory and start demo.plx script there
+- CELL_Message_en.conf: add some testing messages
+- t/001-log.t: test logging via Status->new with testing message
+- Log.pm: attempt to inherit from Log::Any (not working yet)
+
+0.096  2014-MAY-14 22:23
+- bin/demo.plx now actually does something
+- Config.pm: removed obsolete dependencies
+- t/004-debug.plx: remove obsolete CELL_DEBUG_MODE test and add comment
+  explaining purpose of this unit test file, so I'm not tempted to delete
+  it later
+
+0.097  2014-MAY-15 14:04
+- CELL_Config.pm: get rid of CELL_DEBUG_MODE
+- Load.pm: generate debug message for each meta/core/site param loaded;
+  make process_stanza slightly less verbose; improve debug messages
+  generated by sitedir search routine; no longer look in home directory or
+  /etc/sysconfig because application developer can now specify a literal
+  sitedir path to App::CELL->init
+- Makefile.PL, t/000-dependencies.t: remove dependency on Config::General
+- Status.pm: log using $log object; fix bug in 'log' method that was
+  causing "at [FILE] line [LINE]" to be appended twice; add 'text' accessor
+  method
+
+0.098  2014-MAY-15 21:56
+- Load.pm: clean up get_sitedir some more -- now, application is expected
+  to specify sitedir in call to 'App::CELL->init' by providing either a
+  'sitedir' parameter specifying a full path, or an 'enviro' parameter
+  specifying name of environment variable containing a full path. The only
+  alternative considered is the CELL_SITEDIR environment variable. This
+  makes more sense than what we were attempting before, and streamlines the
+  code.
+- t/050-find-and-parse.t renamed -> t/050-load.t
+- t/070-config.h: rewriting (ticket #33) - WIP
+- add LICENSE and WISHLIST files to dist/ directory
+
+0.099  2014-MAY-16 10:42
+- Load.pm: tweaked log messages, fixed bug in _report_load_status: "success
+  log message not being logged because status code 'OK'"
+
+0.100  2014-MAY-16 21:29
+- t/070-config.t: add more tests (ticket #33)
+- Status.pm: add boolean methods for 'notice', 'warn', 'err', etc.
+- config/: add CELL_SiteConfig.pm, add unit testing params
+
+0.101  2014-MAY-20 10:48
+- t/050-load.t: fix diagnostic log messages
+- add LICENSE file with GPLv3 text
+- add item to WISHLIST
+
+0.102  2014-MAY-21 12:45
+- CELL.pm, Log.pm: minor cleanup
+- Status.pm: fix bug in 'new' -> "status log messages displaying the wrong
+  caller"
+
+0.103  2014-MAY-22 21:56
+- Log.pm: change initialization routine so it takes a PARAMHASH, and added
+  a 'show_caller' param to it
+- adapted CELL.pm and t/* to change in Log.pm
+
+0.104  2014-MAY-22 22:17
+- CELL.pm: fixed bug "App::CELL->init not recognizing appname param"
+- Log.pm: add 'ident' accessor routine
+- demo.plx: expanded demo script
+
+0.105  2014-MAY-23 21:16
+- CELL.pm, CELL_Config.pm: move verbiage to doc/guide.pod, implement
+  CELL_LOG_SHOW_CALLER
+- Config.pm: spam the log less
+- Message.pm: cleanup 'new', make it return a status object (ticket #26)
+- Status.pm: make it handle status object from Message->new
+- t/005-message.t: adapt tests, add more tests
+
+0.106  2014-MAY-23 22:54
+- CELL.pm: honor "debug_mode" flag 
+- Log.pm: honor debug_mode flag, replace a bunch of wrappers with a single
+  AUTOLOAD routine
+- t/001-log.t: add some debug_mode-related tests
+
+0.107  2014-MAY-24 10:19
+- Load.pm: add sanity check to constructor (ticket #21)
+- config/: fix spelling of params, add params for sanity check
+- Message.pm: tell Data::Dumper to not include any newlines
+
+0.108  2014-MAY-24 12:26
+- Load.pm: suppress caller info in "parsed message" $log->debug call,
+  generate more useful warnings/errors in find_files
+- Log.pm: expand AUTOLOAD routine, improve caller handling, eliminate ok
+  and not_ok wrappers
+- Message.pm: improve caller handling in constructor
+- Status.pm: improve caller handling in constructor, make 'caller' accessor
+  return array ref instead of array
+- t/070-config.t: turn on debug_mode
+- Config.pm, CELL_Message_en.conf: add value to CELL_OVERWRITE_META_PARAM,
+  remove unused error/warning messages
+
+0.109  2014-MAY-24 15:18
+- Config.pm: cleanup 'get_param'
+- Log.pm: work on POD, fix AUTOLOAD so it passes all calls through to
+  Log::Any, applying pre-processing selectively.
+- t/001-log.t: get rid of $log_any_obj since we can now access testing
+  methods through the App::CELL::Log singleton
+- Guide.pm: new POD-only module with new high-level introduction to
+  App::CELL
+- remove doc/ directory from the distro
+
+0.110  2014-MAY-24 18:04
+- Guide.pm: include verbiage from config/README (ticket #22) and
+  staging/CELL-Localization-Guide.pod (ticket #13)
+- config/README: make it a stub
 

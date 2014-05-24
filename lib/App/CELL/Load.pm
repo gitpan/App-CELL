@@ -5,9 +5,10 @@ use strict;
 use warnings;
 
 use App::CELL::Config;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Log qw( $log );
 use App::CELL::Message;
 use App::CELL::Status;
+use App::CELL::Test;
 use App::CELL::Util qw( is_directory_viable );
 use Data::Printer;
 use File::Next;
@@ -21,11 +22,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.088
+Version 0.110
 
 =cut
 
-our $VERSION = '0.088';
+our $VERSION = '0.110';
 
 
 
@@ -39,7 +40,7 @@ our $VERSION = '0.088';
     return $status if $status->not_ok;
 
     # attempt to determine the site configuration directory
-    my $siteconfdir = App::CELL::Load::get_siteconfdir();
+    my $sitedir = App::CELL::Load::get_sitedir();
 
     # get a reference to a list of configuration files (full paths) of a
     # given type under a given directory
@@ -74,101 +75,158 @@ performing the following actions:
 
 =item 1. load App::CELL's internal messages and meta, core, and site
 params from the distro share directory determined using File::ShareDir
+(i.e. the C<config/> directory of the distro, wherever it happens to be
+installed)
 
-=item 2. look for a site configuration directory by consulting (a) the
-environment, (b) C<~/.cell/CELL.conf>, (c) C</etc/sysconfig/perl-CELL>,
-(d) C</etc/CELL>. Error exit on fail.
+=item 2. determine the "site dir" (site configuration directory) by first
+looking for a 'sitedir' argument to the function and, failing that,
+looking for a 'CELL_SITE
+procedure described in ...WIP...
 
-=item 3. load messages and meta, core, and site params from the 
-site configuration directory.
+=item 3. if a viable site dir is found, load messages and meta, core, and
+site params from it.
 
 =back
 
 Subsequent calls check state variables to determine status of previous
-calls. For example, it might happen that the first call only loads the
-App::CELL configuration, but not the site configuration, etc.
+calls. For example, if no share dir is found, a critical error is raised.
+The application could theoretically attempt to fix this and try again. Or,
+it might happen that the share dir is loaded as expected, but the site
+dir is not found, in which case on the second call the initialization
+routine would try again to find the site dir.
 
-Sets the following App::CELL site params:
+Once the share dir and site dir are successfully initialized, there is no
+way to undo that.
+
+Upon success the routine sets the following App::CELL params:
 
 =over
 
-=item C<CELL_META_DISTRO_SHAREDIR_LOADED> - meta param
+=item C<CELL_META_SHAREDIR_LOADED> - meta param
 
-=item C<CELL_DISTRO_SHAREDIR_FULLPATH> - site param
+=item C<CELL_SHAREDIR_FULLPATH> - site param
 
-=item C<CELL_META_SITECONF_DIR_LOADED> - meta param
+=item C<CELL_META_SITEDIR_LOADED> - meta param
 
-=item C<CELL_META_SITECONF_DIR_FULLPATH> - site param
+=item C<CELL_SITEDIR_FULLPATH> - site param
 
 =back
 
-Takes: nothing; returns: status object. To be called like this:
+Optionally takes a PARAMHASH. The following arguments are recognized:
 
-    my $status = App::CELL::Load::init();
+=over
 
-Return status is ok provided at least the distro sharedir was found and
-loaded.
+=item C<appname> - name of the application
+
+=item C<sitedir> - full path to the site dir
+
+=back
+
+E.g.: 
+
+    my $status = App::CELL::Load::init( appname => 'FooBar', 
+        sitedir => '/etc/FooBar' );
+
+Return status is 'ok' provided at least the sharedir was found and loaded,
+otherwise a 'CRIT'-level status is returned.
+
+A warning is generated if no site dir is found, but the return status will
+still be 'ok'.
 
 =cut
 
 sub init {
 
-    log_debug( "Entering App::CELL::Load::init" );
+    my %Args = @_;
+
+    $log->debug( "Entering App::CELL::Load::init" );
 
     # re-entrant function
     use feature "state";
     state $sharedir = '';
     state $sharedir_loaded = 0;
-    state $siteconfdir = '';
-    state $siteconfdir_loaded = 0;
+    state $sitedir = '';
+    state $sitedir_loaded = 0;
 
+    # look up sharedir
     if ( not $sharedir ) {
         my $tmp_sharedir = File::ShareDir::dist_dir('App-CELL');
         my $status = is_directory_viable( $tmp_sharedir );
         if ( $status->not_ok ) {
-            return App::CELL::Status->new( level => 'CRIT', 
-                code => 'App::CELL distro sharedir ->%s<- is not viable for reason ->%s<-',
+            return App::CELL::Status->new( 
+                level => 'CRIT', 
+                code => 'CELL_SHAREDIR_NOT_VIABLE',
                 args => [ $tmp_sharedir, $status->payload ],
             );
         } 
-        log_info( "Found viable CELL configuration directory " . 
+        $log->info( "Found viable CELL configuration directory " . 
             $tmp_sharedir . " in App::CELL distro" );
-        App::CELL::Config::set_site( 'CELL_DISTRO_SHAREDIR_FULLPATH', $tmp_sharedir );
+        App::CELL::Config::set_site( 'CELL_SHAREDIR_FULLPATH', $tmp_sharedir );
         $sharedir = $tmp_sharedir;
     }
 
+    # walk sharedir
     if ( $sharedir and not $sharedir_loaded ) {
         my $status = message_files( $sharedir );
-        _report_load_status( $sharedir, 'App:CELL distro sharedir', 'messages', $status );
+        my $load_status = _report_load_status( $sharedir, 'App:CELL distro sharedir', 'messages', $status );
+        return $load_status if $load_status->not_ok;
         $status = meta_core_site_files( $sharedir );
-        _report_load_status( $sharedir, 'App:CELL distro sharedir', 'config params', $status );
-        App::CELL::Config::set_meta( 'CELL_META_DISTRO_SHAREDIR_LOADED', 1 );
+        $load_status = _report_load_status( $sharedir, 'App:CELL distro sharedir', 'config params', $status );
+        return $load_status if $load_status->not_ok;
+        App::CELL::Config::set_meta( 'CELL_META_SHAREDIR_LOADED', 1 );
         $sharedir_loaded = 1;
     }
 
-    if ( not $siteconfdir ) {
-        my $tmp_siteconf = get_siteconfdir();
-        if ( $tmp_siteconf ) {
-            App::CELL::Config::set_site( 'CELL_SITECONF_DIR_FULLPATH', $tmp_siteconf );
-            $siteconfdir = $tmp_siteconf;
+    # look up sitedir
+    if ( not $sitedir ) {
+        my $tmp_sitedir = get_sitedir( %Args );
+        if ( $tmp_sitedir ) {
+            App::CELL::Config::set_site( 'CELL_SITEDIR_FULLPATH', $tmp_sitedir );
+            $sitedir = $tmp_sitedir;
         } else {
             App::CELL::Status->new (
                 level => 'WARN',
-                code => 'CELL_SITECONF_DIR_MISSING',
+                code => 'CELL_SITEDIR_MISSING',
             );
         }
     }
 
-    if ( $siteconfdir and not $siteconfdir_loaded ) {
-        my $status = message_files( $siteconfdir );
-        _report_load_status( $siteconfdir, 'site conf dir', 'messages', $status );
-        $status = meta_core_site_files( $siteconfdir );
-        _report_load_status( $siteconfdir, 'site conf dir', 'config params', $status );
-        App::CELL::Config::set_meta( 'CELL_META_SITECONF_DIR_LOADED', 1 );
-        $siteconfdir_loaded = 1;
+    # walk sitedir
+    if ( $sitedir and not $sitedir_loaded ) {
+        my $status = message_files( $sitedir );
+        _report_load_status( $sitedir, 'site dir', 'messages', $status );
+        $status = meta_core_site_files( $sitedir );
+        _report_load_status( $sitedir, 'site conf dir', 'config params', $status );
+        App::CELL::Config::set_meta( 'CELL_META_SITEDIR_LOADED', 1 );
+        $sitedir_loaded = 1;
     }
 
-    log_debug( "Leaving App::CELL::Load::init" );
+    SANITY: {
+        my $results = [];
+        my $status = App::CELL::Message->new( code => 'CELL_TEST_MESSAGE');
+        my $msgobj;
+
+        if ( $status->ok ) {
+            $msgobj = $status->payload;
+            push @$results, (
+                App::CELL::Config::get_param( 'core', 'CELL_SHAREDIR_FULLPATH' ),
+                App::CELL::Config::get_param( 'site', 'CELL_SITE_LOAD_OK' ),
+                App::CELL::Config::get_param( 'meta', 'CELL_META_UNIQUE_VALUE' ),
+                $msgobj->text(),
+                        );
+            my $cmp_arrays_result = App::CELL::Test::cmp_arrays( 
+                $results, 
+                [ '', 'YES', 'uniq', 'This is a test message' ],
+            );
+            last SANITY if $cmp_arrays_result;
+        }
+        return App::CELL::Status->new(
+            level => 'CRIT',
+            code => 'CELL_LOAD_FAILED_SANITY',
+        );
+    }
+        
+    $log->debug( "Leaving App::CELL::Load::init" );
 
     return App::CELL::Status->ok;
 }
@@ -178,20 +236,23 @@ sub _report_load_status {
     my ( $dir_path, $dir_desc, $what, $status ) = @_;
     my $quantitems = ${ $status->payload }{quantitems} || 0; 
     my $quantfiles = ${ $status->payload }{quantfiles} || 0;
-    if ( $quantitems == 0 and $quantfiles == 0 ) {
-        App::CELL::Status->new(
+    if ( $quantitems == 0 ) {
+        return App::CELL::Status->new(
             level => 'WARN',
-            code => 'Walked %s ->%s<- for %s, but none were loaded',
-            args => [ $dir_desc, $dir_path, $what ],
+            code => 'CELL_DIR_WALKED_NOTHING_FOUND',
+            args => [ $dir_desc, $dir_path, $quantfiles, $what ],
             caller => [ caller ],
         );
     } else {
+        # trigger a log message: note that we can't use an OK status here
+        # because log messages for those are suppressed
         App::CELL::Status->new (
             level => 'NOTICE',
-            code => "Imported ->%s<- %s from %s files in %s %s",
+            code => 'CELL_DIR_WALKED_ITEMS_LOADED',
             args => [ $quantitems, $what, $quantfiles, $dir_desc, $dir_path ],
             caller => [ caller ],
         );
+        return App::CELL::Status->ok;
     }
 }
 
@@ -244,11 +305,11 @@ sub meta_core_site_files {
     $reshash{quantitems} = 0;
 
     foreach my $type ( 'meta', 'core', 'site' ) {
-        no strict 'refs';
         my $fulltype = 'App::CELL::Config::' . $type;
-        log_debug( "\$fulltype is $fulltype");
+        #$log->debug( "\$fulltype is $fulltype");
         my $file_list = find_files( $type, $confdir );
         foreach my $file ( @$file_list ) {
+            no strict 'refs';
             $reshash{quantfiles} += 1;
             $reshash{quantitems} += parse_config_file( 
                 File => $file,
@@ -264,7 +325,7 @@ sub meta_core_site_files {
 }
 
 
-=head2 get_siteconfdir
+=head2 get_sitedir
 
 Look in various places (in a pre-defined order) for the site
 configuration directory. Stop as soon as we come up with a viable
@@ -273,152 +334,53 @@ directory path. On failure, returns undef.
 
 =cut
 
-sub get_siteconfdir {
+sub get_sitedir {
 
-    # re-entrant function
-    #use feature "state";
-    #state $siteconfdir = '';
-    #return $siteconfdir if $siteconfdir;
+    my %paramhash = @_;
 
-    # first invocation
-    my $siteconfdir;
-    my ( $candidate, $log_message, $status );
+    my ( $sitedir, $log_message, $status );
     GET_CANDIDATE_DIR: {
-        # look in the environment 
-        if ( $candidate = $ENV{ 'CELL_CONFIGDIR' } ) {
-            $log_message = "Found viable CELL configuration directory"
-                           . " in environment (CELL_CONFIGDIR)";
-            $status = is_directory_viable( $candidate );
+
+        # look in paramhash for sitedir
+        $log->debug( "SITEDIR SEARCH, ROUND 1:" );
+        if ( $sitedir = $paramhash{sitedir} ) {
+            $log_message = "Viable site directory passed in argument PARAMHASH";
+            $status = is_directory_viable( $paramhash{sitedir} );
             last GET_CANDIDATE_DIR if $status->ok;
-        } else {
-            log_info( "looking at environment but no indication of "
-                      . " App::CELL site configuration directory there" );
+            $log->err( "Invalid sitedir ->" . $paramhash{sitedir} . "<- passed to App::CELL->init" );
+            return; # returns undef in scalar context
+        }
+        $log->info( "looked at function arguments but they do not contain a literal site dir path" );
+
+        # look in paramhash for name of environment variable
+        $log->debug( "SITEDIR SEARCH, ROUND 2:" );
+        if ( $paramhash{enviro} ) 
+        {
+            if ( $sitedir = $ENV{ $paramhash{enviro} } ) {
+                $log_message = "Found viable sitedir in " . $paramhash{enviro}
+                               . " environment variable";
+                $status = is_directory_viable( $sitedir );
+                last GET_CANDIDATE_DIR if $status->ok;
+            }
+        }
+        else 
+        {
+            if ( $sitedir = $ENV{ 'CELL_SITEDIR' } ) {
+                $log_message = "Found viable sitedir in CELL_SITEDIR"
+                               . " environment variable";
+                $status = is_directory_viable( $sitedir );
+                last GET_CANDIDATE_DIR if $status->ok;
+            }
         }
     
-        # look in the home directory
-        my $cellconf = File::Spec->catfile ( 
-                                    File::HomeDir::home(), 
-                                    '.cell',
-                                    'CELL.conf' 
-                                           );
-        if ( $candidate = _read_siteconfdir_from_file( $cellconf ) ) {
-            $log_message = "Found viable CELL configuration directory"
-                           . " in ~/.cell/CELL.conf";
-            $status = is_directory_viable( $candidate );
-            last GET_CANDIDATE_DIR if $status->ok;
-        }
-
-        # look in /etc/sysconfig/perl-CELL
-        $cellconf = File::Spec->catfile ( 
-                                    File::Spec->rootdir(),
-                                    'etc',
-                                    'sysconfig',
-                                    'perl-CELL'
-                                        );
-        if ( $candidate = _read_siteconfdir_from_file( $cellconf ) ) {
-            $log_message = "Found viable CELL configuration directory"
-                           . " in /etc/sysconfig/perl-CELL";
-            $status = is_directory_viable( $candidate );
-            last GET_CANDIDATE_DIR if $status->ok;
-        }
-
-        # fall back to /etc/CELL
-        $candidate = File::Spec->catfile (
-                                    File::Spec->rootdir(),
-                                    'etc',
-                                    'CELL',
-                                         );
-        $log_message = "Found viable CELL configuration directory"
-                        . " /etc/CELL";
-        $status = is_directory_viable( $candidate );
-        last GET_CANDIDATE_DIR if $status->ok;
-        log_info( "looking at /etc/CELL but it is not viable" );
-
         # FAIL
+        $log->info( "looked in the environment, but no viable sitedir there, either" );
         return; # returns undef in scalar context
     }
 
     # SUCCEED
-    log_info( $log_message );
-    $siteconfdir = $candidate;
-    return $siteconfdir;
-}
-
-
-=head3 _read_siteconfdir_from_file
-
-Takes the full path of what might be a configuration file containing
-SITECONF_PATH setting. Returns that setting (which is a possible site conf
-directory) on success, undef on failure.
-
-=cut
-
-sub _read_siteconfdir_from_file {
-    my $candidate = shift;
-    my ( $problem, $siteconfdir );
-    log_debug( "_read_siteconfdir_from_file: checking out ->$candidate<-" ); 
-    KONTROLA: {
-        if ( not -e $candidate ) {
-            $problem = "looking at ->$candidate<- but it doesn't exist";
-            last KONTROLA;
-        }
-        if ( not -f $candidate ) {
-            $problem = "looking at ->$candidate<- but it's not a file";
-            last KONTROLA;
-        }
-        if ( -z $candidate ) {
-            $problem = "looking at ->$candidate<- but it has zero size";
-            last KONTROLA;
-        }
-        if ( not -r $candidate ) {
-            $problem = "looking at ->$candidate<- but it's not readable";
-            last KONTROLA;
-        }
-
-        # now we attempt to import configuration from the candidate
-        #log_debug("Attempting to parse cellconf candidate ->$candidate<-" );
-        my $conf = Config::General->new( $candidate );
-        my %cellconf_hash = $conf->getall;
-        #log_debug("Loaded " . keys(%cellconf_hash) . " hash elements" );
-        if ( not $cellconf_hash{SITECONF_PATH} ) {
-            $problem = "App::CELL found no SITECONF_PATH value in ->$candidate<-";
-            last KONTROLA;
-        }
-        log_info("App::CELL found a SITECONF_PATH value ->" 
-                 . $cellconf_hash{'SITECONF_PATH'} . "<- in ->$candidate<-");
-        # Config::General doesn't strip quotes
-        if ( $cellconf_hash{'SITECONF_PATH'} =~ m/'(?<value>[^']*)'/ ) {
-            $cellconf_hash{'SITECONF_PATH'} = $+{'value'};
-            log_info("Single quotes stripped from SITECONF_PATH value");
-        }
-        if ( $cellconf_hash{'SITECONF_PATH'} =~ m/"(?<value>[^"]*)"/ ) {
-            $cellconf_hash{'SITECONF_PATH'} = $+{'value'};
-            log_info("Double quotes stripped from SITECONF_PATH value");
-        }
-        log_info( $cellconf_hash{'SITECONF_PATH'} );
-        if ( not File::Spec->file_name_is_absolute(
-                             $cellconf_hash{'SITECONF_PATH'}) ) {
-            $problem = "SITECONF_PATH value is not an absolute path";
-            last KONTROLA;
-        }
-        if ( not -d $cellconf_hash{'SITECONF_PATH'} ) {
-            $problem = "SITECONF_PATH value "
-                       . $cellconf_hash{'SITECONF_PATH'}
-                       . " is not a directory";
-            last KONTROLA;
-        }
-
-        # we passed all the checks
-        $siteconfdir = $cellconf_hash{'SITECONF_PATH'};
-    } # KONTROLA
-
-    if ( $problem ) {
-        log_info( $problem );
-        return; # returns undef in scalar context
-    } else {
-        App::CELL::Log::arbitrary( 'NOTICE', "SITECONF_PATH candidate is now ->$siteconfdir<-" );
-        return $siteconfdir;
-    }
+    $log->notice( $log_message );
+    return $sitedir;
 }
 
 
@@ -439,7 +401,10 @@ corresponding to the four types of configuration files('meta', 'core',
 'site', 'message'). For each matching file, the full path is pushed onto
 the corresponding array in the cache.
 
-Note that only CELL_MAX_CONFIG_FILES will be loaded.
+Note that there is a ceiling on the number of files that will be considered
+while walking the directory tree. This ceiling is defined in the package
+variable C<$max_files> (see below).
+
 =cut
 
 # regular expressions for each file type
@@ -450,9 +415,9 @@ our $typeregex = {
        'message' => qr/^.+_Message(_[^_]+){0,1}.conf$/a ,
 };
 
-# MAX_FILES puts a limit on how many files we will look at in our directory
+# C<$max_files> puts a limit on how many files we will look at in our directory
 # tree walk
-our $CELL_MAX_CONFIG_FILES = 1000;
+our $max_files = 1000;
 
 sub find_files {
     my ( $type, $dirpath ) = @_;
@@ -465,7 +430,7 @@ sub find_files {
     # In other words, $dirpath has already been walked and all the 
     # filepaths are already in the array stored within %resultcache
     if ( exists ${ $resultcache }{ $dirpath } ) {
-        log_debug( "Re-entering find_files for $dirpath (type '$type')" );
+        $log->debug( "Re-entering find_files for $dirpath (type '$type')" );
         return ${ $resultcache }{ $dirpath }{ $type };
     } else { # create it
         ${ $resultcache }{ $dirpath } = {  
@@ -474,42 +439,47 @@ sub find_files {
               'site' => [],
               'message' => [],
         };
-        log_debug( "Preparing to walk $dirpath" );
     }
 
     # walk the directory (do we need some error checking here?)
-    log_debug( "find_files: directory path is $dirpath" );
+    $log->debug( "Preparing to walk $dirpath" );
     my $iter = File::Next::files( $dirpath );
 
     # while we are walking, go ahead and populate the result cache for _all
     # four_ types (even though we were asked for just one type)
     my $walk_counter = 0;
     ITER_LOOP: while ( defined ( my $file = $iter->() ) ) {
-        log_debug( "find_files now considering $file" );
+        $log->debug( "Now considering $file" );
         $walk_counter += 1;
-        if ( $walk_counter > $CELL_MAX_CONFIG_FILES ) {
-            App::CELL::Status->new ( level => 'ERROR', code =>
-                "Maximum number of configuration file candidates " .
-                "($App::CELL::Load::CELL_MAX_CONFIG_FILES) " .
-                "exceeded in $dirpath" );
+        if ( $walk_counter > $max_files ) {
+            App::CELL::Status->new ( 
+                level => 'ERROR', 
+                code => 'Maximum number of configuration file candidates ->%s<- exceeded in %s',
+                args => [ $max_files, $dirpath ],
+            );
             last ITER_LOOP; # stop looping if there are so many files
         }
         if ( not -r $file ) {
-            App::CELL::Status->new ( level => 'WARN', code => 
-                "find_files passed over ->$file<- (not readable)" );
+            App::CELL::Status->new ( 
+                level => 'WARN', 
+                code => 'Load operation passed over file ->%s<- (not readable)',
+                args => [ $file ],
+            );
             next ITER_LOOP; # jump to next file
         }
         my $counter = 0;
         foreach my $type ( 'meta', 'core', 'site', 'message' ) {
-            if ( $file =~ /${ $App::CELL::Load::typeregex }{ $type }/ ) { 
+            if ( $file =~ /${ $typeregex }{ $type }/ ) { 
                 push @{ ${ $resultcache }{ $dirpath}{ $type } }, $file;
                 $counter += 1;
             }
         }
         if ( not $counter ) {
-            App::CELL::Status->new ( level => 'WARN', code => 
-                "find_files passed over ->$file<- (unknown"
-                . " file type)" );
+            App::CELL::Status->new ( 
+                level => 'WARN', 
+                code => 'Load operation passed over file %s (type not recognized)',
+                args => [ $file ],
+            );
         }
     }
     #p( $resultcache );
@@ -549,11 +519,10 @@ sub parse_message_file {
         # put first token on first line into $code
         my ( $code ) = $stanza->[0] =~ m/^\s*(\S+)/a;
         if ( not $code ) {
-            log_info( "ERROR: Could not process stanza ->"
+            $log->info( "ERROR: Could not process stanza ->"
                 . join( " ", @$stanza ) . "<- in $file" );
             return 0;
         }
-        log_debug( "process_stanza: CODE ->$code<- LANG ->$lang<-");
 
         # The rest of the lines are the message template
         my $text = '';
@@ -562,7 +531,7 @@ sub parse_message_file {
             $text = $text . " " . $_;
         }
         $text =~ s/^\s+//g;
-        log_debug( "process_stanza: TEXT ->$text<-" );
+        $log->debug( "Parsed message CODE ->$code<- LANG ->$lang<- TEXT ->$text<-" );
         if ( $code and $lang and $text ) {
             # we have a candidate, but we don't want to overwrite
             # an existing entry with the same $code-$lang pair
@@ -570,7 +539,7 @@ sub parse_message_file {
                 my $existing_text = $destref->{ $code }->{ $lang }->{ 'Text' };
                 if ( $existing_text )
                 { # it already has a text
-                    log_info( "ERROR: not loading code-lang pair ->$code"
+                    $log->info( "ERROR: not loading code-lang pair ->$code"
                         . "/$lang<- with text ->$text<- because this would"
                         . " overwrite existing pair with text ->$existing_text<-" );
                 } 
@@ -597,7 +566,7 @@ sub parse_message_file {
     # determine language from file name
     my ( $lang ) = $ARGS{'File'} =~ m/_Message_([^_]+).conf$/a;
     if ( not $lang ) {
-        log_info( "Could not determine language from filename "
+        $log->info( "Could not determine language from filename "
             . "$ARGS{'File'} -- reverting to default language "
             . "->en<-" );
         $lang = 'en';
@@ -612,7 +581,7 @@ sub parse_message_file {
     my $count = 0;
     while ( <$fh> ) {
         chomp( $_ );
-        #log_debug( "Read line =>$_<= from $ARGS{'File'}" );
+        #$log->debug( "Read line =>$_<= from $ARGS{'File'}" );
         $_ = '' if /^\s+$/;
         if ( $_ ) { 
             if ( ! /^\s*#/ ) {
@@ -633,7 +602,7 @@ sub parse_message_file {
 
     close $fh;
 
-    #log_info( "Parsed and loaded $count configuration stanzas "
+    #$log->info( "Parsed and loaded $count configuration stanzas "
     #          . "from $ARGS{'File'}" );
     #p( %{ $ARGS{'Dest'} } );
     
@@ -690,16 +659,16 @@ sub parse_config_file {
                     @_,
                );
 
-    # This is so we can use the C<$self> variable (in the C<eval>
+    # This is so we can use the C<$self> variable (in the C<try>
     # statement, below) to reach the C<_conf_from_config> functions from
     # the configuration file.
     my $self = {};
     bless $self, 'App::CELL::Load';
 
     my $count = 0;
-    log_info( "Loading =>$ARGS{'File'}<=" );
+    $log->info( "Loading =>$ARGS{'File'}<=" );
     if ( not ref( $ARGS{'Dest'} ) ) {
-        log_info("Something strange happened: " . ref( $ARGS{'Dest'} ));
+        $log->info("Something strange happened: " . ref( $ARGS{'Dest'} ));
     }
     try {
         local *set = sub($$) {
@@ -718,14 +687,16 @@ sub parse_config_file {
     catch {
        my $errmsg = $_;
        $errmsg =~ s/\o{12}/ -- /ag;
-       log_debug( $errmsg );
-       App::CELL::Status->new( level => 'ERR',
-                                     code => 'CELL_CONFIG_LOAD_FAIL',
-                                     args => [ $ARGS{'File'}, $errmsg ], );
-       log_debug( "The count is $count" );
+       $log->debug( $errmsg );
+       App::CELL::Status->new( 
+           level => 'ERR',
+           code => 'CELL_CONFIG_LOAD_FAIL',
+           args => [ $ARGS{'File'}, $errmsg ], 
+       );
+       $log->debug( "The count is $count" );
        return $count;
     };
-    #log_info( "Successfully loaded $count configuration parameters "
+    #$log->info( "Successfully loaded $count configuration parameters "
     #          . "from $ARGS{'File'}" );
 
     return $count;
@@ -762,7 +733,7 @@ sub _conf_from_config {
 
     if ( keys( %{ $desthash->{ $param } } ) ) 
     {
-        App::CELL::Log::arbitrary( 'WARN', "ignoring duplicate definition of config "
+        $log->warn( "ignoring duplicate definition of config "
                   . "parameter $param in line $line of config file $file" );
         return 0;
     } else {
@@ -771,6 +742,8 @@ sub _conf_from_config {
                                     'File'  => $file,
                                     'Line'  => $line,
                                 }; 
+        $log->debug( "Parsed parameter $param with value ->$value<- " .
+                     "from $file, line $line", suppress_caller => 1 );
         return 1;
     } 
 }

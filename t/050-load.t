@@ -4,7 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 use Data::Printer;
 use App::CELL::Load;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Log qw( $log );
 use App::CELL::Test;
 use File::Spec;
 use File::Touch;
@@ -12,13 +12,14 @@ use Test::More;
 
 plan tests => 15;
 
-my $status = App::CELL::Log::configure( 'CELLtest' );
-log_info("-------------------------------------------------------- ");
-log_info("---              050-find_and_parse.t                ---");
-log_info("-------------------------------------------------------- ");
+my $status;
+$log->init( ident => 'CELLtest' );
+$log->info("------------------------------------------------------ ");
+$log->info("---                    050-load.t                  ---");
+$log->info("------------------------------------------------------ ");
 
-log_info("*****");
-log_info("***** TESTING find_files for 'message' type" );
+$log->info("*****");
+$log->info("***** TESTING find_files for 'message' type" );
 $status = App::CELL::Test::cleartmpdir();
 ok( $status, "Temporary directory not present" );
 
@@ -61,8 +62,8 @@ $return_list = App::CELL::Load::find_files( 'site', $tmpdir );
 ok( keys( @$return_list ) == 1, "Right number of site config files" );
 
 
-log_info("*****");
-log_info("***** TESTING parse_message_file" );
+$log->info("*****");
+$log->info("***** TESTING parse_message_file" );
 my $full_path = File::Spec->catfile( $tmpdir, $file_list[0] );
 #diag( "Opening $full_path for writing" );
 open(my $fh, '>', $full_path ) or die "Could not open file: $!";
@@ -92,8 +93,8 @@ ok( exists $messages{'TEST_MESSAGE'}, "TEST_MESSAGE loaded from file" );
 is( $messages{'TEST_MESSAGE'}->{'en'}->{'Text'}, "OK", "TEST_MESSAGE has the right text");
 
 
-log_info("*****");
-log_info("***** TESTING parse_config_file" );
+$log->info("*****");
+$log->info("***** TESTING parse_config_file" );
 $return_list = App::CELL::Load::find_files( 'meta', $tmpdir );
 is( scalar @$return_list, 2, "Found right number of meta config files");
 #diag( "Meta config file found: $return_list->[0]" );
@@ -119,4 +120,5 @@ ok( exists $params{ 'TEST_PARAM_1' }, "TEST_PARAM_1 loaded from file" );
 is( $params{ 'TEST_PARAM_1' }->{ 'Value' }, "Fine and dandy", "TEST_PARAM_1 has the right value" );
 is_deeply( $params{ 'TEST_PARAM_2' }->{ 'Value' }, [ 0, 1, 2], "TEST_PARAM_2 has the right value" );
 is_deeply( $params{ 'TEST_PARAM_3' }->{ 'Value' }, { 'one' => 1, 'two' => 2 }, "TEST_PARAM_3 has the right value" );
-#BAIL_OUT("just because");
+
+#BAIL_OUT("stop here");

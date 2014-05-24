@@ -1,0 +1,6 @@
+20140516 get App::CELL to pass CPAN Testers (100%) on all Perls back to 5.10.0
+20140516 put meta, core, and site params directly in the module's symbol
+         table like RT does it
+20140516 migrate from ExtUtils::MakeMaker to Module::Build (was: ticket #24)
+20140524 add a testing mode to Load.pm so we can prefix all paths with,
+         e.g., '/tmp' (??)

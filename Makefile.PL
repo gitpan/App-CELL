@@ -21,7 +21,6 @@ WriteMakefile(
         'Log::Any::Test'     => 0,
     },
     PREREQ_PM => {
-        'Config::General'    => 0,
         'Date::Format'       => 0,
         'File::HomeDir'      => 0,
         'File::ShareDir'     => 0,

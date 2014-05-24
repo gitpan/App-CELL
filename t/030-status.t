@@ -3,17 +3,18 @@ use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 use Data::Printer;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Log qw( $log );
 use App::CELL::Status;
 use App::CELL::Test;
 use Test::More;
 
 plan tests => 20;
 
-my $status = App::CELL::Log::configure( 'CELLtest' );
-log_info("------------------------------------------------- ");
-log_info("---               030-status.t                ---");
-log_info("------------------------------------------------- ");
+my $status;
+$log->init( ident => 'CELLtest' );
+$log->info("------------------------------------------------- ");
+$log->info("---               030-status.t                ---");
+$log->info("------------------------------------------------- ");
 
 $status = App::CELL::Status->ok;
 ok( $status->ok, "OK status is OK" );

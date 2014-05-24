@@ -3,7 +3,7 @@ package App::CELL::Test;
 use 5.10.0;
 use strict;
 use warnings;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Log qw( $log );
 use File::Spec;
 
 =head1 NAME
@@ -13,11 +13,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.088
+Version 0.110
 
 =cut
 
-our $VERSION = '0.088';
+our $VERSION = '0.110';
 
 
 
@@ -79,12 +79,12 @@ sub mktmpdir {
         $errmsg =~ s/\n//g;
         $errmsg =~ s/\o{12}/ -- /g;
         $errmsg = "Attempting to create $app_cell_test_dir_full . . . failure: $errmsg";
-        log_debug( $errmsg );
+        $log->debug( $errmsg );
         print STDERR $errmsg, "\n";
         return; # returns undef in scalar context
     };
 
-    log_debug( "Attempting to create $app_cell_test_dir_full . . . success" );
+    $log->debug( "Attempting to create $app_cell_test_dir_full . . . success" );
 
     return $app_cell_test_dir_full;
 }
@@ -140,11 +140,11 @@ sub touch_files {
         $errmsg =~ s/\n//g;
         $errmsg =~ s/\o{12}/ -- /g;
         $errmsg = "Attempting to 'touch' $count files in $dirspec . . . failure: $errmsg";
-        log_debug( $errmsg );
+        $log->debug( $errmsg );
         print STDERR $errmsg, "\n";
         return 0;
     };
-    log_debug( "Attempting to 'touch' $count files in $dirspec . . .  success" );
+    $log->debug( "Attempting to 'touch' $count files in $dirspec . . .  success" );
     return $count;
 }
 
@@ -160,9 +160,9 @@ Returns: true (they have the same elements) or false (they differ).
 sub cmp_arrays {
     my ( $ref1, $ref2 ) = @_;
         
-    log_debug( "cmp_arrays: we were asked to compare two arrays:");
-    log_debug( "ARRAY #1: " . join( ',', @$ref1 ) );
-    log_debug( "ARRAY #2: " . join( ',', @$ref2 ) );
+    $log->debug( "cmp_arrays: we were asked to compare two arrays:");
+    $log->debug( "ARRAY #1: " . join( ',', @$ref1 ) );
+    $log->debug( "ARRAY #2: " . join( ',', @$ref2 ) );
 
     # convert them into hashes
     my ( %ref1, %ref2 );
@@ -183,7 +183,7 @@ sub cmp_arrays {
 
     # if the two arrays are the same, the number of keys in both hashes should
     # be zero
-    log_debug( "cmp_arrays: after comparison, hash #1 has " . keys( %ref1 )
+    $log->debug( "cmp_arrays: after comparison, hash #1 has " . keys( %ref1 )
     . " elements and hash #2 has " . keys ( %ref2 ) . " elements" );
     if ( keys( %ref1 ) == 0 and keys( %ref2 ) == 0 ) {
         return 1;

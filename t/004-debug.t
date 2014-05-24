@@ -1,23 +1,36 @@
 #!perl
+
+#
+# t/004-debug.t
+#
+# The purpose of this unit test is to demonstrate how the unit tests can be
+# used for debugging (not to test debugging)
+#
+
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 use App::CELL::Config;
 use App::CELL::Load;
-use App::CELL::Log qw( log_info );
+use App::CELL::Log qw( $log );
 use Data::Printer;
 use Test::More;
 
-plan tests => 2;
+#
+# To activate debugging, uncomment the following line
+#
+#use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
 
-my $status = App::CELL::Log::configure( 'CELLtest' );
-log_info("---------------------------------------------------------");
-log_info("---                   004-debug.t                     ---");
-log_info("---------------------------------------------------------");
+plan tests => 1;
+
+my $status;
+$log->init( ident => 'CELLtest' );
+$log->info("---------------------------------------------------------");
+$log->info("---                   004-debug.t                     ---");
+$log->info("---------------------------------------------------------");
 
 $status = App::CELL::Load::init();
+if ( $status->not_ok ) {
+    diag( $status->msgobj->code . ": " . $status->msgobj->text );
+}
 ok( $status->ok, "Loaded App::CELL configuration from distro share dir" );
-
-#p( $App::CELL::Config::core );
-my $debugbool = App::CELL::Config::get_param( 'core', 'CELL_DEBUG_MODE' );
-is( $debugbool, 0, "Debugging is turned off by default" );

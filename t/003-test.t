@@ -2,7 +2,7 @@
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use App::CELL::Log qw( log_info );
+use App::CELL::Log qw( $log );
 use App::CELL::Status;
 use App::CELL::Test;
 use File::Spec;
@@ -10,10 +10,11 @@ use Test::More;
 
 plan tests => 9;
 
-my $status = App::CELL::Log::configure( 'CELLtest' );
-log_info("-------------------------------------------------------- ");
-log_info("---                   003-test.t                     ---");
-log_info("-------------------------------------------------------- ");
+my $status;
+$log->init( ident => 'CELLtest' );
+$log->info("-------------------------------------------------------- ");
+$log->info("---                   003-test.t                     ---");
+$log->info("-------------------------------------------------------- ");
 
 $status = App::CELL::Test::cleartmpdir();
 ok( $status, "Test directory is not present" );

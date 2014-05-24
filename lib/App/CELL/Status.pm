@@ -1,9 +1,11 @@
+# **** NEED boolean functions 'err', 'notice', etc. 1!!!!!!!
+#
 package App::CELL::Status;
 
 use 5.10.0;
 use strict;
 use warnings;
-use App::CELL::Log;
+use App::CELL::Log qw( $log );
 use Scalar::Util qw( blessed );
 
 
@@ -16,11 +18,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.088
+Version 0.110
 
 =cut
 
-our $VERSION = '0.088';
+our $VERSION = '0.110';
 
 
 
@@ -169,26 +171,25 @@ sub new {
             $ARGS{level} = 'ERR';
         }
 
-        my $parent = $class->SUPER::new(
-                             code => $ARGS{code},
-                             args => $ARGS{args} || [],
-                                  );
-        $ARGS{code} = $parent->code;
-        $ARGS{text} = $parent->text;
-        $ARGS{msgobj} = $parent;
-        
-        # check for unknown code
-        $ARGS{level} = 'ERR' 
-                        if $parent->code eq 'CELL_UNKNOWN_MESSAGE_CODE';
-
         # if caller array not given, create it
-        if ( $ARGS{caller} ) {
-            ( undef, $ARGS{filename}, $ARGS{line} ) = 
-                                                @{ $ARGS{caller} };
-        } else {
-            ( undef, $ARGS{filename}, $ARGS{line} ) = caller;
+        if ( not exists $ARGS{caller} ) {
+            $ARGS{caller} = [ caller ];
         }
 
+        $ARGS{args} = [] if not defined( $ARGS{args} );
+        $ARGS{called_from_status} = 1;
+
+        # App::CELL::Message->new returns a status object
+        my $status = $class->SUPER::new( %ARGS );
+        if ( $status->ok ) {
+            my $parent = $status->payload();
+            $ARGS{msgobj} = $parent;
+            $ARGS{code} = $parent->code;
+            $ARGS{text} = $parent->text;
+        } else {
+            $ARGS{code} = $status->code;
+            $ARGS{text} = $status->text;
+        }
     }
 
     # bless into objecthood
@@ -212,9 +213,15 @@ because syslog is down.
 
 sub log {
     my $self = shift;
-    return 1 if $self->{level} eq 'OK';
-    require App::CELL::Log;
-    App::CELL::Log::status_obj( $self );
+    return 1 if $self->{level} eq 'OK'; # don't log 'OK'
+
+    my $level = lc $self->level || 'info';
+    {
+        no strict 'refs';
+        $log->$level( $self->text, caller => [ $self->caller ] );
+    }
+
+    return 1;
 }
 
 
@@ -238,14 +245,6 @@ sub ok {
         # instance method
         $self = $_[0];
 
-        #if ( not $self->isa( 'App::CELL::Status' ) ) {
-        #    # we can't return a status object, but we can at least
-        #    # complain to the log
-        #    App::CELL::Status->new( level => 'ERR',
-        #                           code => 'CELL_IMPROPER_STATUS'
-        #                         );
-        #    return 0;
-        #}
         # if it's not an error, it will have status level OK
         return 1 if ( $self->level eq 'OK' );
         # otherwise
@@ -279,30 +278,87 @@ method call, must be a scalar).
 
 sub not_ok {
 
-    my ( $class, $self );
+    my ( $arg0, $arg1 ) = @_;
 
-    if ( blessed $_[0] ) 
-    { # instance method
-
-        $self = $_[0];
-        return 1 if ( $self->level ne 'OK' );
+    if ( blessed $arg0 ) 
+    { 
+        # instance method
+        return 1 if ( $arg0->level ne 'OK' );
         return 0;
-
     } 
-    else 
-    { # class method
 
-        # check for payload
-        if ( $_[1] ) {
-            return App::CELL::Status->new(
-                level => 'NOT_OK',
-                payload => $_[1],
-            );
-        } else {
-            return App::CELL::Status->new( level => 'NOT_OK' );
-        }
+    # class method
+
+    # check for payload
+    if ( $arg1 ) {
+        return App::CELL::Status->new(
+            level => 'NOT_OK',
+            payload => $_[1],
+        );
     }
-        
+
+    # no payload
+    return App::CELL::Status->new( level => 'NOT_OK' );
+}
+
+
+=head2 notice
+
+Boolean function, returns true if status object has level 'NOTICE', false
+otherwise.
+
+=cut
+
+sub notice {
+
+    my ( $arg0, $arg1 ) = @_;
+
+    if ( blessed $arg0 )
+    {
+        # instance method - OK
+        return 1 if ( $arg0->level eq 'NOTICE' );
+    } 
+    return 0;
+}
+
+
+=head2 warn
+
+Boolean function, returns true if status object has level 'WARN', false
+otherwise.
+
+=cut
+
+sub warn {
+
+    my ( $arg0, $arg1 ) = @_;
+
+    if ( blessed $arg0 )
+    {
+        # instance method - OK
+        return 1 if ( $arg0->level eq 'WARN' );
+    } 
+    return 0;
+}
+
+
+=head2 err
+
+Boolean function, returns true if status object has level 'ERR', false
+otherwise.
+
+=cut
+
+sub err {
+
+    my ( $arg0, $arg1 ) = @_;
+
+    if ( blessed $arg0 )
+    {
+        # instance method - OK
+        return 1 if ( $arg0->level eq 'ERR' );
+    } 
+    return 0;
 }
 
 
@@ -313,10 +369,34 @@ Accessor method.
 =cut
 
 sub level {
-    my $self = $_[0];
+    my $self = shift;
 
     return $self->{level} if exists $self->{level};
     return "<NO_LEVEL>";
+}
+
+
+=head2 text
+
+Accessor method.
+
+=cut
+
+sub text {
+    my $self = shift;
+    return $self->{text} || $self->msgobj->text() || "<NO_TEXT>";
+}
+
+
+=head2 caller
+
+Accessor method.
+
+=cut
+
+sub caller {
+    my $self = shift;
+    return @{ $self->{caller} };
 }
 
 

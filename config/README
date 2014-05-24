@@ -1,44 +1,9 @@
-App::CELL configuration directory
+This is the "sharedir", where App::CELL stores its own internal
+configuration information. It can serve as a model for populating the
+application's site configuration directory.
 
-This directory is where CELL's own internal configuration is stored.
-During initialization, CELL recursively walks this directory and all its
-subdirectories and looks for its meta, core, site, and message
-configuration files.
+For more information, do:
 
-CELL's purpose is to be used as part of the infrastructure for an
-application written in Perl. The configuration information for that
-application is stored in the "site configuration directory"
-(CELL_SITE_CONFIGDIR). After initializing itself, CELL will look for the
-site configuration directory by trying the following possibilities in the
-order shown:
+$ perldoc App::CELL::Guide
 
-1. First, CELL looks in the environment variable CELL_SITE_CONFIGDIR. If 
-this variable exists and contains a valid path to a viable site
-configuration directory, this value is accepted and no further
-possibilities are entertained.
-
-2. Failing that, CELL looks for a file ~/.cell/CELL.conf under the user's
-home directory. If the file is found, CELL looks in it for SITECONF_PATH="..."
-If this indicates a viable directory, this value is accepted and no further
-possibilities are entertained.
-
-3. Failing that, CELL looks for a file /etc/sysconfig/CELL containing a
-setting SITECONF_PATH="...". If this indicates a viable directory, this
-value is accepted and no further possibilities are entertained.
-
-4. If even that fails, CELL makes a last-ditch effort by looking for a file
-named /etc/CELL.conf 
-
-Once it finds a valid site configuration directory tree, CELL walks it,
-looking for files matching one four regular expressions:
-  1. ^.+_MetaConfig.pm$             (meta)
-  2. ^.+_Config.pm$                 (core)
-  3. ^.+_SiteConfig.pm$             (site)
-  4. ^.+_Message(_[^_]+){0,1}.conf$ (message)
-
-Files with names that don't match any of the above regexes are ignored.
-
-For details on what the various types of configuration files are for and
-how to set parameters therein, refer to the App::CELL User's Guide, which
-can be found in the doc/ directory of the App::CELL distro.
-
+or point your browser at https://metacpan.org/pod/App::CELL::Guide

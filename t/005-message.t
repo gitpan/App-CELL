@@ -5,29 +5,42 @@ use warnings FATAL => 'all';
 use Data::Printer;
 use File::ShareDir;
 use App::CELL::Load;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Log qw( $log );
 use App::CELL::Message;
 use Test::More;
 
-plan tests => 3;
+plan tests => 12;
 
-my $status = App::CELL::Log::configure( 'CELLtest' );
-log_info("----------------------------------------------- ");
-log_info("---             005-message.t               ---");
-log_info("----------------------------------------------- ");
+$log->init( ident => 'CELLtest' );
+$log->info("----------------------------------------------- ");
+$log->info("---             005-message.t               ---");
+$log->info("----------------------------------------------- ");
 
-my $message = App::CELL::Message->new();
-is( $message->code, 'CELL_MESSAGE_NO_CODE', "code defaults to correct value" );
+my $status = App::CELL::Message->new();
+ok( $status->not_ok, "Message->new with no code is not OK");
+ok( $status->err, "Message->new with no code returns ERR status");
+is( $status->code, 'CELL_MESSAGE_NO_CODE', "Error message code is correct" );
+is( $status->text, 'CELL_MESSAGE_NO_CODE', "Error message text is correct" );
 #diag( $message->stringify );
 
-$message = App::CELL::Message->new( code => 'UNGHGHASDF!*' );
-is( $message->code, 'UNGHGHASDF!*', "Pre-init unknown message codes are passed through" );
+$status = App::CELL::Message->new( code => undef );
+ok( $status->not_ok, "Message->new with no code is not OK");
+ok( $status->err, "Message->new with no code returns ERR status");
+is( $status->code, 'CELL_MESSAGE_CODE_UNDEFINED', "Error message code is correct" );
+is( $status->text, 'CELL_MESSAGE_CODE_UNDEFINED', "Error message text is correct" );
+
+$status = App::CELL::Message->new( code => 'UNGHGHASDF!*' );
+ok( $status->ok, "Message->new with unknown code is OK");
+my $message = $status->payload();
+is( $message->code, 'UNGHGHASDF!*', "Unknown message codes are passed through" );
 #diag( "Text of " . $message->code . " message is ->" . $message->text . "<-" );
 
-$message = App::CELL::Message->new( 
+$status = App::CELL::Message->new( 
             code => "Pre-init message w/arg ->%s<-",
             args => [ "CONTENT" ],
                              );
+ok( $status->ok, "Message->new with unknown code and arguments is OK");
+$message = $status->payload();
 is( $message->text, "Pre-init message w/arg ->CONTENT<-", "Pre-init unknown message codes can contain arguments" );
-log_debug( $message->text );
+$log->debug( $message->text );
 #diag( "Text of " . $message->code . " message is ->" . $message->text . "<-" );

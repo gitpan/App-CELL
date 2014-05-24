@@ -4,7 +4,7 @@
       "Smithfarm <presnypreklad@gmail.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.88, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -33,7 +33,6 @@
       },
       "runtime" : {
          "requires" : {
-            "Config::General" : "0",
             "Date::Format" : "0",
             "File::HomeDir" : "0",
             "File::Next" : "0",
@@ -46,5 +45,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.088"
+   "version" : "0.110"
 }

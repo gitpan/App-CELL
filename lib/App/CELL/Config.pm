@@ -4,15 +4,8 @@ use 5.10.0;
 use strict;
 use warnings;
 
-use Carp;
-use Config::General;
-use Data::Printer;
-use File::HomeDir;
-use File::ShareDir;
-use File::Spec;
-
 use App::CELL::Load;
-use App::CELL::Log qw( log_debug log_info );
+use App::CELL::Log qw( $log );
 use App::CELL::Status;
 
 =head1 NAME
@@ -24,11 +17,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.088
+Version 0.110
 
 =cut
 
-our $VERSION = '0.088';
+our $VERSION = '0.110';
 
 
 
@@ -48,12 +41,14 @@ our $VERSION = '0.088';
 =head1 DESCRIPTION
 
 The purpose of the C<App::CELL::Config> module is to maintain and provide
-access to three blessed hashrefs: C<$meta>, C<$core>, and C<$site>,
-which hold the names, values, and other information related to the
-configuration parameters loaded from files in the App::CELL distro sharedir
-and the site configuration directory, if any. These values are loaded by
-the C<App::CELL::Load> module.
+access to three package variables, C<$meta>, C<$core>, and C<$site>,
+which are references to hashes holding the names, values, and other
+information related to the configuration parameters loaded from files in
+the App::CELL distro sharedir and the site configuration directory, if any.
+These values are loaded by the C<App::CELL::Load> module.
 
+
+=head1 PACKAGE VARIABLES
 
 =head2 C<$meta>
 
@@ -129,9 +124,10 @@ returned.
 =cut
 
 sub config {
-    my $value = get_param( 'site', $_[0] );
+    my $param = shift;
+    my $value = get_param( 'site', $param );
     return $value if defined( $value );
-    $value = get_param( 'core', $_[0] );
+    $value = get_param( 'core', $param );
     return $value if defined( $value );
     return; # returns undef in scalar context
 }
@@ -150,35 +146,21 @@ when parameter is not defined).
 =cut
 
 sub get_param {
-    no strict 'refs';
+    no strict 'refs';   # valid throughout get_param
     my ( $type, $param ) = @_;
 
     # sanity
     if ( not defined($$type) or not ref($$type) ) {
-        App::CELL::Status->new(
-            level => 'ERR',
-            code => 'CELL_BAD_PARAM_TYPE',
-            args => [ $type, 'get_param', 'Load.pm' ],
-            caller => [ caller ],
-        );
         return; # returns undef in scalar context
     }
 
     # logic
     if ( exists $$type->{$param} ) {
-        log_debug( "get_param: type is $type");
-        log_debug( "get_param: param is $param");
-        log_debug( "get_param: value is " . $$type->{$param}->{'Value'} );
+        $log->debug( "get_param: $type param $param value ->" .  $$type->{$param}->{'Value'} . "<-" );
         return $$type->{$param}->{'Value'};
-    } else {
-        App::CELL::Status->new(
-            level => 'INFO',
-            code => 'CELL_CONFIG_PARAM_UNKNOWN',
-            args => [ $type, $param ],
-            caller => [ caller ],
-        );
-        return; # returns undef in scalar context
     }
+
+    return; # returns undef in scalar context
 }
 
 
@@ -199,11 +181,11 @@ sub set_meta {
         App::CELL::Status->new(
             level => 'NOTICE',
             code => 'CELL_OVERWRITE_META_PARAM',
-            args => [ $param ],
+            args => [ $param, $value ],
             caller => [ caller ],
         );
     } else {
-        log_info( "Setting meta parameter $param for the first time" );
+        $log->info( "Setting meta parameter $param for the first time" );
     }
     $meta->{$param} = {
            'File' => '<INTERNAL>',
@@ -246,21 +228,19 @@ param name and new value. If the parameter didn't exist before, it will be
 created.  Returns 'ok' status object on success, or error object on
 failure.
 
-TO_DO: 
-- check value to make sure it's a scalar.
-
 =cut
 
 sub _set_core_site {
-    no strict 'refs';
+    no strict 'refs';   # valid throughout the subroutine
     my ( $type, $param, $value ) = @_;
+    #if ( $type eq "core" and exists $core->{$param} ) {
     if ( exists $$type->{$param} ) {
         return App::CELL::Status->new( level => 'ERR', 
-            code => 'Core param ->%s<- already exists and core params are immutable',
+            code => 'CELL_CORE_PARAM_EXISTS_IMMUTABLE',
             args => [ $param ],
         );
     } else {
-        log_info( "Setting $type parameter $param" );
+        $log->info( "Setting $type parameter $param" );
         $$type->{$param} = {
            'File' => '<INTERNAL>',
            'Line' => 0,
