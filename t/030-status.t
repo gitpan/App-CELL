@@ -2,7 +2,6 @@
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use Data::Printer;
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
 use App::CELL::Test;

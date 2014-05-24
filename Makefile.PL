@@ -9,6 +9,7 @@ install_share 'config';
 WriteMakefile(
     NAME             => 'App::CELL',
     AUTHOR           => q{Smithfarm <presnypreklad@gmail.com>},
+    LICENSE          => 'gpl',
     VERSION_FROM     => 'lib/App/CELL.pm',
     ABSTRACT_FROM    => 'lib/App/CELL.pm',
     PL_FILES         => {},
@@ -17,7 +18,6 @@ WriteMakefile(
         'File::ShareDir::Install' => 0,
     },
     BUILD_REQUIRES => {
-        'Data::Printer'      => 0,
         'Log::Any::Test'     => 0,
     },
     PREREQ_PM => {

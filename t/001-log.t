@@ -3,7 +3,6 @@ use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 
-use Data::Printer;
 use Log::Any::Test;
 use App::CELL::Log qw( $log );
 use App::CELL::Load;

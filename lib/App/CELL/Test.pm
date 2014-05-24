@@ -13,11 +13,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.110
+Version 0.113
 
 =cut
 
-our $VERSION = '0.110';
+our $VERSION = '0.113';
 
 
 

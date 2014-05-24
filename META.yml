@@ -3,13 +3,12 @@ abstract: 'Configuration, Error-handling, Localization, and Logging'
 author:
   - 'Smithfarm <presnypreklad@gmail.com>'
 build_requires:
-  Data::Printer: 0
   Log::Any::Test: 0
 configure_requires:
   File::ShareDir::Install: 0
 dynamic_config: 1
 generated_by: 'ExtUtils::MakeMaker version 6.88, CPAN::Meta::Converter version 2.120921'
-license: unknown
+license: open_source
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
@@ -27,4 +26,4 @@ requires:
   Log::Any: 0
   Try::Tiny: 0
   perl: 5.014001
-version: 0.110
+version: 0.113

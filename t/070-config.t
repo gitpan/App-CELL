@@ -12,13 +12,12 @@ use warnings FATAL => 'all';
 use App::CELL::Config;
 use App::CELL::Log qw( $log );
 use App::CELL::Test;
-use Data::Printer;
 use Test::More;
 
 #
 # To activate debugging, uncomment the following line
 #
-use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
+#use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
 
 plan tests => 26;
 

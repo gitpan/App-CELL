@@ -13,7 +13,6 @@ use warnings FATAL => 'all';
 use App::CELL::Config;
 use App::CELL::Load;
 use App::CELL::Log qw( $log );
-use Data::Printer;
 use Test::More;
 
 #

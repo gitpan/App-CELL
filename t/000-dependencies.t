@@ -3,9 +3,8 @@ use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
-use Data::Printer;
 
-plan tests => 24;
+plan tests => 23;
 
 BEGIN {
 
@@ -19,7 +18,6 @@ BEGIN {
     use_ok( 'Test::More' );
 
     # non-core (CPAN) modules
-    use_ok( 'Data::Printer' );
     use_ok( 'Date::Format' );
     use_ok( 'File::HomeDir' );
     use_ok( 'File::ShareDir' );

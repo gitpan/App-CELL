@@ -2,7 +2,6 @@
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use Data::Printer;
 use File::ShareDir;
 use Test::More;
 use App::CELL;

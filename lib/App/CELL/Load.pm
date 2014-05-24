@@ -10,7 +10,6 @@ use App::CELL::Message;
 use App::CELL::Status;
 use App::CELL::Test;
 use App::CELL::Util qw( is_directory_viable );
-use Data::Printer;
 use File::Next;
 use File::ShareDir;
 
@@ -22,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.110
+Version 0.113
 
 =cut
 
-our $VERSION = '0.110';
+our $VERSION = '0.113';
 
 
 

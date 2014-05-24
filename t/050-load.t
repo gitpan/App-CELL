@@ -2,7 +2,6 @@
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use Data::Printer;
 use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Test;
@@ -88,7 +87,6 @@ my %messages;
 #diag( "BEFORE: %messages has " . keys(%messages) . " keys" );
 App::CELL::Load::parse_message_file( File => $full_path, Dest => \%messages );
 #diag( "Loaded " . keys(%messages) . " message codes from $full_path" );
-#p(%messages);
 ok( exists $messages{'TEST_MESSAGE'}, "TEST_MESSAGE loaded from file" );
 is( $messages{'TEST_MESSAGE'}->{'en'}->{'Text'}, "OK", "TEST_MESSAGE has the right text");
 
@@ -113,7 +111,6 @@ print $fh $stuff;
 close $fh;
 my %params = ();
 my $count = App::CELL::Load::parse_config_file( File => $full_path, Dest => \%params );
-#p( %params );
 is( keys( %params ), 4, "Correct number of parameters loaded from file" );
 is( $count, keys( %params ), "Return value matches number of parameters loaded");
 ok( exists $params{ 'TEST_PARAM_1' }, "TEST_PARAM_1 loaded from file" );

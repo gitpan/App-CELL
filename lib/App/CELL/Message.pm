@@ -3,7 +3,6 @@ package App::CELL::Message;
 use 5.10.0;
 use strict;
 use warnings;
-use Data::Printer;
 use App::CELL::Config;
 use App::CELL::Log qw( $log );
 
@@ -17,11 +16,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.110
+Version 0.113
 
 =cut
 
-our $VERSION = '0.110';
+our $VERSION = '0.113';
 
 
 

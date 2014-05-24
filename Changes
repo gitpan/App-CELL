@@ -514,3 +514,18 @@ later are in the perl-CELL project repo.
   staging/CELL-Localization-Guide.pod (ticket #13)
 - config/README: make it a stub
 
+0.111  2014-MAY-24 18:39
+- t/070-config.t: comment out Log::Any::Adapter as this causes local osc
+  build to fail
+
+0.112  2014-MAY-24 18:45
+- remove t/TEMPLATE (obsolete)
+- remove Data::Printer dependency because (1) this causes build problems in
+  OBS, and (2) no longer needed
+
+0.113  2014-MAY-24 20:21
+- change license to GPLv3
+- change Makefile.PL to reflect license change
+- README: add copyright and license information
+- LICENSE: new license text
+
