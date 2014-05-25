@@ -551,3 +551,8 @@ later are in the perl-CELL project repo.
 0.119  2014-MAY-25 12:15
 - fix bug "release script not incrementing version number properly"
 
+0.120  2014-MAY-25 13:23
+- work on release script some more
+- extend MANIFEST.SKIP
+- dev.sh: use distclean instead of just clean
+
