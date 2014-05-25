@@ -17,11 +17,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.124
+Version 0.127
 
 =cut
 
-our $VERSION = '0.124';
+our $VERSION = '0.127';
 
 
 

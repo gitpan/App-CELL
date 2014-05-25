@@ -571,3 +571,12 @@ later are in the perl-CELL project repo.
   Build.PL
 - release.sh: make CPAN upload into an option
 
+0.125  2014-MAY-25 16:17
+- continue testing release script
+
+0.126  2014-MAY-25 16:20
+- tweak release script yet again
+
+0.127  2014-MAY-25 16:26
+- test release script one more time
+
