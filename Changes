@@ -556,3 +556,13 @@ later are in the perl-CELL project repo.
 - extend MANIFEST.SKIP
 - dev.sh: use distclean instead of just clean
 
+0.121  2014-MAY-25 15:40
+- release.sh: add cpan-upload, move generated tarball to
+  'perl-cell-releases' directory, change order of operations, add comments
+
+0.122  2014-MAY-25 15:45
+- release.sh: fix regression
+
+0.123  2014-MAY-25 15:49
+- tweak release script some more
+
