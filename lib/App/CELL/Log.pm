@@ -17,11 +17,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.119
+Version 0.120
 
 =cut
 
-our $VERSION = '0.119';
+our $VERSION = '0.120';
 
 
 

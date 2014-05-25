@@ -545,3 +545,9 @@ later are in the perl-CELL project repo.
 0.117  2014-MAY-25 12:00
 - make release script run './Build test'
 
+0.118  2014-MAY-25 12:07
+- tweak release script
+
+0.119  2014-MAY-25 12:15
+- fix bug "release script not incrementing version number properly"
+
