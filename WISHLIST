@@ -1,6 +1,5 @@
 MIGHT IMPLEMENT SOMEDAY
 20140516 get App::CELL to pass CPAN Testers (100%) on all Perls back to 5.10.0
-20140516 migrate from ExtUtils::MakeMaker to Module::Build (was: ticket #24)
 
 
 WILL PROBABLY NEVER IMPLEMENT

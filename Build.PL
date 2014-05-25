@@ -5,21 +5,21 @@ use warnings FATAL => 'all';
 use Module::Build 0.37;
 
 my $build = Module::Build->new(
-    module_name       => 'App::CELL',
-    dist_author       => q{Smithfarm <presnypreklad@gmail.com>},
-    dist_version_from => 'lib/App/CELL.pm',
-    license           => 'GPL_3',
-    create_license    => 1,
-    share_dir         => { 
+    module_name        => 'App::CELL',
+    dist_author        => q{Smithfarm <presnypreklad@gmail.com>},
+    dist_version_from  => 'lib/App/CELL.pm',
+    license            => 'GPL_3',
+    create_license     => 1,
+    share_dir          => { 
         dist => [ 'config' ], 
     },
     configure_requires => {
         'Module::Build'      => 0.37,
     },
-    build_requires    => { 
+    build_requires     => { 
         'Log::Any::Test'     => 0 
     },
-    requires          => {
+    requires           => {
         'Date::Format'       => 0,
         'File::HomeDir'      => 0,
         'File::ShareDir'     => 0,

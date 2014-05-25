@@ -538,3 +538,10 @@ later are in the perl-CELL project repo.
 0.115  2014-MAY-25 10:43
 - migrate from ExtUtils::MakeMaker to Module::Build
 
+0.116  2014-MAY-25 11:56
+- bring back Makefile.PL (someone might still need it)
+- dev.sh: add 'test' command
+
+0.117  2014-MAY-25 12:00
+- make release script run './Build test'
+

@@ -1,8 +1,9 @@
 .perlcriticrc
+Build.PL
 Changes
 LICENSE
-Build.PL
 MANIFEST
+Makefile.PL
 META.json
 META.yml
 README
