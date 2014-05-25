@@ -1,8 +1,8 @@
 package App::CELL::Guide;
 
-use 5.10.0;
 use strict;
 use warnings;
+use 5.10.0;
 
 
 
@@ -14,11 +14,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.113
+Version 0.115
 
 =cut
 
-our $VERSION = '0.113';
+our $VERSION = '0.115';
 
 
 

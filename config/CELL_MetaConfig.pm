@@ -3,13 +3,17 @@
 #
 # This file is part of the App::CELL distro:
 #    https://metacpan.org/pod/App::CELL
-
+#
 # Development takes place here:
 #    https://sourceforge.net/projects/perl-cell/
 #
-# This file contains parameters that are internal to App::CELL. It is not
-# meant to be edited by the user.
+# This file contains parameters that are internal to App::CELL. It can also
+# serve as a model for setting up and populating the site configuration
+# directory -- see App::CELL::Guide for more information.
 #
+
+use strict;
+use warnings;
 
 # unique value used by App::CELL::Load->init for sanity check
 set('CELL_META_UNIQUE_VALUE', 'uniq');
@@ -31,3 +35,4 @@ set('CELL_META_START_DATETIME', '');
 # for unit testing
 set( 'CELL_META_UNIT_TESTING', [ 1, 2, 3, 'a', 'b', 'c' ] );
 
+1;

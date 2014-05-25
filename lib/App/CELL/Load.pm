@@ -1,8 +1,8 @@
 package App::CELL::Load;
 
-use 5.10.0;
 use strict;
 use warnings;
+use 5.10.0;
 
 use App::CELL::Config;
 use App::CELL::Log qw( $log );
@@ -21,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.113
+Version 0.115
 
 =cut
 
-our $VERSION = '0.113';
+our $VERSION = '0.115';
 
 
 

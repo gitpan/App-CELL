@@ -1,8 +1,10 @@
 .perlcriticrc
 Changes
 LICENSE
-Makefile.PL
+Build.PL
 MANIFEST
+META.json
+META.yml
 README
 WISHLIST
 bin/demo.plx
@@ -34,5 +36,5 @@ t/100-cell.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+META.yml
+META.json

@@ -1,8 +1,8 @@
 package App::CELL::Log;
 
-use 5.10.0;
 use strict;
 use warnings;
+use 5.10.0;
 
 # IMPORTANT: this module must not depend on any other CELL modules
 use File::Spec;
@@ -17,11 +17,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.113
+Version 0.115
 
 =cut
 
-our $VERSION = '0.113';
+our $VERSION = '0.115';
 
 
 

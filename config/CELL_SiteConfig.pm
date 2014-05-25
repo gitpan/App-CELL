@@ -1,3 +1,6 @@
+use strict;
+use warnings;
+
 # CELL_SITE_UNIT_TESTING
 #        used only for App::CELL unit tests
 set('CELL_SITE_UNIT_TESTING', [ 'Om mane padme hum' ] );

@@ -1,8 +1,9 @@
 package App::CELL::Test;
 
-use 5.10.0;
 use strict;
 use warnings;
+use 5.10.0;
+
 use App::CELL::Log qw( $log );
 use File::Spec;
 
@@ -13,11 +14,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.113
+Version 0.115
 
 =cut
 
-our $VERSION = '0.113';
+our $VERSION = '0.115';
 
 
 

@@ -1,3 +1,6 @@
+use strict;
+use warnings;
+
 # CELL_SHAREDIR_FULLPATH
 #        full path of App::CELL distro sharedir
 #        overrided by site param when sharedir is loaded

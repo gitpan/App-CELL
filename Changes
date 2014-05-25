@@ -529,3 +529,12 @@ later are in the perl-CELL project repo.
 - README: add copyright and license information
 - LICENSE: new license text
 
+0.114  2014-MAY-25 09:23
+- update WISHLIST
+- Makefile.PL: correct license string
+- change order of "use" boilerplate in all modules
+- config/ add use strict; use warnings; to config modules in sharedir
+
+0.115  2014-MAY-25 10:43
+- migrate from ExtUtils::MakeMaker to Module::Build
+

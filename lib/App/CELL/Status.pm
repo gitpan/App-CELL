@@ -1,10 +1,9 @@
-# **** NEED boolean functions 'err', 'notice', etc. 1!!!!!!!
-#
 package App::CELL::Status;
 
-use 5.10.0;
 use strict;
 use warnings;
+use 5.10.0;
+
 use App::CELL::Log qw( $log );
 use Scalar::Util qw( blessed );
 
@@ -18,11 +17,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.113
+Version 0.115
 
 =cut
 
-our $VERSION = '0.113';
+our $VERSION = '0.115';
 
 
 
