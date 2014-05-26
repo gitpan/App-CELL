@@ -26,6 +26,7 @@ my $build = Module::Build->new(
         'File::Next'         => 0,
         'File::Touch'        => 0,
         'Log::Any'           => 0,
+        'perl'               => '5.12.0',
         'Try::Tiny'          => 0,
     },
 );

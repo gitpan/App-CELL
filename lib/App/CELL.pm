@@ -19,22 +19,23 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.127
+Version 0.132
 
 =cut
 
-our $VERSION = '0.127';
+our $VERSION = '0.132';
 
 
 
 =head1 SYNOPSIS
 
-   use App::CELL;
+   # bring in the $CELL and $log singleton objects
+   use App::CELL qw( $CELL );
    use App::CELL::Log qw( $log );
 
    # initialization (set up logging, load config params and messages from
    # configuration directory) of an application called FooBar
-   App::CELL->init( ident => 'FooBar' );
+   $CELL->init( ident => 'FooBar' );
 
    # log messages (see L<App::CELL::Log> for details)
    $log->debug( "Debug-level log message" );
@@ -45,13 +46,13 @@ our $VERSION = '0.127';
    return $status unless $status->ok;
 
    # set the value of a meta parameter META_MY_PARAM to 42
-   App::CELL->set_meta( 'META_MY_PARAM', 42 );
+   $CELL->set_meta( 'META_MY_PARAM', 42 );
 
    # get the value of a meta parameter
-   my $value = App::CELL->meta( 'META_MY_PARAM' );
+   my $value = $CELL->meta( 'META_MY_PARAM' );
 
    # get the value of a site configuration parameter
-   $value = App::CELL->config( 'MY_PARAM' );
+   $value = $CELL->config( 'MY_PARAM' );
 
    # note: site configuration parameters are read-only: to change
    # them, edit the core and site configuration files and run your
@@ -98,10 +99,28 @@ methods that are merely wrappers.
 
 
 
+=head1 EXPORTS
+
+This module provides the following exports:
+
+=over 
+
+=item C<$CELL> - App::CELL singleton object
+
+=back
+
+=cut 
+
+use Exporter qw( import );
+our @EXPORT_OK = qw( $CELL );
+
+
+
 =head1 PACKAGE VARIABLES
 
 =cut
 
+our $CELL = bless {}, __PACKAGE__;
 our $initialized = 0;
 
 
@@ -238,7 +257,7 @@ arrayref, or hashref) to assign to the parameter. Returns a status object.
 =cut
 
 sub set_meta {
-    shift();  # throw away the class
+    shift();  # throw away the class/object
     if ( @_ ) {
         return App::CELL::Config::set_meta( @_ );
     } else {
@@ -257,7 +276,7 @@ of meta parameter if the parameter exists, otherwise undef.
 =cut
 
 sub meta {
-    # use $_[1] because $_[0] is the class name
+    # use $_[1] because $_[0] is the class/object
     return if not $_[1]; # returns undef in scalar context
     App::CELL::Config::get_param( 'meta', $_[1] );
 }
@@ -276,10 +295,36 @@ returned.
 =cut
 
 sub config {
-    # use $_[1] because $_[0] is the class name
+    # use $_[1] because $_[0] is the class/object
     return if not $_[1]; # returns undef in scalar context
     return App::CELL::Config::config( $_[1] );
 }
+
+=head1 LICENSE
+
+App::CELL is Copyright (C) 2014, SUSE LLC
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Author: Nathan Cutler L<mailto:presnypreklad@gmail.com>
+
+    If the above link doesn't work for any reason, the full text of the license
+    can also be found in the "LICENSE" file, located in the top-level directory 
+    of the App::CELL distro (i.e. in the same directory where this README file 
+    is located)
+
+=cut
 
 # END OF CELL MODULE
 1;

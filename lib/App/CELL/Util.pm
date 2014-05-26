@@ -15,11 +15,11 @@ App::CELL::Util - generalized, reuseable functions
 
 =head1 VERSION
 
-Version 0.127
+Version 0.132
 
 =cut
 
-our $VERSION = '0.127';
+our $VERSION = '0.132';
 
 
 

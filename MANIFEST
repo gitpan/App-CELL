@@ -7,7 +7,6 @@ config/CELL_Message_en.conf
 config/CELL_MetaConfig.pm
 config/CELL_SiteConfig.pm
 config/README
-ignore.txt
 lib/App/CELL.pm
 lib/App/CELL/Config.pm
 lib/App/CELL/Guide.pm

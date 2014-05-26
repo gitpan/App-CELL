@@ -17,11 +17,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.127
+Version 0.132
 
 =cut
 
-our $VERSION = '0.127';
+our $VERSION = '0.132';
 
 
 
@@ -212,14 +212,15 @@ because syslog is down.
 
 sub log {
     my $self = shift;
-    return 1 if $self->{level} eq 'OK'; # don't log 'OK'
-
-    my $level = lc $self->level || 'info';
-    {
-        no strict 'refs';
-        $log->$level( $self->text, caller => [ $self->caller ] );
-    }
-
+    $log->status_obj( $self );
+#    return 1 if $self->{level} eq 'OK'; # don't log 'OK'
+#
+#    my $level = lc $self->level || 'info';
+#    {
+#        no strict 'refs';
+#        $log->$level( $self->text, caller => [ $self->caller ] );
+#    }
+#
     return 1;
 }
 

@@ -6,6 +6,7 @@ use 5.10.0;
 
 # IMPORTANT: this module must not depend on any other CELL modules
 use File::Spec;
+use Log::Any;
 
 
 
@@ -17,11 +18,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.127
+Version 0.132
 
 =cut
 
-our $VERSION = '0.127';
+our $VERSION = '0.132';
 
 
 
@@ -31,36 +32,31 @@ our $VERSION = '0.127';
 
     # set up logging for application FooBar -- need only be done once
     $log->init( ident => 'FooBar' );  
-    
+
+    # do not suppess 'trace' and 'debug' messages
+    $log->init( debug_mode => 1 );     
+
+    # do not append filename and line number of caller
+    $log->init( show_caller => 0 );
+
     # log messages at different log levels
-    $log->trace    ( "Trace-level message"     );
-    $log->debug    ( "Debug-level message"     );
-    $log->info     ( "Info-level message"      );
-    $log->inform   ( "Info-level message"      );
+    my $level = 'warn'  # can be any of the levels provided by Log::Any
+    $log->$level ( "Foobar log message" );
+
+    # the following App::CELL-specific levels are supported as well
     $log->ok       ( "Info-level message prefixed with 'OK: '");
     $log->not_ok   ( "Info-level message prefixed with 'NOT_OK: '");
-    $log->warning  ( "Warning-level message"   );
-    $log->warn     ( "Warning-level message"   );
-    $log->error    ( "Error-level message"     );
-    $log->critical ( "Critical-level message"  );
-    $log->crit     ( "Critical-level message"  );
-    $log->fatal    ( "Critical-level message"  );
-    $log->alert    ( "Alert-level message"     );
-    $log->emergency( "Emergency-level message" );
 
-    # Log a status object (don't do this: it happens automatically when
-    # status object is constructed)
-    App::CELL::Log::status_obj( $status_obj );
+    # by default, the caller's filename and line number are appended
+    # to suppress this for an individual log message:
+    $log->debug    ( "Debug-level message", suppress_caller => 1 );
 
+    # Log a status object (happens automatically when object is
+    # constructed)
+    $log->status_obj( $status_obj );
 
-
-=head1 INHERITANCE
-
-This module inherits from L<Log::Any>
-
-=cut
-
-use parent qw( Log::Any );
+    # Log a message object
+    $log->message_obj( $message_obj );
 
 
 
@@ -262,7 +258,7 @@ Take a status object and log it.
 =cut
 
 sub status_obj {
-    my $status_obj = shift;
+    my ( $self, $status_obj ) = @_;
     $log->init( ident => $ident ) if not $log_any_obj;
     my $level = $status_obj->{level};
     my $msg_text = $status_obj->text;
@@ -275,6 +271,21 @@ sub status_obj {
     $log->$level( 
         _assemble_log_message( $msg_text, $file, $line ) );
 }
+
+
+=head2 message_obj
+
+Take a message object and log it.
+
+=cut
+
+sub message_obj {
+    my ( $self, $message_obj ) = @_;
+    $log->init( ident => $ident ) if not $log_any_obj;
+    my $level = $message_obj->level;
+    my $msg_text = $message_obj->text;
+}
+
 
 sub _sanitize_level {
     my ( $level, $msg_text ) = @_;
@@ -291,7 +302,7 @@ sub _sanitize_level {
 sub _assemble_log_message {
     my ( $message, $file, $line ) = @_;
 
-    if ( File::Spec->file_name_is_absolute( $file ) ) {
+    if ( $file and File::Spec->file_name_is_absolute( $file ) ) {
        ( undef, undef, $file ) = File::Spec->splitpath( $file );
     }
 

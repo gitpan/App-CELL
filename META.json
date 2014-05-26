@@ -4,7 +4,7 @@
       "Smithfarm <presnypreklad@gmail.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "open_source"
    ],
@@ -32,46 +32,47 @@
             "File::ShareDir" : "1.00",
             "File::Touch" : "0",
             "Log::Any" : "0",
-            "Try::Tiny" : "0"
+            "Try::Tiny" : "0",
+            "perl" : "v5.12.0"
          }
       }
    },
    "provides" : {
       "App::CELL" : {
          "file" : "lib/App/CELL.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Config" : {
          "file" : "lib/App/CELL/Config.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Guide" : {
          "file" : "lib/App/CELL/Guide.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Load" : {
          "file" : "lib/App/CELL/Load.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Log" : {
          "file" : "lib/App/CELL/Log.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Message" : {
          "file" : "lib/App/CELL/Message.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Status" : {
          "file" : "lib/App/CELL/Status.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Test" : {
          "file" : "lib/App/CELL/Test.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       },
       "App::CELL::Util" : {
          "file" : "lib/App/CELL/Util.pm",
-         "version" : "0.127"
+         "version" : "0.132"
       }
    },
    "release_status" : "stable",
@@ -80,5 +81,5 @@
          "http://www.gnu.org/licenses/gpl-3.0.txt"
       ]
    },
-   "version" : "0.127"
+   "version" : "0.132"
 }
