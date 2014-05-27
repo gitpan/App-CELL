@@ -2,7 +2,7 @@ package App::CELL::Load;
 
 use strict;
 use warnings;
-use 5.10.0;
+use 5.010;
 
 use App::CELL::Config;
 use App::CELL::Log qw( $log );
@@ -21,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.132
+Version 0.137
 
 =cut
 
-our $VERSION = '0.132';
+our $VERSION = '0.137';
 
 
 
@@ -62,6 +62,32 @@ file finding and loading functionality to the App::CELL::Message and
 App::CELL::Config modules.
 
 
+
+=head1 PACKAGE VARIABLES
+
+This module provides the following package variables
+
+=over 
+
+=item C<$sharedir> - the full path of the sharedir
+
+=item C<$sharedir_loaded> - whether it has been loaded or not
+
+=item C<$sitedir> - the full path of the site configuration directory
+
+=item C<$sitedir_loaded> - whether it has been loaded or not
+
+=back
+
+=cut
+
+our $sharedir = '';
+our $sharedir_loaded = 0;
+our $sitedir = '';
+our $sitedir_loaded = 0;
+
+
+=head1 MODULES
 
 =head2 init
 
@@ -127,7 +153,7 @@ E.g.:
         sitedir => '/etc/FooBar' );
 
 Return status is 'ok' provided at least the sharedir was found and loaded,
-otherwise a 'CRIT'-level status is returned.
+otherwise an 'ERR' status is returned.
 
 A warning is generated if no site dir is found, but the return status will
 still be 'ok'.
@@ -140,20 +166,13 @@ sub init {
 
     $log->debug( "Entering App::CELL::Load::init" );
 
-    # re-entrant function
-    use feature "state";
-    state $sharedir = '';
-    state $sharedir_loaded = 0;
-    state $sitedir = '';
-    state $sitedir_loaded = 0;
-
     # look up sharedir
     if ( not $sharedir ) {
         my $tmp_sharedir = File::ShareDir::dist_dir('App-CELL');
         my $status = is_directory_viable( $tmp_sharedir );
         if ( $status->not_ok ) {
             return App::CELL::Status->new( 
-                level => 'CRIT', 
+                level => 'ERR', 
                 code => 'CELL_SHAREDIR_NOT_VIABLE',
                 args => [ $tmp_sharedir, $status->payload ],
             );
@@ -220,7 +239,7 @@ sub init {
             last SANITY if $cmp_arrays_result;
         }
         return App::CELL::Status->new(
-            level => 'CRIT',
+            level => 'ERR',
             code => 'CELL_LOAD_FAILED_SANITY',
         );
     }

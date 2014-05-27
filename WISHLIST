@@ -1,5 +1,6 @@
 MIGHT IMPLEMENT SOMEDAY
 20140516 get App::CELL to pass CPAN Testers (100%) on all Perls back to 5.10.0
+20140526 release.sh process multiple arguments (ATM it takes only one)
 
 
 WILL PROBABLY NEVER IMPLEMENT

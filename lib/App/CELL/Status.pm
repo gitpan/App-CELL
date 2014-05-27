@@ -2,7 +2,7 @@ package App::CELL::Status;
 
 use strict;
 use warnings;
-use 5.10.0;
+use 5.010;
 
 use App::CELL::Log qw( $log );
 use Scalar::Util qw( blessed );
@@ -17,11 +17,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.132
+Version 0.137
 
 =cut
 
-our $VERSION = '0.132';
+our $VERSION = '0.137';
 
 
 

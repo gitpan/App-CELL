@@ -463,3 +463,35 @@ later are in the perl-CELL project repo.
 - Build.PL: remove 'executable' bit to improve Kwalitee score, add "perl =>
   '5.12.0'" to requires
 
+0.133  2014-05-26 15:13 CEST
+- change perl version to 5.012 everywhere
+
+0.134  2014-05-26 22:56 CEST
+- dev.sh: run './Build disttest' because it re-builds META.yml and
+  META.json
+- release.sh: more refinements
+- CELL.pm: export $log singleton as well as $CELL, re-write POD, put
+  'appname', 'enviro', and 'loaded' attributes into $CELL singleton,
+  provide accessors for them, also provide 'sharedir' and 'sitedir'
+  convenience "accessor" routines, change name of main routine from 'init'
+  to 'load', use new $log-> methods instead of $log->init
+- Load.pm: make 'sharedir', 'sharedir_loaded', 'sitedir', 'sitedir_loaded'
+  be package variables instead of state variables, return 'ERR' statuses
+  instead of 'CRIT'
+- Log.pm: implement 'ident', 'show_caller', 'debug_mode' that will replace
+  'init'
+- CELL_Config.pm: add CELL_CORE_SAMPLE
+
+0.135  2014-05-27 09:05 CEST
+- t/100-cell.t: add several tests
+- Test.pm: export cmp_arrays symbol
+- Build.PL: add 'Data::Dumper' to build_requires, add remote repo URL
+- CELL.pm: add supported_languages method
+
+0.136  2014-05-27 10:09 CEST
+- dev.sh: always run './Build disttest' after 'perl Build.PL' to ensure
+  META.json and META.yml are rebuilt, improve 'stop' routine
+
+0.137  2014-05-27 10:35 CEST
+- tweak Build.PL and release.sh
+

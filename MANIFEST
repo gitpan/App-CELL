@@ -1,5 +1,5 @@
 .perlcriticrc
-bin/demo.plx
+bin/CELLdemo.plx
 Build.PL
 Changes
 config/CELL_Config.pm

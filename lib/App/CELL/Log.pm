@@ -2,7 +2,7 @@ package App::CELL::Log;
 
 use strict;
 use warnings;
-use 5.10.0;
+use 5.010;
 
 # IMPORTANT: this module must not depend on any other CELL modules
 use File::Spec;
@@ -18,11 +18,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.132
+Version 0.137
 
 =cut
 
-our $VERSION = '0.132';
+our $VERSION = '0.137';
 
 
 
@@ -99,9 +99,9 @@ messages
 
 =cut
 
+our $debug_mode = 0;
 our $ident = '';
 our $show_caller = 1;
-our $debug_mode = 0;
 our $log = bless {}, __PACKAGE__;
 our $log_any_obj;
 our @permitted_levels = qw( OK NOT_OK TRACE DEBUG INFO INFORM NOTICE
@@ -120,6 +120,37 @@ logging 'OK' and 'NOT_OK' statuses.
 
 
 =head1 METHODS
+
+
+=head2 debug_mode
+
+Set the $debug_mode package variable
+
+=cut
+
+sub debug_mode { $debug_mode = $_[1]; }
+
+
+=head2 ident
+
+Set the $ident package variable and the Log::Any category
+
+=cut
+
+sub ident {
+    my $self = shift;
+    $ident = shift;
+    $log_any_obj = Log::Any->get_logger(category => $ident);
+}
+
+
+=head2 show_caller
+
+Set the $show_caller package variable
+
+=cut
+
+sub show_caller { $show_caller = $_[1]; }
 
 
 =head2 init
@@ -181,17 +212,6 @@ sub init {
     }
 
     return 1;
-}
-
-
-=head2 ident
-
-Accessor method.
-
-=cut
-
-sub ident {
-    return $ident;
 }
 
 

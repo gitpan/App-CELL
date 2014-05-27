@@ -2,12 +2,13 @@ package App::CELL;
 
 use strict;
 use warnings;
-use 5.10.0;
+use 5.012;
 
 use Carp;
 use App::CELL::Config;
-use App::CELL::Status;
+use App::CELL::Load;
 use App::CELL::Log qw( $log );
+use App::CELL::Status;
 use App::CELL::Util qw( utc_timestamp );
 
 
@@ -19,83 +20,44 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.132
+Version 0.137
 
 =cut
 
-our $VERSION = '0.132';
+our $VERSION = '0.137';
 
 
 
 =head1 SYNOPSIS
 
-   # bring in the $CELL and $log singleton objects
-   use App::CELL qw( $CELL );
-   use App::CELL::Log qw( $log );
+    # imagine you have a script/app called 'foo' . . . 
 
-   # initialization (set up logging, load config params and messages from
-   # configuration directory) of an application called FooBar
-   $CELL->init( ident => 'FooBar' );
+    use Log::Any::Adapter ( 'File', "/var/tmp/foo.log" );
+    use App::CELL qw( $CELL $log );
 
-   # log messages (see L<App::CELL::Log> for details)
-   $log->debug( "Debug-level log message" );
-   $log->info( "Info-level log message" );
+    # load config params and messages from sitedir
+    my $status = $CELL->load( appname => 'foo', 
+                              sitedir => '/etc/foo' );
+    return $status unless $status->ok;
 
-   # process status objects returned by function Foo::fn
-   my $status = Foo::fn( ... );
-   return $status unless $status->ok;
+    # write to the log
+    $log->notice("Configuration loaded from /etc/foo");
 
-   # set the value of a meta parameter META_MY_PARAM to 42
-   $CELL->set_meta( 'META_MY_PARAM', 42 );
+    # get value of config param
+    $conf_param = $CELL->config('FOO_CONF_PARAM');
 
-   # get the value of a meta parameter
-   my $value = $CELL->meta( 'META_MY_PARAM' );
+    # get text of message
+    print $CELL->msg('FOO_INFO_MSG')->lang('en')->text;
 
-   # get the value of a site configuration parameter
-   $value = $CELL->config( 'MY_PARAM' );
-
-   # note: site configuration parameters are read-only: to change
-   # them, edit the core and site configuration files and run your
-   # application again.
-   # 
-   # For details, see the CELL Guide (in C<doc/>)
-   
 
 
 =head1 DESCRIPTION
 
 This is the top-level module of App::CELL, the Configuration,
 Error-handling, Localization, and Logging framework for
-applications written in Perl.
+applications (or scripts) written in Perl.
 
-App::CELL is released under the GNU Affero General Public License Version 3
-in the hopes that it will be useful, but with no warrany of any kind. For
-details, see the C<LICENSE> file in the top-level distro directory.
-
-This module provides a number of public methods. For the sake of
-uniformity, no functions are exported: the methods are designed to be
-called using "arrow" notation, i.e.:
-
-    App::CELL->method_name( args );
-
-Some of the methods are "constructors" in the sense that they return
-objects. 
-
-=over 
-
-=item C<init> - initialize App::CELL
-
-=item C<set_meta> - set a meta parameter to an arbitrary value
-
-=item C<meta> - get value of a meta parameter
-
-=item C<config> - get value of a site parameter
-
-=back
-
-Each of these methods is described in somewhat more detail in the
-L</METHODS> section, which contains links to the actual functions for those
-methods that are merely wrappers.
+For details, see the documentation below and in L<App::CELL::Guide>.
 
 
 
@@ -107,129 +69,149 @@ This module provides the following exports:
 
 =item C<$CELL> - App::CELL singleton object
 
+=item C<$log> - App::CELL::Log singleton object
+
 =back
 
 =cut 
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( $CELL );
+our @EXPORT_OK = qw( $CELL $log );
 
+our $CELL = bless { 
+        appname  => __PACKAGE__,
+        enviro   => '',
+        loaded   => 0,
+    }, __PACKAGE__;
 
-
-=head1 PACKAGE VARIABLES
-
-=cut
-
-our $CELL = bless {}, __PACKAGE__;
-our $initialized = 0;
+# $log is brought in via the 'use App::CELL::Log' statement above
 
 
 
 =head1 METHODS
 
 
-=head2 init
+=head2 appname
 
-This method needs to be called at least once, preferably before calling any
-of the other methods. It performs all necessary initialization tasks. It is
-designed to be re-entrant, which means you can call it more than once. 
-
-The first time the function is called, it performs the following
-tasks:
-
-=over 
-
-=item - configure logging
-
-App::CELL uses C<Log::Any> to log its activities. WIP
-
-=item - load message templates
-
-CELL message templates are a special type of meta parameter that is loaded
-from files whose names look like C<[...]_Message_en.pm>, where C<en> can be
-any language tag (actually, any string, but you should stick to real
-language tags at all if possible). See the CELL Guide for more information
-on using CELL for localization.
-
-=item - load meta parameters
-
-Meta parameters are a replacement for global variables. They are
-programatically changeable and their defaults are loaded from configuration
-files with names of the format C<[...]_Meta.pm>. See C<App::CELL::Config> for
-more information.
-
-=item - load core and site parameters
-
-Core and site configuration parameters are strictly read-only, and are
-stored in any number of files whose names have the format
-C<[...]_Config.pm> and C<[...]_SiteConfig.pm>. These two types of
-parameters are designed to work together, with core parameters providing
-defaults and site parameters providing site-specific overrides. See
-the CELL Guide for more information on using CELL for configuration.
-
-=back
-
-Optionally takes arguments as a PARAMHASH. The following params are
-recognized:
-
-=over
-
-=item C<appname> - name of the application (used to set the C<Log::Any>
-logger category and also in the site directory search (see
-C<App::CELL::Load>)
-
-=item C<sitedir> - full path to the site directory (when C<App::CELL::Load>
-conducts its site dir search, it will look here first)
-
-=back
-
-Returns an C<App::CELL::Status> object with level either "OK"
-(on success) or "CRIT" (on failure). On success, it also sets the
-C<CELL_META_INIT_STATUS_BOOL> and C<CELL_META_START_DATETIME> meta
-parameters.
+Get the C<appname> attribute, i.e. the name of the application or script
+that is using L<App::CELL> for its configuration, error handling, etc.
 
 =cut
 
-sub init {
+sub appname { $CELL->{appname} }
+
+
+=head2 enviro
+
+Get the C<enviro> attribute, i.e. the name of the environment variable
+containing the sitedir
+
+=cut
+
+sub enviro { $CELL->{enviro} }
+
+
+=head2 loaded
+
+Get the C<loaded> attribute, which can be any of the following:
+    0        nothing loaded yet
+    'SHARE'  sharedir loaded
+    'BOTH'   sharedir _and_ sitedir loaded
+
+=cut
+
+sub loaded {
+    return 'SHARE' if $App::CELL::Load::sharedir_loaded and not
+                      $App::CELL::Load::sitedir_loaded;
+    return 'BOTH'  if $App::CELL::Load::sharedir_loaded and
+                      $App::CELL::Load::sitedir_loaded;
+    return 0;
+}
+
+
+=head2 sharedir
+
+Get the C<sharedir> attribute, i.e. the full path of the site configuration
+directory (available only after sharedir has been successfully loaded)
+
+=cut
+
+sub sharedir { 
+    return '' if not $App::CELL::Load::sharedir_loaded;
+    return $App::CELL::Load::sharedir;
+}
+
+
+=head2 sitedir
+
+Get the C<sitedir> attribute, i.e. the full path of the site configuration
+directory (available only after sitedir has been successfully loaded)
+
+=cut
+
+sub sitedir { 
+    return '' if not $App::CELL::Load::sitedir_loaded;
+    return $App::CELL::Load::sitedir;
+}
+
+
+=head2 supported_languages
+
+Get $supported_languages array ref from L<App::CELL::Message>
+
+=cut
+
+sub supported_languages {
+    return \@App::CELL::Message::supp_lang || [];
+}
+
+
+=head2 load
+
+Attempt to load messages and configuration parameters from the sharedir
+and, possibly, the sitedir as well.
+
+Takes: a PARAMHASH that should include C<appname> and at least one of 
+C<enviro> or C<sitedir> (if both are given, C<enviro> takes precedence with
+C<sitedir> as a fallback).
+
+Returns: an C<App::CELL::Status> object, which could be any of the
+following: 
+    OK    success
+    WARN  previous call already succeeded, nothing to do 
+    ERR   failure
+
+On success, it also sets the C<CELL_META_START_DATETIME> meta parameter.
+
+=cut
+
+sub load {
 
     my ( $class, %Args ) = @_;
-
     my $status;
 
-    if ( $initialized ) {
-        $log->debug("Reentering App::CELL->init");
-        App::CELL::Status->new( level => 'INFO',
+    if ( $CELL->{'loaded'} eq 'BOTH' ) {
+        $log->debug("Reentering App::CELL->load");
+        return App::CELL::Status->new( level => 'WARN',
             code => 'CELL_ALREADY_INITIALIZED',
         );
-        return App::CELL::Status->ok;
     }
 
-    # determine the application name
-    my $appname;
-    if ( $Args{appname} ) {
-        $appname = $Args{appname} ;
-    } else {
-        $appname = 'CELLtest';
-    }
+    $CELL->{'appname'} = __PACKAGE__ if not $CELL->{'appname'};
 
-    # determine debugging mode
-    my $debug_mode;
-    if ( $Args{debug} ) {
-        $debug_mode = 1;
-    } else {
-        $debug_mode = 0;
-    }
+    # $log->init is fully re-entrant, and nothing is actually logged until
+    # the application does something with Log::Any::Adapter, so this will 
+    # probably be convenient, or at least do no harm
+    $log->ident( $CELL->{'appname'} );
 
-    # set logger category
-    $log->init( ident => $appname, debug_mode => $debug_mode );
-
-    # load site configuration parameters
+    # we only get past this next call if at least the sharedir loads
+    # successfully (sitedir is optional)
     $status = App::CELL::Load::init( %Args );
     return $status unless $status->ok;
     $log->info( "App::CELL has finished loading messages and site conf params" );
 
-    # set $App::CELL::Log::show_caller
-    App::CELL::Log->init( show_caller => App::CELL::Config::config( 'CELL_LOG_SHOW_CALLER' ) );
+    $log->show_caller( App::CELL::Config::config( 'CELL_LOG_SHOW_CALLER' ) );
+    $log->debug_mode( App::CELL::Config::config( 'CELL_DEBUG_MODE' ) );
 
     # initialize package variables in Message.pm
     @App::CELL::Message::supp_lang = 
@@ -237,8 +219,7 @@ sub init {
     $App::CELL::Message::language_tag = 
         App::CELL::Config::config( 'CELL_LANGUAGE' ) || 'en';
 
-    $initialized = 1;
-    App::CELL::Config::set_meta( 'CELL_META_INIT_STATUS_BOOL', $initialized );
+    $CELL->{loaded} = 1;
     App::CELL::Config::set_meta( 'CELL_META_START_DATETIME', utc_timestamp() );
     $log->info( "**************** CELL started at "
                     . App::CELL->meta( 'CELL_META_START_DATETIME' )

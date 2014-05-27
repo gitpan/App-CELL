@@ -2,7 +2,7 @@ package App::CELL::Test;
 
 use strict;
 use warnings;
-use 5.10.0;
+use 5.010;
 
 use App::CELL::Log qw( $log );
 use File::Spec;
@@ -14,11 +14,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.132
+Version 0.137
 
 =cut
 
-our $VERSION = '0.132';
+our $VERSION = '0.137';
 
 
 
@@ -41,6 +41,23 @@ our $VERSION = '0.132';
 
 The C<App::CELL::Test> module provides a number of special-purpose functions for
 use in CELL's test suite. 
+
+
+
+=head1 EXPORTS
+
+This module provides the following exports:
+
+=over 
+
+=item C<cmp_arrays> - cmp_arrays routine
+
+=back
+
+=cut 
+
+use Exporter qw( import );
+our @EXPORT_OK = qw( cmp_arrays );
 
 
 

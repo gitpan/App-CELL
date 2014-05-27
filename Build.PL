@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use 5.014001;
+use 5.012000; # CPAN Testers
 use strict;
 use warnings FATAL => 'all';
 use Module::Build 0.37;
@@ -17,6 +17,7 @@ my $build = Module::Build->new(
         'Module::Build'      => 0.37,
     },
     build_requires     => { 
+        'Data::Dumper'       => 0,
         'Log::Any::Test'     => 0 
     },
     requires           => {
@@ -26,8 +27,13 @@ my $build = Module::Build->new(
         'File::Next'         => 0,
         'File::Touch'        => 0,
         'Log::Any'           => 0,
-        'perl'               => '5.12.0',
+        'perl'               => 5.012000,
         'Try::Tiny'          => 0,
+    },
+    meta_merge => {
+        resources => {
+            repository => 'https://sourceforge.net/projects/perl-cell/',
+        }
     },
 );
 

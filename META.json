@@ -16,6 +16,7 @@
    "prereqs" : {
       "build" : {
          "requires" : {
+            "Data::Dumper" : "0",
             "Log::Any::Test" : "0"
          }
       },
@@ -33,53 +34,56 @@
             "File::Touch" : "0",
             "Log::Any" : "0",
             "Try::Tiny" : "0",
-            "perl" : "v5.12.0"
+            "perl" : "5.012"
          }
       }
    },
    "provides" : {
       "App::CELL" : {
          "file" : "lib/App/CELL.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Config" : {
          "file" : "lib/App/CELL/Config.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Guide" : {
          "file" : "lib/App/CELL/Guide.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Load" : {
          "file" : "lib/App/CELL/Load.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Log" : {
          "file" : "lib/App/CELL/Log.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Message" : {
          "file" : "lib/App/CELL/Message.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Status" : {
          "file" : "lib/App/CELL/Status.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Test" : {
          "file" : "lib/App/CELL/Test.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       },
       "App::CELL::Util" : {
          "file" : "lib/App/CELL/Util.pm",
-         "version" : "0.132"
+         "version" : "0.137"
       }
    },
    "release_status" : "stable",
    "resources" : {
       "license" : [
          "http://www.gnu.org/licenses/gpl-3.0.txt"
-      ]
+      ],
+      "repository" : {
+         "url" : "https://sourceforge.net/projects/perl-cell/"
+      }
    },
-   "version" : "0.132"
+   "version" : "0.137"
 }

@@ -26,6 +26,10 @@ set('CELL_LANGUAGE', 'en');
 #        used only for App::CELL unit tests
 set('CELL_CORE_UNIT_TESTING', [ 'nothing special' ] );
 
+# CELL_CORE_SAMPLE
+#        sample core variable (for demo purposes)
+set('CELL_CORE_SAMPLE', 'layers of sediments' );
+
 # CELL_LOG_SHOW_CALLER
 #        determine whether App::CELL::Log appends file and line number of
 #        caller to log messages
