@@ -11,7 +11,7 @@ use App::CELL::Test qw( cmp_arrays );
 #
 # To activate debugging, uncomment the following line
 #
-use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
+#use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
 
 plan tests => 13;
 

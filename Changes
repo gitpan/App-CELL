@@ -531,3 +531,8 @@ later are in the perl-CELL project repo.
 - globally change \o{12} to \012 in all regexes in attempt to appease Perl
   5.12
 
+0.142  2014-05-28 14:56 CEST
+- CELL.pm: add missing items to POD
+- t/: commented out lines that were uncommented for debugging and
+  shouldn't have gone to CPAN
+

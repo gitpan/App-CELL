@@ -8,7 +8,7 @@ use App::CELL qw( $log $meta );
 #
 # To activate debugging, uncomment the following line
 #
-use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
+#use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
 
 plan tests => 1;
 

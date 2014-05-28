@@ -20,11 +20,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.141
+Version 0.142
 
 =cut
 
-our $VERSION = '0.141';
+our $VERSION = '0.142';
 
 
 
@@ -73,6 +73,12 @@ This module provides the following exports:
 =item C<$CELL> - App::CELL singleton object
 
 =item C<$log> - App::CELL::Log singleton object
+
+=item C<$meta> - App::CELL::Config singleton object
+
+=item C<$core> - App::CELL::Config singleton object
+
+=item C<$site> - App::CELL::Config singleton object
 
 =back
 
