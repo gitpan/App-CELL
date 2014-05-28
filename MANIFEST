@@ -15,6 +15,7 @@ lib/App/CELL/Log.pm
 lib/App/CELL/Message.pm
 lib/App/CELL/Status.pm
 lib/App/CELL/Test.pm
+lib/App/CELL/Test/LogToFile.pm
 lib/App/CELL/Util.pm
 LICENSE
 Makefile.PL

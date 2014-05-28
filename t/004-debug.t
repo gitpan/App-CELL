@@ -16,9 +16,9 @@ use App::CELL::Log qw( $log );
 use Test::More;
 
 #
-# To activate debugging, uncomment the following line
+# To activate debugging, uncomment the following
 #
-#use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
+use App::CELL::Test::LogToFile;
 
 plan tests => 1;
 

@@ -536,3 +536,7 @@ later are in the perl-CELL project repo.
 - t/: commented out lines that were uncommented for debugging and
   shouldn't have gone to CPAN
 
+0.143  2014-05-28 16:00 CEST
+- Test/LogToFile.pm: new module
+- t/: use the new module in tests
+
