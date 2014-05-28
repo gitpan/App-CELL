@@ -9,7 +9,8 @@
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use App::CELL::Config;
+use App::CELL::Config qw( $meta $core $site );
+use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Test;
 use Test::More;
@@ -19,7 +20,7 @@ use Test::More;
 #
 #use Log::Any::Adapter ('File', $ENV{'HOME'} . '/tmp/CELLtest.log');
 
-plan tests => 26;
+plan tests => 25;
 
 my $status;
 $log->init( ident => 'CELLtest', debug_mode => 1 );
@@ -31,10 +32,7 @@ $log->info("-------------------------------------------------------");
 # META
 #
 
-$status = exists $App::CELL::Config::meta{ 'CELL_META_TEST_PARAM_BLOOEY' };
-ok( ! $status, "No blooey" );
-
-$status = App::CELL::Config::get_param( 'meta', 'CELL_META_TEST_PARAM_BLOOEY' );
+$status = $meta->CELL_META_TEST_PARAM_BLOOEY;
 ok( ! defined($status), "Still no blooey" );
 
 $status = App::CELL::Config::set_meta( 'CELL_META_TEST_PARAM_BLOOEY', 'Blooey' );
@@ -44,14 +42,14 @@ ok( $status->ok, "Blooey create succeeded" );
 $status = exists $App::CELL::Config::meta->{ 'CELL_META_TEST_PARAM_BLOOEY' };
 ok( defined( $status ), "Blooey exists after its creation" );
 
-$status = App::CELL::Config::get_param( 'meta', 'CELL_META_TEST_PARAM_BLOOEY' );
+$status = $meta->CELL_META_TEST_PARAM_BLOOEY;
 is( $status, "Blooey", "Blooey has the right value via get_param" );
 
 $status = App::CELL::Load::init( appname => 'CELLtest' );
 ok( $status->ok, "CELLtest load OK" );
 
 # 'exists' returns undef on failure
-$status = exists $App::CELL::Config::meta->{ 'CELL_META_UNIT_TESTING' };
+$status = $meta->CELL_META_UNIT_TESTING;
 ok( defined( $status ), "Meta unit testing param exists" );
 
 my $value = $App::CELL::Config::meta->{ 'CELL_META_UNIT_TESTING' }->{'Value'};
@@ -61,7 +59,7 @@ my $expected_value = [ 1, 2, 3, 'a', 'b', 'c' ];
 $status = App::CELL::Test::cmp_arrays( $expected_value, $value );
 ok( $status, "Meta unit testing param, obtained by cheating, has expected value" );
 
-my $result = App::CELL::Config::get_param( 'meta', 'CELL_META_UNIT_TESTING' );
+my $result = $meta->CELL_META_UNIT_TESTING;
 $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Meta unit testing param, obtained via get_param, has expected value" );
 
@@ -69,7 +67,7 @@ $status = App::CELL::Config::set_meta( 'CELL_META_UNIT_TESTING', "different foo"
 ok( $status->ok, "set_meta says OK" );
 
 $result = undef;
-$result = App::CELL::Config::get_param( 'meta', 'CELL_META_UNIT_TESTING' );
+$result = $meta->CELL_META_UNIT_TESTING;
 is( $result, "different foo", "set_meta really changed the value" );
 # (should also test that this triggers a log message !)
 
@@ -88,14 +86,14 @@ $expected_value = [ 'nothing special' ];
 $status = App::CELL::Test::cmp_arrays( $expected_value, $value );
 ok( $status, "Core unit testing param, obtained by cheating, has expected value" );
 
-$result = App::CELL::Config::get_param( 'core', 'CELL_CORE_UNIT_TESTING' );
+$result = $core->CELL_CORE_UNIT_TESTING;
 $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Core unit testing param, obtained via get_param, has expected value" );
 
 $status = App::CELL::Config::set_core( 'CELL_CORE_UNIT_TESTING', "different bar" );
 ok( $status->err, "Attempt to set existing core param triggered ERR" );
 
-my $new_result = App::CELL::Config::get_param( 'core', 'CELL_CORE_UNIT_TESTING' );
+my $new_result = $core->CELL_CORE_UNIT_TESTING;
 isnt( $new_result, "different bar", "set_core did not change the value" );
 is( $new_result, $result, "the value stayed the same" );
 
@@ -114,14 +112,14 @@ $expected_value = [ 'Om mane padme hum' ];
 $status = App::CELL::Test::cmp_arrays( $expected_value, $value );
 ok( $status, "Site unit testing param, obtained by cheating, has expected value" );
 
-$result = App::CELL::Config::get_param( 'site', 'CELL_SITE_UNIT_TESTING' );
+$result = $site->CELL_SITE_UNIT_TESTING;
 $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Site unit testing param, obtained via get_param, has expected value" );
 
 $status = App::CELL::Config::set_site( 'CELL_SITE_UNIT_TESTING', "different baz" );
 ok( $status->err, "Attempt to set existing site param triggered ERR" );
 
-$new_result = App::CELL::Config::get_param( 'site', 'CELL_SITE_UNIT_TESTING' );
+$new_result = $site->CELL_SITE_UNIT_TESTING;
 isnt( $new_result, "different baz", "set_site did not change the value" );
 is( $new_result, $result, "the value stayed the same" );
 

@@ -18,11 +18,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.137
+Version 0.140
 
 =cut
 
-our $VERSION = '0.137';
+our $VERSION = '0.140';
 
 
 
@@ -100,7 +100,7 @@ messages
 =cut
 
 our $debug_mode = 0;
-our $ident = '';
+our $ident = 'CELLtest';
 our $show_caller = 1;
 our $log = bless {}, __PACKAGE__;
 our $log_any_obj;
@@ -183,13 +183,13 @@ sub init {
 
     # process 'ident'
     if ( defined( $ARGS{ident} ) ) {
-        if ( $ARGS{ident} eq $ident ) {
+        if ( $ARGS{ident} eq $ident and $ident ne 'CELLtest' ) {
             $log->info( "Logging already configured" );
         } else {
             $ident = $ARGS{ident};
             $log_any_obj = Log::Any->get_logger(category => $ident);
         }
-    } elsif ( not $ident ) {
+    } else {
         $ident = 'CELLtest';
         $log_any_obj = Log::Any->get_logger(category => $ident);
     }    
@@ -262,12 +262,10 @@ sub AUTOLOAD {
         ( $throwaway, $file, $line ) = caller;
     }
 
-    return if not $debug_mode and ( $method_lc eq 'debug' or $method_lc eq 'trace' );
-    
     $log->init( ident => $ident ) if not $log_any_obj;
-
+    die "No Log::Any object!" if not $log_any_obj;
+    return if not $debug_mode and ( $method_lc eq 'debug' or $method_lc eq 'trace' );
     $log_any_obj->$method_lc( _assemble_log_message( "$level: $msg_text", $file, $line ) );
-
 }
 
 

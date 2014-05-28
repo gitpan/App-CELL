@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use 5.010;
 
-use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
 
@@ -17,150 +16,85 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.137
+Version 0.140
 
 =cut
 
-our $VERSION = '0.137';
+our $VERSION = '0.140';
 
 
 
 =head1 SYNOPSIS
  
-    use App::CELL::Config;
+    use App::CELL::Config qw( $meta $core $site );
 
     # get a parameter value (returns value or undef)
-    my $value = App::CELL::Config::get_param( 'meta', 'MY_PARAM' );
-    my $value = App::CELL::Config::get_param( 'core', 'MY_PARAM' );
-    my $value = App::CELL::Config::get_param( 'site', 'MY_PARAM' );
+    my $value;
+    $value = $meta->MY_PARAM;
+    $value = $core->MY_PARAM;
+    $value = $site->MY_PARAM;
 
     # set a meta parameter
-    App::CELL::Config::set_meta( 'MY_PARAM', 42 );
+    $meta->set( 'MY_PARAM', 42 );
+
+    # set an as-yet undefined core/site parameter
+    $core->set( 'MY_PARAM', 42 );
+    $site->set( 'MY_PARAM', 42 );
+
 
 
 =head1 DESCRIPTION
 
-The purpose of the C<App::CELL::Config> module is to maintain and provide
-access to three package variables, C<$meta>, C<$core>, and C<$site>,
-which are references to hashes holding the names, values, and other
-information related to the configuration parameters loaded from files in
-the App::CELL distro sharedir and the site configuration directory, if any.
-These values are loaded by the C<App::CELL::Load> module.
+The purpose of the L<App::CELL::Config> module is to maintain and provide
+access to three package variables, C<$meta>, C<$core>, and C<$site>, which
+are actually singleton objects, containing configuration parameters loaded
+by L<App::CELL::Load> from files in the distro sharedir and the site
+configuration directory, if any.
+
+For details, read L<App::CELL::Guilde>.
 
 
-=head1 PACKAGE VARIABLES
 
-=head2 C<$meta>
+=head1 EXPORTS
 
-Holds parameter values loaded from files with names of the format
-C<[...]_MetaConfig.pm>. These "meta parameters" are by definition
-changeable.
-
-=cut
-
-our $meta = {};
-
-
-=head2 C<$core>
-
-Holds parameter values loaded from files whose names match
-C<[...]_Config.pm>. Sometimes referred to as "core parameters", these are
-intended to be set by the application programmer to provide default values
-for site parameters.
+This module exports three scalars: the 'singleton' objects C<$meta>,
+C<$core>, and C<$site>.
 
 =cut
 
-our $core = {};
+use Exporter qw( import );
+our @EXPORT_OK = qw( $meta $core $site );
 
-
-=head2 C<$site>
-
-Holds parameter values loaded from files of the format
-C<[...]_SiteConfig.pm> -- referred to as "site parameters".
-These are intended to be set by the site administrator.
-
-=cut
-
-our $site = {};
+our $meta = bless { CELL_CONFTYPE => 'meta' }, __PACKAGE__;
+our $core = bless { CELL_CONFTYPE => 'core' }, __PACKAGE__;
+our $site = bless { CELL_CONFTYPE => 'site' }, __PACKAGE__;
 
 
 
-=head1 HOW PARAMETERS ARE INITIALIZED
+=head1 AUTOLOAD ROUTINE
 
-Like message templates, the meta, core, and site parameters are initialized
-by C<require>-ing files in the configuration directory. As described above,
-files in this directory are processed according to their filenames. 
-
-The actual directory path is determined by consulting the C<CELL_CONFIGDIR>
-environment variable, the file C<.cell/CELL.conf> in the user's C<HOME>
-directory, or the file C</etc/sysconfig/perl-CELL>, in that order --
-whichever is found first, "wins".
-
-CELL's configuration parameters are modelled after those of Request
-Tracker. Configuration files are special Perl modules that are loaded at
-run-time.  The modules should be in the C<CELL> package and should consist
-of a series of calls to the C<set> function (which is provided by C<CELL>
-and will not collide with your application's function of the same name).
-
-CELL configuration files are straightforward and simple to create and
-maintain, while still managing to provide power and flexibility. For
-details, see the C<CELL_MetaConfig.pm> module in the CELL distribution.
-
-
-
-=head1 PUBLIC FUNCTIONS AND METHODS
-
-
-=head2 config
-
-The C<config> method provides clients access to site
-configuration parameters. A simple logic is applied: if the parameter is
-defined in 'site', we're done: that is the value. If the parameter is not
-defined in 'site', check 'core' and use that value, if available.
-
-If neither 'site' nor 'core' has a definition for the parameter, undef is
-returned.
+The C<AUTOLOAD> routine handles calls that look like this:
+   $meta->MY_PARAM
+   $core->MY_PARAM
+   $site->MY_PARAM
 
 =cut
 
-sub config {
-    my $param = shift;
-    my $value = get_param( 'site', $param );
-    return $value if defined( $value );
-    $value = get_param( 'core', $param );
-    return $value if defined( $value );
-    return; # returns undef in scalar context
-}
-
-
-=head2 get_param
-
-Basic function providing access to values of site configuration parameters
-(i.e. the values stored in the C<%meta>, C<%core>, and C<%site> module
-variables). Takes two arguments: type ('meta', 'core', or 'site') and
-parameter name. Returns parameter value on success, undef on failure (i.e.
-when parameter is not defined).
-
-    my $value = App::CELL::Config::get_param( 'meta', 'META_MY_PARAM' );
-
-=cut
-
-sub get_param {
-    no strict 'refs';   # valid throughout get_param
-    my ( $type, $param ) = @_;
-
-    # sanity
-    if ( not defined($$type) or not ref($$type) ) {
-        return; # returns undef in scalar context
+our $AUTOLOAD;
+sub AUTOLOAD {
+    my $self = shift;
+    ( my $param ) = $AUTOLOAD =~ m/.*::(.*)$/;
+    my ( $throwaway, $file, $line ) = caller;
+    $log->fatal( "Bad call to Config.pm \$$param at $file line $line!" ) if not ref $self;
+    if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
+        return $meta->{$param}->{Value} if exists $meta->{$param};
+    } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
+        return $core->{$param}->{Value} if exists $core->{$param};
+    } else {
+        return $site->{$param}->{Value} if defined $site->{$param};
     }
-
-    # logic
-    if ( exists $$type->{$param} ) {
-        $log->debug( "get_param: $type param $param value ->" .  $$type->{$param}->{'Value'} . "<-" );
-        return $$type->{$param}->{'Value'};
-    }
-
-    return; # returns undef in scalar context
+    return $core->{$param}->{Value} if defined $core->{$param};
+    return;
 }
 
 

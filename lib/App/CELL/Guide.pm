@@ -14,11 +14,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.137
+Version 0.140
 
 =cut
 
-our $VERSION = '0.137';
+our $VERSION = '0.140';
 
 
 
@@ -253,6 +253,38 @@ Files with names that don't match any of the above regexes are ignored.
 For the syntax of these files see CELL's own configuration files in the
 sharedir (C<config/> in the distro). All four types of configuration file
 are represented there, with comments.
+
+
+=head1 HOW CONFIG PARAMS ARE INITIALIZED
+
+=for comment
+Old verbiage -- revisit.
+
+All three categories of config params (C<meta>, C<core>, and C<$site>) are
+initialized by C<require>-ing configuration files, which are actually
+simple Perl modules, in the site configuration directory (C<sitedir>).
+
+The C<sitedir> path is determined using the following simple algorithm:
+
+=over
+
+=item 1. if C<sitedir> argument given to C<< $CELL->load >>, assume that is
+the sitedir path; done.
+
+=item 2. if C<enviro> argument given to C<< $CELL->load >>, assume that is
+the name of an environment variable containing the sitedir path; done.
+
+=item 3. look for an environment variable C<CELL_SITEDIR> and if it
+contains a viable sitedir path, done; otherwise trigger a warning that
+there is no sitedir.
+
+=back
+
+CELL's configuration parameters are modelled after those of Request
+Tracker. Configuration files are special Perl modules that are loaded at
+run-time. These modules consist of a series of calls to a C<set> function
+(which resides in L<App::CELL::Config>).
+
 
 
 =head1 MESSAGE CONFIGURATION

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.010;
 
-use App::CELL::Config;
+use App::CELL::Config qw( $meta $core $site );
 use App::CELL::Log qw( $log );
 use App::CELL::Message;
 use App::CELL::Status;
@@ -21,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.137
+Version 0.140
 
 =cut
 
-our $VERSION = '0.137';
+our $VERSION = '0.140';
 
 
 
@@ -227,9 +227,9 @@ sub init {
         if ( $status->ok ) {
             $msgobj = $status->payload;
             push @$results, (
-                App::CELL::Config::get_param( 'core', 'CELL_SHAREDIR_FULLPATH' ),
-                App::CELL::Config::get_param( 'site', 'CELL_SITE_LOAD_OK' ),
-                App::CELL::Config::get_param( 'meta', 'CELL_META_UNIQUE_VALUE' ),
+                $meta->CELL_META_UNIQUE_VALUE,
+                $core->CELL_SHAREDIR_FULLPATH,
+                $site->CELL_SITE_LOAD_OK,
                 $msgobj->text(),
                         );
             my $cmp_arrays_result = App::CELL::Test::cmp_arrays( 

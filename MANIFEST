@@ -28,6 +28,7 @@ t/002-util.t
 t/003-test.t
 t/004-debug.t
 t/005-message.t
+t/006-config.t
 t/030-status.t
 t/050-load.t
 t/070-config.t

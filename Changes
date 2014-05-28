@@ -495,3 +495,35 @@ later are in the perl-CELL project repo.
 0.137  2014-05-27 10:35 CEST
 - tweak Build.PL and release.sh
 
+0.138  2014-05-27 22:54 CEST
+- CELL.pm: add 'msg' method (wrapper to App::CELL::Message->new)
+- t/100-cell.pm: add some tests
+
+0.139  2014-05-28 10:59 CEST
+- t/111-test.t: add "ad hoc testing" test
+- CELL_Config.pm: move 'use' statements to bottom, restore CELL_DEBUG_MODE,
+  improve comment
+- CELL.pm: remove 'loaded' attribute from $CELL, re-implement 'meta' and
+  'config' methods in light of Config.pm change
+- Config.pm: new SYNOPSIS, new DESCRIPTIONS, introduce $meta, $core, and
+  $site "singleton" objects, new AUTOLOAD routine to replace 'get_param'
+- Guide.pm: new verbiage
+- Log.pm: fix bug "Endless recursion between init and AUTOLOAD when logger
+  not explicitly initializd"
+- release.sh: add '-ff' to force push to remote without testing
+- (some unit tests are failing)
+
+0.140  2014-05-28 13:17 CEST
+- dev.sh: clean up after disttest
+- CELL.pm: fix SYNOPSIS, fix exports, change 'loaded' from attribute to
+  method, fix call to no-longer-existent 'App::CELL::Config::config'
+  function, delete 'meta' and 'config' wrappers
+- Config.pm: fix regex, get rid of stupid symbolic reference, delete 'use
+  App::CELL::Load' that was causing grief
+- Load.pm: bring in the new $meta, $core, and $site "singletons", use them
+  in sanity check
+- Log.pm: deal with situations when $log method is called before logger has
+  been explicitly initialized
+- move t/111-test.t to t/006-config.t
+- t/110-cell.t: fix calls to 'meta' and 'config'
+

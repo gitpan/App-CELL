@@ -5,7 +5,7 @@ use warnings;
 use 5.012;
 
 use Carp;
-use App::CELL::Config;
+use App::CELL::Config qw( $meta $core $site );
 use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
@@ -20,11 +20,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.137
+Version 0.140
 
 =cut
 
-our $VERSION = '0.137';
+our $VERSION = '0.140';
 
 
 
@@ -33,7 +33,7 @@ our $VERSION = '0.137';
     # imagine you have a script/app called 'foo' . . . 
 
     use Log::Any::Adapter ( 'File', "/var/tmp/foo.log" );
-    use App::CELL qw( $CELL $log );
+    use App::CELL qw( $CELL $log $meta $site );
 
     # load config params and messages from sitedir
     my $status = $CELL->load( appname => 'foo', 
@@ -43,11 +43,14 @@ our $VERSION = '0.137';
     # write to the log
     $log->notice("Configuration loaded from /etc/foo");
 
-    # get value of config param
-    $conf_param = $CELL->config('FOO_CONF_PARAM');
+    # get value of site configuration parameter FOO_PARAM
+    my $val = $site->FOO_PARAM;
 
-    # get text of message
-    print $CELL->msg('FOO_INFO_MSG')->lang('en')->text;
+    # get text of message in default language
+    my $txt = $CELL->msg('FOO_INFO_MSG')->text;
+
+    # get text of message in a different language
+    $txt = $CELL->msg('FOO_INFO_MSG')->lang('sk')->text;
 
 
 
@@ -76,15 +79,15 @@ This module provides the following exports:
 =cut 
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( $CELL $log );
+our @EXPORT_OK = qw( $CELL $log $meta $core $site );
 
 our $CELL = bless { 
         appname  => __PACKAGE__,
         enviro   => '',
-        loaded   => 0,
     }, __PACKAGE__;
 
-# $log is brought in via the 'use App::CELL::Log' statement above
+# ($log is imported from App::CELL::Log)
+# ($meta, $core, and $site are imported from App::CELL::Config)
 
 
 
@@ -113,7 +116,7 @@ sub enviro { $CELL->{enviro} }
 
 =head2 loaded
 
-Get the C<loaded> attribute, which can be any of the following:
+Get the current load status, which can be any of the following:
     0        nothing loaded yet
     'SHARE'  sharedir loaded
     'BOTH'   sharedir _and_ sitedir loaded
@@ -190,7 +193,7 @@ sub load {
     my ( $class, %Args ) = @_;
     my $status;
 
-    if ( $CELL->{'loaded'} eq 'BOTH' ) {
+    if ( $CELL->loaded eq 'BOTH' ) {
         $log->debug("Reentering App::CELL->load");
         return App::CELL::Status->new( level => 'WARN',
             code => 'CELL_ALREADY_INITIALIZED',
@@ -210,20 +213,16 @@ sub load {
     return $status unless $status->ok;
     $log->info( "App::CELL has finished loading messages and site conf params" );
 
-    $log->show_caller( App::CELL::Config::config( 'CELL_LOG_SHOW_CALLER' ) );
-    $log->debug_mode( App::CELL::Config::config( 'CELL_DEBUG_MODE' ) );
+    $log->show_caller( $site->CELL_LOG_SHOW_CALLER );
+    $log->debug_mode ( $site->CELL_DEBUG_MODE );
 
     # initialize package variables in Message.pm
-    @App::CELL::Message::supp_lang = 
-        @{ App::CELL::Config::config( 'CELL_SUPPORTED_LANGUAGES' ) };
-    $App::CELL::Message::language_tag = 
-        App::CELL::Config::config( 'CELL_LANGUAGE' ) || 'en';
+    @App::CELL::Message::supp_lang = @{ $site->CELL_SUPPORTED_LANGUAGES };
+    $App::CELL::Message::language_tag = $site->CELL_LANGUAGE || 'en';
 
-    $CELL->{loaded} = 1;
     App::CELL::Config::set_meta( 'CELL_META_START_DATETIME', utc_timestamp() );
-    $log->info( "**************** CELL started at "
-                    . App::CELL->meta( 'CELL_META_START_DATETIME' )
-                    . " (UTC)" );
+    $log->info( "**************** CELL started at " . 
+                $meta->CELL_META_START_DATETIME     . " (UTC)" );
 
     return App::CELL::Status->ok;
 }
@@ -248,40 +247,22 @@ sub set_meta {
 }
 
 
-=head2 meta
+=head2 msg 
 
-Get value of a meta parameter. Wrapper for App::CELL::MetaConfig::get_param.
-Takes one argument: string containing name of meta parameter. Returns value
-of meta parameter if the parameter exists, otherwise undef.
+Construct a message object (wrapper for App::CELL::Message::new)
 
 =cut
 
-sub meta {
-    # use $_[1] because $_[0] is the class/object
-    return if not $_[1]; # returns undef in scalar context
-    App::CELL::Config::get_param( 'meta', $_[1] );
+sub msg { 
+    my ( $self, $code ) = @_;
+    my $status = App::CELL::Message->new( code => $code );
+    return undef if $status->not_ok;
+    return $status->payload;
 }
 
 
-=head2 config
 
-The C<config> method provides clients access to site
-configuration parameters. A simple logic is applied: if the parameter is
-defined in 'site', we're done: that is the value. If the parameter is not
-defined in 'site', check 'core' and use that value, if available.
-
-If neither 'site' nor 'core' has a definition for the parameter, undef is
-returned.
-
-=cut
-
-sub config {
-    # use $_[1] because $_[0] is the class/object
-    return if not $_[1]; # returns undef in scalar context
-    return App::CELL::Config::config( $_[1] );
-}
-
-=head1 LICENSE
+=head1 COPYRIGHT AND LICENSE
 
 App::CELL is Copyright (C) 2014, SUSE LLC
 

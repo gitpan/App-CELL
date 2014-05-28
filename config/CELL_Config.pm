@@ -1,5 +1,7 @@
-use strict;
-use warnings;
+# CELL_DEBUG_MODE
+#        debug mode means that calls to $log->trace and $log->debug
+#        won't be suppressed - off by default
+set('CELL_DEBUG_MODE', 0);
 
 # CELL_SHAREDIR_FULLPATH
 #        full path of App::CELL distro sharedir
@@ -18,8 +20,8 @@ set('CELL_SITEDIR_FULLPATH', '');
 set( 'CELL_SUPPORTED_LANGUAGES', [ 'en' ] );
 
 # CELL_LANGUAGE
-#        language tag determining localization behavior 
-#        default
+#        the language that messages will be displayed in by default,
+#        when no language is specified by other means
 set('CELL_LANGUAGE', 'en');
 
 # CELL_CORE_UNIT_TESTING
@@ -34,5 +36,8 @@ set('CELL_CORE_SAMPLE', 'layers of sediments' );
 #        determine whether App::CELL::Log appends file and line number of
 #        caller to log messages
 set( 'CELL_LOG_SHOW_CALLER', 1 );
+
+use strict;
+use warnings;
 
 1;
