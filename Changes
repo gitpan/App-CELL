@@ -527,3 +527,7 @@ later are in the perl-CELL project repo.
 - move t/111-test.t to t/006-config.t
 - t/110-cell.t: fix calls to 'meta' and 'config'
 
+0.141  2014-05-28 13:57 CEST
+- globally change \o{12} to \012 in all regexes in attempt to appease Perl
+  5.12
+

@@ -14,11 +14,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.140
+Version 0.141
 
 =cut
 
-our $VERSION = '0.140';
+our $VERSION = '0.141';
 
 
 
@@ -95,7 +95,7 @@ sub mktmpdir {
     catch {
         my $errmsg = $_ || '';
         $errmsg =~ s/\n//g;
-        $errmsg =~ s/\o{12}/ -- /g;
+        $errmsg =~ s/\012/ -- /g;
         $errmsg = "Attempting to create $app_cell_test_dir_full . . . failure: $errmsg";
         $log->debug( $errmsg );
         print STDERR $errmsg, "\n";
@@ -156,7 +156,7 @@ sub touch_files {
     catch {
         my $errmsg = $_;
         $errmsg =~ s/\n//g;
-        $errmsg =~ s/\o{12}/ -- /g;
+        $errmsg =~ s/\012/ -- /g;
         $errmsg = "Attempting to 'touch' $count files in $dirspec . . . failure: $errmsg";
         $log->debug( $errmsg );
         print STDERR $errmsg, "\n";

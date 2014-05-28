@@ -21,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.140
+Version 0.141
 
 =cut
 
-our $VERSION = '0.140';
+our $VERSION = '0.141';
 
 
 
@@ -704,7 +704,7 @@ sub parse_config_file {
     }
     catch {
        my $errmsg = $_;
-       $errmsg =~ s/\o{12}/ -- /ag;
+       $errmsg =~ s/\012/ -- /ag;
        $log->debug( $errmsg );
        App::CELL::Status->new( 
            level => 'ERR',

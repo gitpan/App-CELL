@@ -17,11 +17,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.140
+Version 0.141
 
 =cut
 
-our $VERSION = '0.140';
+our $VERSION = '0.141';
 
 
 
@@ -193,7 +193,7 @@ sub new {
 
     # strip out anything that resembles a newline
     $text =~ s/\n//g;
-    $text =~ s/\o{12}/ -- /g;
+    $text =~ s/\012/ -- /g;
 
     # insert the arguments into the message text -- needs to be in an eval
     # block because we have no control over what crap the application
@@ -206,7 +206,7 @@ sub new {
     }
     catch {
         my $errmsg = $_;
-        $errmsg =~ s/\o{12}/ -- /ag;
+        $errmsg =~ s/\012/ -- /ag;
         return App::CELL::Status->new( level => 'ERR',
             code => 'CELL_MESSAGE_ARGUMENT_MISMATCH',
             args => [ $ARGS{code}, $errmsg ],
