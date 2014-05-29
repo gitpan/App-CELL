@@ -21,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.145
+Version 0.146
 
 =cut
 
-our $VERSION = '0.145';
+our $VERSION = '0.146';
 
 
 

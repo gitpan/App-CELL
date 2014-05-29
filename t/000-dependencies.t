@@ -4,7 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 26;
+plan tests => 27;
 
 BEGIN {
 
@@ -26,12 +26,13 @@ BEGIN {
     use_ok( 'File::Temp' );
     use_ok( 'File::Touch' );
     use_ok( 'Log::Any' );
+    use_ok( 'Log::Any::Adapter' );
     use_ok( 'Log::Any::Test' );
     use_ok( 'Try::Tiny' );
 
     # modules in this distro
-    use_ok( 'App::CELL' );
-    use_ok( 'App::CELL::Config' );
+    use_ok( 'App::CELL', qw( $CELL $log $meta $core $site ) );
+    use_ok( 'App::CELL::Config', qw( $meta $core $site ) );
     use_ok( 'App::CELL::Load' );
     use_ok( 'App::CELL::Log', qw( $log ) );
     use_ok( 'App::CELL::Message' );

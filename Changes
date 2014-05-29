@@ -552,3 +552,6 @@ later are in the perl-CELL project repo.
 - Build.PL: add Log::Any::Adapter to build_requires
 - t/000-dependencies.t: update
 
+0.146  2014-05-29 05:28 CEST
+- t/000-dependencies.t: add Log::Any::Adapter, exports
+
