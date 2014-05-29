@@ -18,7 +18,8 @@ my $build = Module::Build->new(
     },
     build_requires     => { 
         'Data::Dumper'       => 0,
-        'Log::Any::Test'     => 0 
+        'Log::Any::Adapter'  => 0,
+        'Log::Any::Test'     => 0,
     },
     requires           => {
         'Date::Format'       => 0,
@@ -32,7 +33,8 @@ my $build = Module::Build->new(
     },
     meta_merge => {
         resources => {
-            repository => 'https://sourceforge.net/projects/perl-cell/',
+            homepage => 'https://sourceforge.net/projects/perl-cell/',
+            repository => 'https://sourceforge.net/p/perl-cell/code/',
         }
     },
 );

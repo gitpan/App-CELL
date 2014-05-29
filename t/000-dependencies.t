@@ -4,24 +4,26 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 23;
+plan tests => 26;
 
 BEGIN {
 
     # CORE modules
     use_ok( 'Carp' );
-    use_ok( 'English');
+    use_ok( 'Data::Dumper' );
     use_ok( 'Exporter', qw( import ) );
     use_ok( 'ExtUtils::Command' );
     use_ok( 'File::Spec' );
+    use_ok( 'Module::Build' );
     use_ok( 'Scalar::Util', qw( blessed ) );
     use_ok( 'Test::More' );
 
     # non-core (CPAN) modules
     use_ok( 'Date::Format' );
     use_ok( 'File::HomeDir' );
-    use_ok( 'File::ShareDir' );
     use_ok( 'File::Next' );
+    use_ok( 'File::ShareDir' );
+    use_ok( 'File::Temp' );
     use_ok( 'File::Touch' );
     use_ok( 'Log::Any' );
     use_ok( 'Log::Any::Test' );
@@ -30,12 +32,13 @@ BEGIN {
     # modules in this distro
     use_ok( 'App::CELL' );
     use_ok( 'App::CELL::Config' );
-    use_ok( 'App::CELL::Status' );
     use_ok( 'App::CELL::Load' );
     use_ok( 'App::CELL::Log', qw( $log ) );
     use_ok( 'App::CELL::Message' );
+    use_ok( 'App::CELL::Status' );
     use_ok( 'App::CELL::Util', qw( utc_timestamp is_directory_viable ) );
     use_ok( 'App::CELL::Test' );
+    use_ok( 'App::CELL::Test::LogToFile' );
 
 }
 

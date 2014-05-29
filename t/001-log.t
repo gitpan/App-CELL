@@ -3,17 +3,15 @@ use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
 
-use Log::Any::Test;
-use App::CELL::Log qw( $log );
 use App::CELL::Load;
+use App::CELL::Log qw( $log );
+use Log::Any::Test; # BE AWARE THAT App::CELL::Test::LogToFile is 
+                    # incompatible with Log::Any::Test !!
+
 use Test::More tests => 18;
 
 # Initialize the logger
 $log->init( ident => 'CELLtest', debug_mode => 1 );
-
-# This is cheating, but we need the Log::Any object so we can call the
-# testing methods
-our $log_any_obj = Log::Any->get_logger(category => 'CELLtest');
 
 $log->info("-------------------------------------------------------- ");
 $log->info("---                   001-log.t                      ---");

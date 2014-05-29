@@ -91,7 +91,7 @@ $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Core unit testing param, obtained via get_param, has expected value" );
 
 $status = App::CELL::Config::set_core( 'CELL_CORE_UNIT_TESTING', "different bar" );
-ok( $status->err, "Attempt to set existing core param triggered ERR" );
+ok( $status->level eq 'ERR', "Attempt to set existing core param triggered ERR" );
 
 my $new_result = $core->CELL_CORE_UNIT_TESTING;
 isnt( $new_result, "different bar", "set_core did not change the value" );
@@ -117,7 +117,7 @@ $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Site unit testing param, obtained via get_param, has expected value" );
 
 $status = App::CELL::Config::set_site( 'CELL_SITE_UNIT_TESTING', "different baz" );
-ok( $status->err, "Attempt to set existing site param triggered ERR" );
+ok( $status->level eq 'ERR', "Attempt to set existing site param triggered ERR" );
 
 $new_result = $site->CELL_SITE_UNIT_TESTING;
 isnt( $new_result, "different baz", "set_site did not change the value" );

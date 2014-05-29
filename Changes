@@ -540,3 +540,15 @@ later are in the perl-CELL project repo.
 - Test/LogToFile.pm: new module
 - t/: use the new module in tests
 
+0.144  2014-05-28 22:57 CEST
+- Build.PL: fix/improve metadata
+- CELL.pm, Load.pm, Log.pm: perlcritic fixes
+- Status.pm: delete boolean methods 'notice', 'warn', etc. because the same
+  info can easily be obtained using the 'level' accessor method
+- t/: cleanup
+- release/: update README
+
+0.145  2014-05-29 05:21 CEST
+- Build.PL: add Log::Any::Adapter to build_requires
+- t/000-dependencies.t: update
+

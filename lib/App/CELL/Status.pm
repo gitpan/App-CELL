@@ -17,11 +17,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.143
+Version 0.145
 
 =cut
 
-our $VERSION = '0.143';
+our $VERSION = '0.145';
 
 
 
@@ -302,77 +302,18 @@ sub not_ok {
 }
 
 
-=head2 notice
-
-Boolean function, returns true if status object has level 'NOTICE', false
-otherwise.
-
-=cut
-
-sub notice {
-
-    my ( $arg0, $arg1 ) = @_;
-
-    if ( blessed $arg0 )
-    {
-        # instance method - OK
-        return 1 if ( $arg0->level eq 'NOTICE' );
-    } 
-    return 0;
-}
-
-
-=head2 warn
-
-Boolean function, returns true if status object has level 'WARN', false
-otherwise.
-
-=cut
-
-sub warn {
-
-    my ( $arg0, $arg1 ) = @_;
-
-    if ( blessed $arg0 )
-    {
-        # instance method - OK
-        return 1 if ( $arg0->level eq 'WARN' );
-    } 
-    return 0;
-}
-
-
-=head2 err
-
-Boolean function, returns true if status object has level 'ERR', false
-otherwise.
-
-=cut
-
-sub err {
-
-    my ( $arg0, $arg1 ) = @_;
-
-    if ( blessed $arg0 )
-    {
-        # instance method - OK
-        return 1 if ( $arg0->level eq 'ERR' );
-    } 
-    return 0;
-}
-
-
 =head2 level
 
-Accessor method.
+Accessor method, returns level of status object in ALL-CAPS, or undef if
+not called on a valid status object.
 
 =cut
 
 sub level {
     my $self = shift;
 
-    return $self->{level} if exists $self->{level};
-    return "<NO_LEVEL>";
+    return uc $self->{level} if exists $self->{level};
+    return;
 }
 
 

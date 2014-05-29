@@ -17,14 +17,14 @@ $log->info("----------------------------------------------- ");
 
 my $status = App::CELL::Message->new();
 ok( $status->not_ok, "Message->new with no code is not OK");
-ok( $status->err, "Message->new with no code returns ERR status");
+ok( $status->level eq 'ERR', "Message->new with no code returns ERR status");
 is( $status->code, 'CELL_MESSAGE_NO_CODE', "Error message code is correct" );
 is( $status->text, 'CELL_MESSAGE_NO_CODE', "Error message text is correct" );
 #diag( $message->stringify );
 
 $status = App::CELL::Message->new( code => undef );
 ok( $status->not_ok, "Message->new with no code is not OK");
-ok( $status->err, "Message->new with no code returns ERR status");
+ok( $status->level eq 'ERR', "Message->new with no code returns ERR status");
 is( $status->code, 'CELL_MESSAGE_CODE_UNDEFINED', "Error message code is correct" );
 is( $status->text, 'CELL_MESSAGE_CODE_UNDEFINED', "Error message text is correct" );
 

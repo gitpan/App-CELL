@@ -5,6 +5,7 @@ use warnings;
 use 5.010;
 
 # IMPORTANT: this module must not depend on any other CELL modules
+use Data::Dumper;
 use File::Spec;
 use Log::Any;
 
@@ -18,11 +19,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.143
+Version 0.145
 
 =cut
 
-our $VERSION = '0.143';
+our $VERSION = '0.145';
 
 
 
@@ -128,7 +129,7 @@ Set the $debug_mode package variable
 
 =cut
 
-sub debug_mode { $debug_mode = $_[1]; }
+sub debug_mode { return $debug_mode = $_[1]; }
 
 
 =head2 ident
@@ -140,7 +141,7 @@ Set the $ident package variable and the Log::Any category
 sub ident {
     my $self = shift;
     $ident = shift;
-    $log_any_obj = Log::Any->get_logger(category => $ident);
+    return $log_any_obj = Log::Any->get_logger(category => $ident);
 }
 
 
@@ -150,7 +151,7 @@ Set the $show_caller package variable
 
 =cut
 
-sub show_caller { $show_caller = $_[1]; }
+sub show_caller { return $show_caller = $_[1]; }
 
 
 =head2 init
@@ -223,19 +224,19 @@ Call Log::Any methods after some pre-processing
 
 sub AUTOLOAD {
     
-    my $class = shift;
+    my ( $class, $msg_text, @ARGS ) = @_;
     my $method = $AUTOLOAD;
     $method =~ s/.*:://;
 
     # if method is not in permitted_levels, pass through to Log::Any
     # directly
-    if ( not grep { $_ =~ /$method/i } @permitted_levels ) {
-        return $log_any_obj->$method( @_ );
+    if ( not grep { $_ =~ m/$method/i } @permitted_levels ) {
+        return $log_any_obj->$method( $msg_text, @ARGS );
     }
 
-    # we are logging a message: pass through to Log::Any after
-    # pre-processing
-    my ( $msg_text, %ARGS ) = @_;
+    # we are logging a message
+    my %ARGS;
+    %ARGS = @ARGS if @ARGS % 2 == 0;
     my ( $file, $line );
     my $level;
     my $method_uc = uc $method;
@@ -266,6 +267,7 @@ sub AUTOLOAD {
     die "No Log::Any object!" if not $log_any_obj;
     return if not $debug_mode and ( $method_lc eq 'debug' or $method_lc eq 'trace' );
     $log_any_obj->$method_lc( _assemble_log_message( "$level: $msg_text", $file, $line ) );
+    return;
 }
 
 
@@ -286,23 +288,24 @@ sub status_obj {
 
     ( $level, $msg_text ) = _sanitize_level( $level, $msg_text );
 
-    $log->$level( 
+    return $log->$level( 
         _assemble_log_message( $msg_text, $file, $line ) );
 }
 
 
-=head2 message_obj
-
-Take a message object and log it.
-
-=cut
-
-sub message_obj {
-    my ( $self, $message_obj ) = @_;
-    $log->init( ident => $ident ) if not $log_any_obj;
-    my $level = $message_obj->level;
-    my $msg_text = $message_obj->text;
-}
+#=head2 msg
+#
+#Take a message object and log it.
+#
+#=cut
+#
+#sub msg {
+#    my ( $self, $msgobj, @ARGS ) = @_;
+#    return if not blessed( $msgobj );
+#    $log->init( ident => $ident ) if not $log_any_obj;
+#    my $level = $msgobj->level;
+#    my $text = $msgobj->text;
+#}
 
 
 sub _sanitize_level {

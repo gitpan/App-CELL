@@ -21,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.143
+Version 0.145
 
 =cut
 
-our $VERSION = '0.143';
+our $VERSION = '0.145';
 
 
 
@@ -285,7 +285,7 @@ messages loaded).
 
 sub message_files {
 
-    my $confdir = $_[0];
+    my $confdir = shift;
     my %reshash;
     $reshash{quantfiles} = 0;
     $reshash{quantitems} = 0;
@@ -317,7 +317,7 @@ configuration parameters loaded).
 
 sub meta_core_site_files {
 
-    my $confdir = $_[0];
+    my $confdir = shift;
     my %reshash;
     $reshash{quantfiles} = 0;
     $reshash{quantitems} = 0;
@@ -523,10 +523,11 @@ Returns: number of stanzas successfully parsed and loaded
 =cut
 
 sub parse_message_file {
+    my @ARGS = @_;
     my %ARGS = ( 
                     'File' => undef,
                     'Dest' => undef,
-                    @_,
+                    @ARGS,
                );
 
     my $process_stanza_sub = sub {
@@ -668,9 +669,6 @@ be loaded.)
 =cut
 
 sub parse_config_file {
-
-    use Try::Tiny;
-
     my %ARGS = ( 
                     'File' => undef,
                     'Dest' => undef,
@@ -684,36 +682,43 @@ sub parse_config_file {
     bless $self, 'App::CELL::Load';
 
     my $count = 0;
-    $log->info( "Loading =>$ARGS{'File'}<=" );
+    
+    # ideally this should be 'debug' for sharedir and 'info' for sitedir
+    # but in this routine I have no easy way of telling one from the other
+    $log->debug( "Loading =>$ARGS{'File'}<=" );
     if ( not ref( $ARGS{'Dest'} ) ) {
         $log->info("Something strange happened: " . ref( $ARGS{'Dest'} ));
     }
-    try {
-        local *set = sub($$) {
-            my ( $param, $value ) = @_;
-            my ( undef, $file, $line ) = caller;
-            $count += $self->_conf_from_config(
-                'Dest'  => $ARGS{'Dest'},
-                'Param' => $param,
-                'Value' => $value,
-                'File'  => $file,
-                'Line'  => $line,
-            );
+
+    {
+        use Try::Tiny;
+        try {
+            local *set = sub($$) {
+                my ( $param, $value ) = @_;
+                my ( undef, $file, $line ) = caller;
+                $count += $self->_conf_from_config(
+                    'Dest'  => $ARGS{'Dest'},
+                    'Param' => $param,
+                    'Value' => $value,
+                    'File'  => $file,
+                    'Line'  => $line,
+                );
+            };
+            require $ARGS{'File'};
+        }
+        catch {
+           my $errmsg = $_;
+           $errmsg =~ s/\012/ -- /ag;
+           $log->debug( $errmsg );
+           App::CELL::Status->new( 
+               level => 'ERR',
+               code => 'CELL_CONFIG_LOAD_FAIL',
+               args => [ $ARGS{'File'}, $errmsg ], 
+           );
+           $log->debug( "The count is $count" );
+           return $count;
         };
-        require $ARGS{'File'};
     }
-    catch {
-       my $errmsg = $_;
-       $errmsg =~ s/\012/ -- /ag;
-       $log->debug( $errmsg );
-       App::CELL::Status->new( 
-           level => 'ERR',
-           code => 'CELL_CONFIG_LOAD_FAIL',
-           args => [ $ARGS{'File'}, $errmsg ], 
-       );
-       $log->debug( "The count is $count" );
-       return $count;
-    };
     #$log->info( "Successfully loaded $count configuration parameters "
     #          . "from $ARGS{'File'}" );
 

@@ -20,11 +20,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.143
+Version 0.145
 
 =cut
 
-our $VERSION = '0.143';
+our $VERSION = '0.145';
 
 
 
@@ -107,7 +107,7 @@ that is using L<App::CELL> for its configuration, error handling, etc.
 
 =cut
 
-sub appname { $CELL->{appname} }
+sub appname { return $CELL->{appname}; }
 
 
 =head2 enviro
@@ -117,7 +117,7 @@ containing the sitedir
 
 =cut
 
-sub enviro { $CELL->{enviro} }
+sub enviro { return $CELL->{enviro}; }
 
 
 =head2 loaded
@@ -262,7 +262,7 @@ Construct a message object (wrapper for App::CELL::Message::new)
 sub msg { 
     my ( $self, $code ) = @_;
     my $status = App::CELL::Message->new( code => $code );
-    return undef if $status->not_ok;
+    return if $status->not_ok; # will return undef in scalar mode
     return $status->payload;
 }
 
