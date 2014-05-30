@@ -2,16 +2,13 @@
 use 5.012;
 use strict;
 use warnings FATAL => 'all';
-use Test::More;
 use App::CELL qw( $log $meta );
-
-#
-# To activate debugging, uncomment the following line
-#
 #use App::CELL::Test::LogToFile;
+use Test::More tests => 2;
 
-plan tests => 1;
-
-$log->info("************************************ 111-test.t");
-App::CELL::Config::set_meta('MY_PARAM', 42);
+$log->init( debug_mode => 1 );
+my $status;
+$log->debug("************************************ t/006-config.t");
+$status = $meta->set('MY_PARAM', 42);
+ok( $status->ok, "\$meta->set status OK" );
 is( $meta->MY_PARAM, 42, 'MY_PARAM is 42' );

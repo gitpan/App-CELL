@@ -2,9 +2,7 @@
 use 5.10.0;
 use strict;
 use warnings FATAL => 'all';
-use Test::More;
-
-plan tests => 27;
+use Test::More tests => 26;
 
 BEGIN {
 
@@ -12,8 +10,8 @@ BEGIN {
     use_ok( 'Carp' );
     use_ok( 'Data::Dumper' );
     use_ok( 'Exporter', qw( import ) );
-    use_ok( 'ExtUtils::Command' );
     use_ok( 'File::Spec' );
+    use_ok( 'File::Temp' );
     use_ok( 'Module::Build' );
     use_ok( 'Scalar::Util', qw( blessed ) );
     use_ok( 'Test::More' );
@@ -23,7 +21,6 @@ BEGIN {
     use_ok( 'File::HomeDir' );
     use_ok( 'File::Next' );
     use_ok( 'File::ShareDir' );
-    use_ok( 'File::Temp' );
     use_ok( 'File::Touch' );
     use_ok( 'Log::Any' );
     use_ok( 'Log::Any::Adapter' );

@@ -4,6 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
+#use App::CELL::Test::LogToFile;
 use App::CELL::Util qw( utc_timestamp is_directory_viable );
 use File::Spec;
 use Test::More;
@@ -18,9 +19,10 @@ $log->info("-------------------------------------------------------- ");
 
 # test that App::CELL::Util::timestamp returns something that looks
 # like a timestamp
-my $timestamp_regex = qr/\d{4,4}-[A-Z]{3,3}-\d{1,2} \d{2,2}:\d{2,2}/a;
-ok( utc_timestamp() =~ $timestamp_regex, "App::CELL::Util::timestamp" );
-#diag( "Timestamp: " . timestamp() );
+my $timestamp_regex = qr/^\d{4,4}-\d{2,2}-\d{1,2} \d{2,2}:\d{2,2}/a;
+my $timestamp = utc_timestamp();
+ok( $timestamp =~ $timestamp_regex, "App::CELL::Util::timestamp" );
+#diag( "Timestamp: " . $timestamp );
 
 # App::CELL::Util::is_directory_viable with a viable directory
 my $test_dir = File::Spec->catfile (
@@ -37,4 +39,3 @@ $status = is_directory_viable( $test_dir );
 #diag( $status->payload ) if $status->payload;
 ok( $status->not_ok, "Invalid directory is not viable" );
 is( $status->payload, "does not exist", "Invalid directory is not viable for the right reason" );
-#BAIL_OUT("just because");

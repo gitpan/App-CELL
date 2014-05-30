@@ -15,11 +15,11 @@ App::CELL::Util - generalized, reuseable functions
 
 =head1 VERSION
 
-Version 0.146
+Version 0.150
 
 =cut
 
-our $VERSION = '0.146';
+our $VERSION = '0.150';
 
 
 
@@ -67,7 +67,7 @@ our @EXPORT_OK = qw( utc_timestamp is_directory_viable );
 =cut
 
 sub utc_timestamp {
-   return uc time2str("%Y-%b-%d %H:%M", time, 'GMT');
+   return uc time2str("%Y-%m-%d %H:%M %Z", time, 'GMT');
 }
 
 

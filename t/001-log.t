@@ -10,6 +10,9 @@ use Log::Any::Test; # BE AWARE THAT App::CELL::Test::LogToFile is
 
 use Test::More tests => 18;
 
+# check environment
+delete $ENV{CELL_DEBUG_MODE} if exists $ENV{CELL_DEBUG_MODE};
+
 # Initialize the logger
 $log->init( ident => 'CELLtest', debug_mode => 1 );
 

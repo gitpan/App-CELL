@@ -21,11 +21,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.146
+Version 0.150
 
 =cut
 
-our $VERSION = '0.146';
+our $VERSION = '0.150';
 
 
 
@@ -179,7 +179,7 @@ sub init {
         } 
         $log->info( "Found viable CELL configuration directory " . 
             $tmp_sharedir . " in App::CELL distro" );
-        App::CELL::Config::set_site( 'CELL_SHAREDIR_FULLPATH', $tmp_sharedir );
+        $site->set( 'CELL_SHAREDIR_FULLPATH', $tmp_sharedir );
         $sharedir = $tmp_sharedir;
     }
 
@@ -191,7 +191,7 @@ sub init {
         $status = meta_core_site_files( $sharedir );
         $load_status = _report_load_status( $sharedir, 'App:CELL distro sharedir', 'config params', $status );
         return $load_status if $load_status->not_ok;
-        App::CELL::Config::set_meta( 'CELL_META_SHAREDIR_LOADED', 1 );
+        $meta->set( 'CELL_META_SHAREDIR_LOADED', 1 );
         $sharedir_loaded = 1;
     }
 
@@ -199,7 +199,7 @@ sub init {
     if ( not $sitedir ) {
         my $tmp_sitedir = get_sitedir( %Args );
         if ( $tmp_sitedir ) {
-            App::CELL::Config::set_site( 'CELL_SITEDIR_FULLPATH', $tmp_sitedir );
+            $site->set( 'CELL_SITEDIR_FULLPATH', $tmp_sitedir );
             $sitedir = $tmp_sitedir;
         } else {
             App::CELL::Status->new (
@@ -215,7 +215,7 @@ sub init {
         _report_load_status( $sitedir, 'site dir', 'messages', $status );
         $status = meta_core_site_files( $sitedir );
         _report_load_status( $sitedir, 'site conf dir', 'config params', $status );
-        App::CELL::Config::set_meta( 'CELL_META_SITEDIR_LOADED', 1 );
+        $meta->set( 'CELL_META_SITEDIR_LOADED', 1 );
         $sitedir_loaded = 1;
     }
 
@@ -708,7 +708,7 @@ sub parse_config_file {
         }
         catch {
            my $errmsg = $_;
-           $errmsg =~ s/\012/ -- /ag;
+           $errmsg =~ s/\012/ -- /g;
            $log->debug( $errmsg );
            App::CELL::Status->new( 
                level => 'ERR',

@@ -6,6 +6,8 @@ use 5.010;
 
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
+#use Data::Dumper;
+use Scalar::Util qw( blessed );
 
 =head1 NAME
 
@@ -16,11 +18,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.146
+Version 0.150
 
 =cut
 
-our $VERSION = '0.146';
+our $VERSION = '0.150';
 
 
 
@@ -85,7 +87,7 @@ sub AUTOLOAD {
     my $self = shift;
     ( my $param ) = $AUTOLOAD =~ m/.*::(.*)$/;
     my ( $throwaway, $file, $line ) = caller;
-    $log->fatal( "Bad call to Config.pm \$$param at $file line $line!" ) if not ref $self;
+    die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
     if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
         return $meta->{$param}->{Value} if exists $meta->{$param};
     } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
@@ -98,90 +100,70 @@ sub AUTOLOAD {
 }
 
 
-=head2 set_meta
+=head2 set
 
-By definition, meta parameters are mutable. Use this function to set or
-change them. Takes two arguments: parameter name and new value. If the
-parameter didn't exist before, it will be created. Returns 'ok' status
-object.
-
-TO_DO: check value to make sure it's a scalar.
+Use this function to set new params (meta/core/site) or change existing
+ones (meta only). Takes two arguments: parameter name and new value. 
+Returns a status object.
 
 =cut
 
-sub set_meta {
-    my ( $param, $value ) = @_;
-    if ( exists $meta->{$param} ) {
-        App::CELL::Status->new(
-            level => 'NOTICE',
-            code => 'CELL_OVERWRITE_META_PARAM',
-            args => [ $param, $value ],
-            caller => [ caller ],
-        );
-    } else {
-        $log->info( "Setting meta parameter $param for the first time" );
+sub set {
+    my ( $self, $param, $value ) = @_;
+    return App::CELL::Status->not_ok if not blessed $self;
+    my %ARGS = (
+                    level => 'OK',
+                    caller => [ caller ],
+               );
+    if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
+        if ( exists $meta->{$param} ) {
+            %ARGS = (   
+                        %ARGS,
+                        code => 'CELL_OVERWRITE_META_PARAM',
+                        args => [ $param, $value ],
+                    );
+            $log->debug( "Overwriting \$meta->$param with ->$value<-" );
+        } else {
+            $log->info( "Setting new \$meta->$param to ->$value<-" );
+        }
+        $meta->{$param} = {
+                               'File' => (caller)[1],
+                               'Line' => (caller)[2],
+                               'Value' => $value,
+                          };
+        #$log->debug( Dumper $meta );
+    } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
+        if ( exists $core->{$param} ) {
+            %ARGS = (
+                        %ARGS,
+                        level => 'ERR',
+                        code => 'CELL_PARAM_EXISTS_IMMUTABLE',
+                        args => [ 'Core', $param ],
+                    );
+        } else {
+            $core->{$param} = {
+                                   'File' => (caller)[1],
+                                   'Line' => (caller)[2],
+                                   'Value' => $value,
+                              };
+        }
+    } elsif ( $self->{'CELL_CONFTYPE'} eq 'site' ) {
+        if ( exists $site->{$param} ) {
+            %ARGS = (
+                        %ARGS,
+                        level => 'ERR',
+                        code => 'CELL_PARAM_EXISTS_IMMUTABLE',
+                        args => [ 'Site', $param ],
+                    );
+        } else {
+            $site->{$param} = {
+                                   'File' => (caller)[1],
+                                   'Line' => (caller)[2],
+                                   'Value' => $value,
+                              };
+        }
     }
-    $meta->{$param} = {
-           'File' => '<INTERNAL>',
-           'Line' => 0,
-           'Value' => $value,
-    };
-    return App::CELL::Status->ok;
-}
-
-
-=head2 set_core
-
-Sets core parameter, provided it doesn't already exist. Wrapper.
-
-=cut
-
-sub set_core {
-    my ( $param, $value ) = @_;
-    return _set_core_site( 'core', $param, $value );
-}
-
-
-=head2 set_site
-
-Sets site parameter, provided it doesn't already exist. Wrapper.
-
-=cut
-
-sub set_site {
-    my ( $param, $value ) = @_;
-    return _set_core_site( 'site', $param, $value );
-}
-
-
-=head3 _set_core_site
-
-Core and site parameters are immutable. This function can be used to set
-them, provided they don't already exist. Takes three arguments: param type,
-param name and new value. If the parameter didn't exist before, it will be
-created.  Returns 'ok' status object on success, or error object on
-failure.
-
-=cut
-
-sub _set_core_site {
-    no strict 'refs';   # valid throughout the subroutine
-    my ( $type, $param, $value ) = @_;
-    #if ( $type eq "core" and exists $core->{$param} ) {
-    if ( exists $$type->{$param} ) {
-        return App::CELL::Status->new( level => 'ERR', 
-            code => 'CELL_CORE_PARAM_EXISTS_IMMUTABLE',
-            args => [ $param ],
-        );
-    } else {
-        $log->info( "Setting $type parameter $param" );
-        $$type->{$param} = {
-           'File' => '<INTERNAL>',
-           'Line' => 0,
-           'Value' => $value,
-        };
-        return App::CELL::Status->ok;
-    }
+    return App::CELL::Status->new( %ARGS );
 }
 
 # END OF App::CELL::Config MODULE

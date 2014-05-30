@@ -8,6 +8,7 @@ use 5.010;
 use Data::Dumper;
 use File::Spec;
 use Log::Any;
+use Scalar::Util;
 
 
 
@@ -19,11 +20,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.146
+Version 0.150
 
 =cut
 
-our $VERSION = '0.146';
+our $VERSION = '0.150';
 
 
 
@@ -154,6 +155,15 @@ Set the $show_caller package variable
 sub show_caller { return $show_caller = $_[1]; }
 
 
+=head2 permitted_levels
+
+Access the C<@permitted_levels> package variable.
+
+=cut
+
+sub permitted_levels { return @permitted_levels };
+
+
 =head2 init
 
 Initializes (or reconfigures) the logger. Although in most cases folks will
@@ -250,17 +260,16 @@ sub AUTOLOAD {
     my $method_lc = lc $method;
 
     # determine what caller info will be displayed, if any
-    my $throwaway;
     if ( %ARGS ) {
         if ( $ARGS{caller} ) {
-            ( $throwaway, $file, $line ) = @{ $ARGS{caller} };
+            ( undef, $file, $line ) = @{ $ARGS{caller} };
         } elsif ( $ARGS{suppress_caller} ) {
             ( $file, $line ) = ( '', '' );
         } else {
-            ( $throwaway, $file, $line ) = caller;
+            ( undef, $file, $line ) = caller;
         }
     } else {
-        ( $throwaway, $file, $line ) = caller;
+        ( undef, $file, $line ) = caller;
     }
 
     $log->init( ident => $ident ) if not $log_any_obj;
@@ -279,17 +288,16 @@ Take a status object and log it.
 
 sub status_obj {
     my ( $self, $status_obj ) = @_;
+    my ( $level, $text, $caller, %ARGS );
+    $level  = $status_obj->level;
+    $text   = $status_obj->text;
+    $caller = $status_obj->caller;
+    %ARGS = ( caller => $caller ) if $caller;
+    $text = "<STATUS OBJECT WITHOUT TEXT OR CODE>" if not $text;
+    #( $level, $text ) = _sanitize_level( $level, $text );
+
     $log->init( ident => $ident ) if not $log_any_obj;
-    my $level = $status_obj->{level};
-    my $msg_text = $status_obj->text;
-    my $pkg = undef;
-    my $file = $status_obj->{filename};
-    my $line = $status_obj->{line};
-
-    ( $level, $msg_text ) = _sanitize_level( $level, $msg_text );
-
-    return $log->$level( 
-        _assemble_log_message( $msg_text, $file, $line ) );
+    return $log->$level( $text, %ARGS );
 }
 
 

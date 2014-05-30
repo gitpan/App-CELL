@@ -555,3 +555,24 @@ later are in the perl-CELL project repo.
 0.146  2014-05-29 05:28 CEST
 - t/000-dependencies.t: add Log::Any::Adapter, exports
 
+0.147  2014-05-29 10:36 CEST
+- config/: add an error message
+- Status.pm: refactor 'ok' method (perlcritic)
+- Test.pm: make tempdir stuff use File::Temp
+- Util.pm: make timestamp ISO-conformant
+- t/: adjust tests
+
+0.148  2014-05-29 16:58 CEST
+- ticket #48 (new 'set' method in Config.pm) -- WIP
+
+0.149  2014-05-29 21:31 CEST
+- Config.pm: finish implementing new 'set' method
+- t/: update tests
+- Status.pm: new 'dump' method WIP, use $log->status_obj in 'new', refactor
+  accessors
+- Log.pm: new permitted_objects method, refactor status_obj method
+
+0.150  2014-05-30 11:35 CEST
+- remove '/a' regex modifier that doesn't work with Perl 5.012
+  (maybe nobody will miss it?)
+

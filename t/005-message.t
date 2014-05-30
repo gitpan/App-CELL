@@ -6,6 +6,7 @@ use File::ShareDir;
 use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Message;
+#use App::CELL::Test::LogToFile;
 use Test::More;
 
 plan tests => 12;

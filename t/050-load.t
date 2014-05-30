@@ -22,7 +22,8 @@ $log->info("***** TESTING find_files for 'message' type" );
 $status = App::CELL::Test::cleartmpdir();
 ok( $status, "Temporary directory not present" );
 
-my $tmpdir = App::CELL::Test::mktmpdir();
+$status = App::CELL::Test::mktmpdir();
+my $tmpdir = $status->payload();
 my @file_list = qw{ 
                      CELL_Message.conf
                      CELL_Message_en.conf

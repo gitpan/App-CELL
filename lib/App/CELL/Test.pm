@@ -14,11 +14,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.146
+Version 0.150
 
 =cut
 
-our $VERSION = '0.146';
+our $VERSION = '0.150';
 
 
 
@@ -65,8 +65,7 @@ our @EXPORT_OK = qw( cmp_arrays );
 
 =cut
 
-our $app_cell_test_dir_name = 'App-CELLtest';
-our $app_cell_test_dir_full = '';
+our $tdo;  # temporary directory object
 
 
 
@@ -75,9 +74,9 @@ our $app_cell_test_dir_full = '';
 
 =head2 mktmpdir
 
-Creates the App::CELL testing directory in the system temporary directory
-(e.g. C</tmp>) and returns the path to this directory or "undef" on
-failure.
+Creates the App::CELL testing directory in a temporary directory
+(obtained using L<File::Temp>) and returns the path to this directory in
+the payload of a status object.
 
 =cut
 
@@ -85,51 +84,33 @@ sub mktmpdir {
 
     use Try::Tiny;
 
-    $app_cell_test_dir_full = File::Spec->catfile( 
-                                  File::Spec->tmpdir, 
-                                  $app_cell_test_dir_name,
-                              );
     try { 
-        mkdir $app_cell_test_dir_full; 
+        use File::Temp;
+        $tdo = File::Temp->newdir();
     }
     catch {
         my $errmsg = $_ || '';
         $errmsg =~ s/\n//g;
         $errmsg =~ s/\012/ -- /g;
-        $errmsg = "Attempting to create $app_cell_test_dir_full . . . failure: $errmsg";
-        $log->debug( $errmsg );
-        print STDERR $errmsg, "\n";
-        return; # returns undef in scalar context
+        return App::CELL::Status->new( level => 'ERR',
+            code => 'CELL_CREATE_TMPDIR_FAIL',
+            args => [ $errmsg ],
+        );
     };
-
-    $log->debug( "Attempting to create $app_cell_test_dir_full . . . success" );
-
-    return $app_cell_test_dir_full;
+    $log->debug( "Created temporary directory" . $tdo );
+    return App::CELL::Status->ok( $tdo->dirname );
 }
 
 
 =head2 cleartmpdir
 
-Wipes (rm -rf) the App::CELL testing directory, if it exists. Returns:
-
-=over
-
-=item C<true> App::CELL testing directory successfully wiped or not there in the first
-place
-
-=item C<false> directory still there even after C<rm -rf> attempt
-
-=back
+DESTROYs the temporary directory object (see L<File::Temp>).
 
 =cut
 
-sub cleartmpdir {
-    require ExtUtils::Command;
-    return 1 if not -e $app_cell_test_dir_full;
-    local $ARGV[0] = $app_cell_test_dir_full;
-    ExtUtils::Command::rm_rf();
-    return 1 if not -e $app_cell_test_dir_full;
-    return 0;
+sub cleartmpdir { 
+    $tdo->DESTROY if defined $tdo;
+    return App::CELL::Status->ok;
 }
 
 
@@ -140,11 +121,10 @@ that directory. Returns number of files successfully touched.
 
 =cut
 
-sub touch_files {
-
+sub touch_files { 
+    my ( $dirspec, @file_list ) = @_;
     use Try::Tiny;
 
-    my ( $dirspec, @file_list ) = @_;
     my $count = @file_list;
     try {
         use File::Touch;

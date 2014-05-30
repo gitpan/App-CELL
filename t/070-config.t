@@ -13,14 +13,8 @@ use App::CELL::Config qw( $meta $core $site );
 use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Test;
-use Test::More;
-
-#
-# To activate debugging, uncomment the following line
-#
 #use App::CELL::Test::LogToFile;
-
-plan tests => 25;
+use Test::More tests => 25;
 
 my $status;
 $log->init( ident => 'CELLtest', debug_mode => 1 );
@@ -35,7 +29,7 @@ $log->info("-------------------------------------------------------");
 $status = $meta->CELL_META_TEST_PARAM_BLOOEY;
 ok( ! defined($status), "Still no blooey" );
 
-$status = App::CELL::Config::set_meta( 'CELL_META_TEST_PARAM_BLOOEY', 'Blooey' );
+$status = $meta->set( 'CELL_META_TEST_PARAM_BLOOEY', 'Blooey' );
 ok( $status->ok, "Blooey create succeeded" );
 
 # 'exists' returns undef on failure
@@ -63,7 +57,8 @@ my $result = $meta->CELL_META_UNIT_TESTING;
 $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Meta unit testing param, obtained via get_param, has expected value" );
 
-$status = App::CELL::Config::set_meta( 'CELL_META_UNIT_TESTING', "different foo" );
+$status = $meta->set( 'CELL_META_UNIT_TESTING', "different foo" );
+#diag( "\$status level is " . $status->level . ", code " . $status->code );
 ok( $status->ok, "set_meta says OK" );
 
 $result = undef;
@@ -90,7 +85,7 @@ $result = $core->CELL_CORE_UNIT_TESTING;
 $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Core unit testing param, obtained via get_param, has expected value" );
 
-$status = App::CELL::Config::set_core( 'CELL_CORE_UNIT_TESTING', "different bar" );
+$status = $core->set( 'CELL_CORE_UNIT_TESTING', "different bar" );
 ok( $status->level eq 'ERR', "Attempt to set existing core param triggered ERR" );
 
 my $new_result = $core->CELL_CORE_UNIT_TESTING;
@@ -116,7 +111,7 @@ $result = $site->CELL_SITE_UNIT_TESTING;
 $status = App::CELL::Test::cmp_arrays( $result, $expected_value );
 ok( $status, "Site unit testing param, obtained via get_param, has expected value" );
 
-$status = App::CELL::Config::set_site( 'CELL_SITE_UNIT_TESTING', "different baz" );
+$status = $site->set( 'CELL_SITE_UNIT_TESTING', "different baz" );
 ok( $status->level eq 'ERR', "Attempt to set existing site param triggered ERR" );
 
 $new_result = $site->CELL_SITE_UNIT_TESTING;

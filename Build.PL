@@ -15,20 +15,20 @@ my $build = Module::Build->new(
     },
     configure_requires => {
         'Module::Build'      => 0.37,
+        'Software::License'  => 0,
     },
     build_requires     => { 
-        'Data::Dumper'       => 0,
         'Log::Any::Adapter'  => 0,
         'Log::Any::Test'     => 0,
     },
     requires           => {
+        'perl'               => 5.012,
         'Date::Format'       => 0,
         'File::HomeDir'      => 0,
         'File::ShareDir'     => 0,
         'File::Next'         => 0,
         'File::Touch'        => 0,
         'Log::Any'           => 0,
-        'perl'               => 5.012000,
         'Try::Tiny'          => 0,
     },
     meta_merge => {

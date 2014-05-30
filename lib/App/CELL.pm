@@ -20,11 +20,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.146
+Version 0.150
 
 =cut
 
-our $VERSION = '0.146';
+our $VERSION = '0.150';
 
 
 
@@ -226,30 +226,11 @@ sub load {
     @App::CELL::Message::supp_lang = @{ $site->CELL_SUPPORTED_LANGUAGES };
     $App::CELL::Message::language_tag = $site->CELL_LANGUAGE || 'en';
 
-    App::CELL::Config::set_meta( 'CELL_META_START_DATETIME', utc_timestamp() );
+    $meta->set( 'CELL_META_START_DATETIME', utc_timestamp() );
     $log->info( "**************** CELL started at " . 
                 $meta->CELL_META_START_DATETIME     . " (UTC)" );
 
     return App::CELL::Status->ok;
-}
-
-
-=head2 set_meta
-
-Set a meta parameter. Wrapper for App::CELL::Config::set_meta. Takes two
-arguments: string containing name of meta parameter, and value (scalar,
-arrayref, or hashref) to assign to the parameter. Returns a status object.
-
-=cut
-
-sub set_meta {
-    shift();  # throw away the class/object
-    if ( @_ ) {
-        return App::CELL::Config::set_meta( @_ );
-    } else {
-        return App::CELL::Status->new( level => 'ERR',
-                   code => 'CELL_ERR_BAD_ARGUMENT' );
-    }
 }
 
 
