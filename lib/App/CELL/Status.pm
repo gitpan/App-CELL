@@ -2,7 +2,7 @@ package App::CELL::Status;
 
 use strict;
 use warnings;
-use 5.010;
+use 5.012;
 
 use App::CELL::Log qw( $log );
 use Scalar::Util qw( blessed );
@@ -17,11 +17,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 
@@ -39,11 +39,6 @@ our $VERSION = '0.150';
     my $status = $XYZ( ... );
     return $status if not $status->ok;  # handle failure
     my $payload = $status->payload;     # handle success
-
-    # just to log something more serious than DEBUG or INFO (see
-    # App::CELL::Log for how to log those)
-    App::CELL::Status->new( 'WARN', 'Watch out!' );
-    App::CELL::Status->new( 'NOTICE', 'Look at this!' );
 
 
 
@@ -100,81 +95,27 @@ Construct a status object and trigger a log message if the level is
 anything other than "OK". Always returns a status object. If no level is
 specified, the level will be 'ERR'. If no code is given, the code will be 
 
-The most frequent case will be a status code of "OK" with no message (shown
-here with optional "payload", which is whatever the function is supposed to
-return on success:
-
-    # all green
-    return App::CELL::Status->new( level => 'OK',
-                                  payload => $my_return_value,
-                                );
-
-To ensure this is as simple as possible in cases when no return value
-(other than the simple fact of an OK status) is needed, we provide a
-special constructor method:
-
-    # all green
-    return App::CELL::Status->ok;
-
-In most other cases, we will want the status message to be linked to the
-filename and line number where the C<new> method was called. If so, we call
-the method like this:
-
-    # relative to me
-    App::CELL::Status->new( level => 'ERR', 
-                           code => 'CODE1',
-                           args => [ 'foo', 'bar' ],
-                         );
-
-It is also possible to report the caller's filename and line number:
-
-    # relative to my caller
-    App::CELL::Status->new( level => 'ERR', 
-                           code => 'CODE1',
-                           args => [ 'foo', 'bar' ],
-                           caller => [ caller ],
-                         );
-
-It is also possible to pass a message object in lieu of C<code> and
-C<msg_args> (this could be useful if we already have an appropriate message
-on hand):
-
-    # with pre-existing message object
-    App::CELL::Status->new( level => 'ERR', 
-                           msg_obj => $my_msg;
-                         );
-
-Permitted levels are listed in the C<@permitted_levels> package
-variable in C<App::CELL::Log>.
-
 =cut
 
 sub new {
     my ( $class, @ARGS ) = @_;
-    my %ARGS = (
-                    # only level is mandatory
-                    code     => '<NO_CODE>',
-                    @ARGS,
-               ); 
+    my %ARGS = @ARGS;
     my $self;
 
-    # 'OK' and 'NOT_OK' status objects have an optional payload, but
-    # nothing else
-    if ( $ARGS{level} ne 'OK' and $ARGS{level} ne 'NOT_OK' )
-    {
-        # default to ERR level
-        if ( not grep { $ARGS{level} eq $_ } $log->permitted_levels ) {
-            $ARGS{level} = 'ERR';
-        }
+    # default to ERR level
+    if ( not grep { $ARGS{level} eq $_ } $log->permitted_levels ) {
+        $ARGS{level} = 'ERR';
+    }
 
-        # if caller array not given, create it
-        if ( not exists $ARGS{caller} ) {
-            $ARGS{caller} = [ caller ];
-        }
+    # if caller array not given, create it
+    if ( not $ARGS{caller} ) {
+        $ARGS{caller} = [ caller ];
+    }
 
-        $ARGS{args} = [] if not defined( $ARGS{args} );
-        $ARGS{called_from_status} = 1;
+    $ARGS{args} = [] if not defined( $ARGS{args} );
+    $ARGS{called_from_status} = 1;
 
+    if ( $ARGS{code} ) {
         # App::CELL::Message->new returns a status object
         my $status = $class->SUPER::new( %ARGS );
         if ( $status->ok ) {
@@ -249,17 +190,18 @@ method call, must be a scalar).
 sub ok {
 
     my ( $self, $payload ) = @_;
-    my %ARGS;
+    my $ARGS = {};
 
-    if ( ref $self ) 
+    if ( blessed $self ) 
     { # instance method
         return 1 if ( $self->level eq 'OK' );
         return 0;
 
     } 
-    $ARGS{level} = 'OK';
-    $ARGS{payload} = $payload if $payload;
-    return App::CELL::Status->new( %ARGS );
+    $ARGS->{level} = 'OK';
+    $ARGS->{payload} = $payload if $payload;
+    $ARGS->{caller} = [ caller ];
+    return bless $ARGS, __PACKAGE__;
 }
 
 
@@ -278,18 +220,17 @@ Optionally, a payload can be supplied as an argument.
 sub not_ok {
 
     my ( $self, $payload ) = @_;
-    my %ARGS;
+    my $ARGS = {};
 
     if ( blessed $self ) 
     { # instance method
-        $log->debug ("Level of $self->{code} status object " .
-                     "is ->$self->{level}<-");
         return 1 if $self->{level} ne 'OK';
         return 0;
     } 
-    $ARGS{level} = 'NOT_OK';
-    $ARGS{payload} = $payload if $payload;
-    return App::CELL::Status->new( %ARGS );
+    $ARGS->{level} = 'NOT_OK';
+    $ARGS->{payload} = $payload if $payload;
+    $ARGS->{caller} = [ caller ];
+    return bless $ARGS, __PACKAGE__;
 }
 
 
@@ -305,17 +246,18 @@ sub level { return $_[0]->{level}; }
 
 =head2 code
 
-Accesor method, returns code of status object, or C<undef> if none present.
+Accesor method, returns code of status object, or "C<< <NONE> >>" if none
+present.
 
 =cut
 
-sub code { return $_[0]->{code}; }
+sub code { return $_[0]->{code} || "<NONE>"; }
     
 
 =head2 text
 
 Accessor method, returns text of status object, or the code if no text
-present. If neither code nor text are present, returns C<undef>.
+present. If neither code nor text are present, returns "C<< <NONE> >>"
 
 =cut
 
@@ -328,11 +270,11 @@ sub text {
 =head2 caller
 
 Accessor method. Returns array reference containing output of C<caller>
-function associated with this status object, or C<undef> if not present.
+function associated with this status object, or C<[]> if not present.
 
 =cut
 
-sub caller { return $_[0]->{caller}; }
+sub caller { return $_[0]->{caller} || []; }
 
 
 =head2 payload
@@ -341,7 +283,7 @@ When called with no arguments, acts like an accessor method.
 When called with a scalar argument, either adds that as the payload or
 changes the payload to that.
 
-Generates a warning if an existing payload is changed.
+Logs a warning if an existing payload is changed.
 
 Returns the (new) payload or undef.
 
@@ -349,7 +291,11 @@ Returns the (new) payload or undef.
 
 sub payload {
     my ( $self, $new_payload ) = @_;
-    $self->{payload} = $new_payload if defined $new_payload;
+    if ( defined $new_payload ) {
+        $log->warn( "Changing payload of status object. Old payload was " . 
+                    "->$self->{payload}<-" ) if $self->{payload};
+        $self->{payload} = $new_payload;
+    }
     return $self->{payload};
 }
 

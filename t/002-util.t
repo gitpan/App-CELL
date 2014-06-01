@@ -1,5 +1,5 @@
 #!perl -T
-use 5.10.0;
+use 5.012;
 use strict;
 use warnings FATAL => 'all';
 use App::CELL::Log qw( $log );

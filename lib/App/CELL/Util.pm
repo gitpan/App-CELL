@@ -2,7 +2,7 @@ package App::CELL::Util;
 
 use strict;
 use warnings;
-use 5.010;
+use 5.012;
 
 use Date::Format;
 use App::CELL::Status;
@@ -15,11 +15,11 @@ App::CELL::Util - generalized, reuseable functions
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 

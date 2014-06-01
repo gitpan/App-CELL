@@ -6,7 +6,7 @@
 # Run Config.pm through its paces
 #
 
-use 5.10.0;
+use 5.012;
 use strict;
 use warnings FATAL => 'all';
 use App::CELL::Config qw( $meta $core $site );
@@ -48,14 +48,10 @@ ok( defined( $status ), "Meta unit testing param exists" );
 
 my $value = $App::CELL::Config::meta->{ 'CELL_META_UNIT_TESTING' }->{'Value'};
 is( ref( $value ), "ARRAY", "Meta unit testing param is an array reference" );
-
-my $expected_value = [ 1, 2, 3, 'a', 'b', 'c' ];
-$status = App::CELL::Test::cmp_arrays( $expected_value, $value );
-ok( $status, "Meta unit testing param, obtained by cheating, has expected value" );
+is_deeply($value, [ 1, 2, 3, 'a', 'b', 'c' ], "Meta unit testing param, obtained by cheating, has expected value" );
 
 my $result = $meta->CELL_META_UNIT_TESTING;
-$status = App::CELL::Test::cmp_arrays( $result, $expected_value );
-ok( $status, "Meta unit testing param, obtained via get_param, has expected value" );
+is_deeply( $result, [ 1, 2, 3, 'a', 'b', 'c' ], "Meta unit testing param, obtained via get_param, has expected value" );
 
 $status = $meta->set( 'CELL_META_UNIT_TESTING', "different foo" );
 #diag( "\$status level is " . $status->level . ", code " . $status->code );
@@ -76,14 +72,10 @@ ok( defined( $status ), "Core unit testing param exists" );
 
 $value = $App::CELL::Config::core->{ 'CELL_CORE_UNIT_TESTING' }->{'Value'};
 is( ref( $value ), "ARRAY", "Core unit testing param is an array reference" );
-
-$expected_value = [ 'nothing special' ];
-$status = App::CELL::Test::cmp_arrays( $expected_value, $value );
-ok( $status, "Core unit testing param, obtained by cheating, has expected value" );
+is_deeply( $value, [ 'nothing special' ], "Core unit testing param, obtained by cheating, has expected value" );
 
 $result = $core->CELL_CORE_UNIT_TESTING;
-$status = App::CELL::Test::cmp_arrays( $result, $expected_value );
-ok( $status, "Core unit testing param, obtained via get_param, has expected value" );
+is_deeply( $result, [ 'nothing special' ], "Core unit testing param, obtained via get_param, has expected value" );
 
 $status = $core->set( 'CELL_CORE_UNIT_TESTING', "different bar" );
 ok( $status->level eq 'ERR', "Attempt to set existing core param triggered ERR" );
@@ -103,13 +95,10 @@ ok( defined( $status ), "Site unit testing param exists" );
 $value = $App::CELL::Config::site->{ 'CELL_SITE_UNIT_TESTING' }->{'Value'};
 is( ref( $value ), "ARRAY", "Site unit testing param is an array reference" );
 
-$expected_value = [ 'Om mane padme hum' ];
-$status = App::CELL::Test::cmp_arrays( $expected_value, $value );
-ok( $status, "Site unit testing param, obtained by cheating, has expected value" );
+is_deeply( $value, [ 'Om mane padme hum' ], "Site unit testing param, obtained by cheating, has expected value" );
 
 $result = $site->CELL_SITE_UNIT_TESTING;
-$status = App::CELL::Test::cmp_arrays( $result, $expected_value );
-ok( $status, "Site unit testing param, obtained via get_param, has expected value" );
+is_deeply( $result, [ 'Om mane padme hum' ], "Site unit testing param, obtained via get_param, has expected value" );
 
 $status = $site->set( 'CELL_SITE_UNIT_TESTING', "different baz" );
 ok( $status->level eq 'ERR', "Attempt to set existing site param triggered ERR" );

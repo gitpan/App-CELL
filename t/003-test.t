@@ -1,14 +1,12 @@
 #!perl -T
-use 5.10.0;
+use 5.012;
 use strict;
 use warnings FATAL => 'all';
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
 use App::CELL::Test qw( cmp_arrays );
 use File::Spec;
-use Test::More;
-
-plan tests => 10;
+use Test::More tests => 11;
 
 my $status;
 $log->init( ident => 'CELLtest' );
@@ -32,13 +30,20 @@ $status = -d $tmpdir;
 ok( ! $status, "Test directory is really gone" );
 
 my $booltrue = cmp_arrays( [ 0, 1, 2 ], [ 0, 1, 2 ] );
-ok( $booltrue, "cmp_arrays works on identical array refs" );
+ok( $booltrue, "cmp_arrays works on identical arrays" );
 
 my $boolfalse = cmp_arrays( [ 0, 1, 2 ], [ 'foo', 'bar', 'baz' ] );
-ok( ! $boolfalse, "cmp_arrays works on different array refs" );
+ok( ! $boolfalse, "cmp_arrays works on different arrays" );
 
 $booltrue = cmp_arrays( [], [] );
-ok( $booltrue, "cmp_arrays works on two empty array refs" );
+ok( $booltrue, "cmp_arrays works on two empty arrays" );
 
 $boolfalse = cmp_arrays( [], [ 'foo' ] );
-ok( ! $boolfalse, "cmp_arrays works on empty and non-empty array refs" );
+ok( ! $boolfalse, "cmp_arrays works on one empty and one non-empty array" );
+
+$booltrue = cmp_arrays( [ 1, 1, 1, 1, 1 ], [ 1, 1, 1, 1, 1 ] );
+ok( $booltrue, "cmp_arrays works on two identical arrays of repeating ones" );
+
+#$boolfalse = cmp_arrays( [ 1, 1, 1, 1 ], [ 1, 1, 1, 1, 1 ] );
+#is( $boolfalse, 0, "cmp_arrays works on two different arrays of repeating ones" );
+

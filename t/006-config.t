@@ -6,6 +6,7 @@ use App::CELL qw( $log $meta );
 #use App::CELL::Test::LogToFile;
 use Test::More tests => 2;
 
+delete $ENV{CELL_DEBUG_MODE};
 $log->init( debug_mode => 1 );
 my $status;
 $log->debug("************************************ t/006-config.t");

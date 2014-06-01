@@ -2,11 +2,12 @@ package App::CELL::Message;
 
 use strict;
 use warnings;
-use 5.010;
+use 5.012;
 
 use App::CELL::Config;
 use App::CELL::Log qw( $log );
-
+use Data::Dumper;
+use Try::Tiny;
 
 
 =head1 NAME
@@ -17,11 +18,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 
@@ -102,35 +103,6 @@ are localizable.
 
 =head1 PACKAGE VARIABLES
 
-=head2 C<@supp_lang>)
-
-The list of supported languages, specified by their respective
-language tags. Set by App::CELL->init, or might not be set at all.
-
-See the W3C's "Language tags in HTML and XML" white paper for a
-detailed explanation of language tags:
-
-    http://www.w3.org/International/articles/language-tags/
-
-And see here for list of all language tags:
-
-    http://www.langtag.net/registries/lsr-language.txt
-
-=head2 C<@min_supp_lang>
-
-Minimal list of languages (tags) all applications using C<App::CELL> are
-required to support.
-
-=head2 C<$language_tag>
-
-Language tag indicating which language messages are to be displayed in.
-
-=cut
-
-our @supp_lang;
-our @min_supp_lang = ( 'en' );
-our $language_tag = 'en';
-
 
 =head2 C<$mesg>
 
@@ -146,6 +118,31 @@ our $mesg;
 =head1 FUNCTIONS AND METHODS
 
 
+=head2 supported_languages
+
+Get reference to list of supported languages.
+
+=cut
+
+sub supported_languages {
+    my $supp_lang = $App::CELL::Config::site->CELL_SUPPORTED_LANGUAGES || [ 'en' ];
+    return $supp_lang;
+}
+
+
+=head2 language_supported
+
+Determine if a given language is supported.
+
+=cut
+
+sub language_supported {
+    my ( $lang ) = @_;
+    return 1 if grep( /$lang/, @{ supported_languages() } );
+    return 0;
+}
+
+
 =head2 new
   
 Construct a message object. Takes a message code and, optionally, a
@@ -155,8 +152,6 @@ is ok, then the message object will be in the payload. See L</SYNOPSIS>.
 =cut
 
 sub new {
-
-    use Try::Tiny;
 
     my ( $class, %ARGS ) = @_; 
     my $stringified_args = _stringify_args( \%ARGS );
@@ -175,21 +170,24 @@ sub new {
             caller => $my_caller,
         );
     }
-    if ( not defined( $ARGS{'code'} ) ) {
+    if ( not $ARGS{'code'} ) {
         return App::CELL::Status->new( level => 'ERR', 
             code => 'CELL_MESSAGE_CODE_UNDEFINED',
             args => [ $stringified_args ],
             caller => $my_caller,
         );
     }
-    @supp_lang = @min_supp_lang if ( not @supp_lang );
 
     # This next line is important: it may happen that the developer wants
     # to quickly code some messages/statuses without formally assigning
     # codes in the site configuration. In these cases, the $mesg lookup
     # will fail. Instead of throwing an error, we just generate a message
     # text from the value of 'code'.
-    my $text = $mesg->{ $ARGS{code} }->{ $language_tag || 'en' }->{ 'Text' } || $ARGS{code};
+    my $text = $mesg->
+               { $ARGS{code} }->
+               { $ARGS{lang} || $App::CELL::Config::site->CELL_LANGUAGE || 'en' }->
+               { 'Text' } 
+               || $ARGS{code};
 
     # strip out anything that resembles a newline
     $text =~ s/\n//g;
@@ -233,6 +231,19 @@ sub new {
     );
 }
 
+
+=head2 lang
+
+Clones the message into another language.
+
+=cut
+
+sub lang {
+    my ( $self, $lang ) = @_;
+    my $fully_blessed = _stringify_args( $self );
+    return $fully_blessed =~ m/\{(.*)\}/
+}
+
 =head3 _stringify_args
 
 Convert args into a string for error reporting
@@ -240,7 +251,6 @@ Convert args into a string for error reporting
 =cut
 
 sub _stringify_args {
-    use Data::Dumper;
     local $Data::Dumper::Indent = 0;
     local $Data::Dumper::Terse = 1;
     my $args = shift;
@@ -261,7 +271,6 @@ Generate a string representation of a message object using Data::Dumper.
 =cut
 
 sub stringify {
-    use Data::Dumper;
     local $Data::Dumper::Terse = 1;
     my $self = shift;
     my %u_self = %$self;

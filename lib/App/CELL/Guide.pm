@@ -2,7 +2,7 @@ package App::CELL::Guide;
 
 use strict;
 use warnings;
-use 5.010;
+use 5.012;
 
 
 
@@ -14,11 +14,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 
@@ -471,6 +471,58 @@ variants can be obtained by specifying the C<Lang> parameter to
 CELL::Message->new. If the C<Lang> parameter is not specified, CELL will
 always try to use the default language (C<CELL_DEFAULT_LANGUAGE> or English if
 that parameter has not been set).
+
+
+
+=head1 STATUS OBJECTS
+
+The most frequent case will be a status code of "OK" with no message (shown
+here with optional "payload", which is whatever the function is supposed to
+return on success:
+
+    # all green
+    return App::CELL::Status->new( level => 'OK',
+                                  payload => $my_return_value,
+                                );
+
+To ensure this is as simple as possible in cases when no return value
+(other than the simple fact of an OK status) is needed, we provide a
+special constructor method:
+
+    # all green
+    return App::CELL::Status->ok;
+
+In most other cases, we will want the status message to be linked to the
+filename and line number where the C<new> method was called. If so, we call
+the method like this:
+
+    # relative to me
+    App::CELL::Status->new( level => 'ERR', 
+                           code => 'CODE1',
+                           args => [ 'foo', 'bar' ],
+                         );
+
+It is also possible to report the caller's filename and line number:
+
+    # relative to my caller
+    App::CELL::Status->new( level => 'ERR', 
+                           code => 'CODE1',
+                           args => [ 'foo', 'bar' ],
+                           caller => [ caller ],
+                         );
+
+It is also possible to pass a message object in lieu of C<code> and
+C<msg_args> (this could be useful if we already have an appropriate message
+on hand):
+
+    # with pre-existing message object
+    App::CELL::Status->new( level => 'ERR', 
+                           msg_obj => $my_msg;
+                         );
+
+Permitted levels are listed in the C<@permitted_levels> package
+variable in C<App::CELL::Log>.
+
 
 
 =head1 COMPONENTS

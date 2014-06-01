@@ -10,6 +10,7 @@ use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
 use App::CELL::Util qw( utc_timestamp );
+use Scalar::Util qw( blessed );
 
 
 =head1 NAME
@@ -20,11 +21,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 
@@ -46,11 +47,23 @@ our $VERSION = '0.150';
     # get value of site configuration parameter FOO_PARAM
     my $val = $site->FOO_PARAM;
 
-    # get text of message in default language
-    my $txt = $CELL->msg('FOO_INFO_MSG')->text;
+    # get a list of all supported languages
+    my @supp_lang = $CELL->supported_languages;
+
+    # determine if a language is supported
+    print "sk supported" if $CELL->language_supported('sk');
+
+    # get message object and text in default language
+    my $fmsg = $CELL->msg('FOO_INFO_MSG');
+    my $text = $fmsg->text;
+
+    # get message object and text in default language
+    # (message that takes arguments)
+    $fmsg = $CELL->msg('BAR_ARGS_MSG', "arg1", "arg2");
+    print $fmsg->text, "\n";
 
     # get text of message in a different language
-    $txt = $CELL->msg('FOO_INFO_MSG')->lang('sk')->text;
+    my $sk_text = $fmsg->lang('sk')->text;
 
 
 
@@ -166,12 +179,25 @@ sub sitedir {
 
 =head2 supported_languages
 
-Get $supported_languages array ref from L<App::CELL::Message>
+Get list of supported languages. Equivalent to:
+
+    $site->CELL_SUPPORTED_LANGUAGES || [ 'en ]
 
 =cut
 
 sub supported_languages {
-    return \@App::CELL::Message::supp_lang || [];
+    return App::CELL::Message::supported_languages();
+}
+
+
+=head2 language_supported
+
+Determine if a given language is supported.
+
+=cut
+
+sub language_supported {
+    return App::CELL::Message::language_supported( $_[1] );
 }
 
 
@@ -224,7 +250,7 @@ sub load {
 
     # initialize package variables in Message.pm
     @App::CELL::Message::supp_lang = @{ $site->CELL_SUPPORTED_LANGUAGES };
-    $App::CELL::Message::language_tag = $site->CELL_LANGUAGE || 'en';
+    $App::CELL::Message::default_lang = $site->CELL_LANGUAGE || 'en';
 
     $meta->set( 'CELL_META_START_DATETIME', utc_timestamp() );
     $log->info( "**************** CELL started at " . 
@@ -241,10 +267,12 @@ Construct a message object (wrapper for App::CELL::Message::new)
 =cut
 
 sub msg { 
-    my ( $self, $code ) = @_;
-    my $status = App::CELL::Message->new( code => $code );
+    my ( $self, $code, @ARGS ) = @_;
+    my $status = App::CELL::Message->new( code => $code, args => [ @ARGS ] );
     return if $status->not_ok; # will return undef in scalar mode
-    return $status->payload;
+    my $msgobj = $status->payload;
+    return $msgobj if blessed $msgobj;
+    return;
 }
 
 

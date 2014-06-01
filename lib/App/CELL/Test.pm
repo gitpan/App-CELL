@@ -2,7 +2,7 @@ package App::CELL::Test;
 
 use strict;
 use warnings;
-use 5.010;
+use 5.012;
 
 use App::CELL::Log qw( $log );
 use File::Spec;
@@ -14,11 +14,11 @@ App::CELL::Test - functions for unit testing
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 
@@ -46,18 +46,18 @@ use in CELL's test suite.
 
 =head1 EXPORTS
 
-This module provides the following exports:
-
-=over 
-
-=item C<cmp_arrays> - cmp_arrays routine
-
-=back
+This module exports the following routines:
+    cleartmpdir
+    cmp_arrays
+    mktmpdir
+    populate_file
+    touch_files
 
 =cut 
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( cmp_arrays );
+our @EXPORT_OK = qw( cleartmpdir cmp_arrays mktmpdir populate_file 
+                     touch_files );
 
 
 
@@ -146,6 +146,30 @@ sub touch_files {
     return $count;
 }
 
+
+=head2 populate_file 
+
+Takes filename (full path) and contents (as a string, potentially
+containing newlines) to write to it. If the file exists, it is first
+unlinked. Then the routine creates the file and populates it with
+the contents. Returns true if something was written, or false if not.
+
+=cut
+
+sub populate_file {
+    my ( $full_path, $contents ) = @_;
+    unlink $full_path;
+    {
+        use File::Touch;
+        File::Touch::touch( $full_path ) or die "Could not touch $full_path";
+    }
+    return 0 unless -f $full_path and -W $full_path;
+    return 0 unless $contents;
+    open(my $fh, '>', $full_path ) or die "Could not open file: $!";
+    print $fh $contents;
+    close $fh;
+    return length $contents;
+}
 
 =head2 cmp_arrays
 

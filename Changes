@@ -576,3 +576,19 @@ later are in the perl-CELL project repo.
 - remove '/a' regex modifier that doesn't work with Perl 5.012
   (maybe nobody will miss it?)
 
+0.151  2014-05-30 20:57 CEST
+- Status.pm: move some verbiage to Guide.pm, clarify edge cases
+- t/030-status.pm: add tests for edge cases
+
+0.152  2014-05-31 17:06 CEST
+- change minimum Perl version to 5.012 everywhere 
+- Status.pm: fix constructors in light of testing
+- CELL.pm, Message.pm: begin implementing language functionality
+- t/030-status.t: add lots of tests
+- t/070-config.t: use is_deeply instead of homegrown cmp_arrays
+- t/110-site.t: new tests
+
+0.153  2014-06-01 11:36 CEST
+- Load.pm: removed more instances of 'a' regex modifier that causes Perl
+  5.012 to cry "syntax error"
+

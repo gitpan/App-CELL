@@ -34,6 +34,7 @@ t/030-status.t
 t/050-load.t
 t/070-config.t
 t/100-cell.t
+t/110-site.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

@@ -2,7 +2,7 @@ package App::CELL::Load;
 
 use strict;
 use warnings;
-use 5.010;
+use 5.012;
 
 use App::CELL::Config qw( $meta $core $site );
 use App::CELL::Log qw( $log );
@@ -10,6 +10,7 @@ use App::CELL::Message;
 use App::CELL::Status;
 use App::CELL::Test;
 use App::CELL::Util qw( is_directory_viable );
+use Data::Dumper;
 use File::Next;
 use File::ShareDir;
 
@@ -21,11 +22,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 
@@ -427,10 +428,10 @@ variable C<$max_files> (see below).
 
 # regular expressions for each file type
 our $typeregex = {
-       'meta'    => qr/^.+_MetaConfig.pm$/a ,
-       'core'    => qr/^.+_Config.pm$/a     ,
-       'site'    => qr/^.+_SiteConfig.pm$/a ,
-       'message' => qr/^.+_Message(_[^_]+){0,1}.conf$/a ,
+       'meta'    => qr/^.+_MetaConfig.pm$/ ,
+       'core'    => qr/^.+_Config.pm$/     ,
+       'site'    => qr/^.+_SiteConfig.pm$/ ,
+       'message' => qr/^.+_Message(_[^_]+){0,1}.conf$/ ,
 };
 
 # C<$max_files> puts a limit on how many files we will look at in our directory
@@ -500,7 +501,6 @@ sub find_files {
             );
         }
     }
-    #p( $resultcache );
     return ${ $resultcache }{ $dirpath }{ $type };
 }
 
@@ -536,7 +536,7 @@ sub parse_message_file {
         my ( $file, $lang, $stanza, $destref ) = @_;
 
         # put first token on first line into $code
-        my ( $code ) = $stanza->[0] =~ m/^\s*(\S+)/a;
+        my ( $code ) = $stanza->[0] =~ m/^\s*(\S+)/;
         if ( not $code ) {
             $log->info( "ERROR: Could not process stanza ->"
                 . join( " ", @$stanza ) . "<- in $file" );
@@ -583,7 +583,7 @@ sub parse_message_file {
     };
 
     # determine language from file name
-    my ( $lang ) = $ARGS{'File'} =~ m/_Message_([^_]+).conf$/a;
+    my ( $lang ) = $ARGS{'File'} =~ m/_Message_([^_]+).conf$/;
     if ( not $lang ) {
         $log->info( "Could not determine language from filename "
             . "$ARGS{'File'} -- reverting to default language "

@@ -7,7 +7,7 @@
 # used for debugging (not to test debugging)
 #
 
-use 5.10.0;
+use 5.012;
 use strict;
 use warnings FATAL => 'all';
 use App::CELL::Config;

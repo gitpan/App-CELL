@@ -2,7 +2,7 @@ package App::CELL::Log;
 
 use strict;
 use warnings;
-use 5.010;
+use 5.012;
 
 # IMPORTANT: this module must not depend on any other CELL modules
 use Data::Dumper;
@@ -20,11 +20,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.150
+Version 0.153
 
 =cut
 
-our $VERSION = '0.150';
+our $VERSION = '0.153';
 
 
 

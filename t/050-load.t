@@ -1,5 +1,5 @@
 #!perl
-use 5.10.0;
+use 5.012;
 use strict;
 use warnings FATAL => 'all';
 use App::CELL::Load;
@@ -64,9 +64,6 @@ ok( keys( @$return_list ) == 1, "Right number of site config files" );
 
 $log->info("*****");
 $log->info("***** TESTING parse_message_file" );
-my $full_path = File::Spec->catfile( $tmpdir, $file_list[0] );
-#diag( "Opening $full_path for writing" );
-open(my $fh, '>', $full_path ) or die "Could not open file: $!";
 my $stuff = <<'EOS';
 # This is a test
 
@@ -82,8 +79,8 @@ BORKED_MESSAGE
 Bimble bomble brum
 
 EOS
-print $fh $stuff;
-close $fh;
+my $full_path = File::Spec->catfile( $tmpdir, $file_list[0] );
+App::CELL::Test::populate_file( $full_path, $stuff);
 my %messages;
 #diag( "BEFORE: %messages has " . keys(%messages) . " keys" );
 App::CELL::Load::parse_message_file( File => $full_path, Dest => \%messages );
@@ -98,7 +95,6 @@ $return_list = App::CELL::Load::find_files( 'meta', $tmpdir );
 is( scalar @$return_list, 2, "Found right number of meta config files");
 #diag( "Meta config file found: $return_list->[0]" );
 $full_path = $return_list->[0];
-open($fh, '>', $full_path ) or die "Could not open file: $!";
 $stuff = <<'EOS';
 # This is a test
 set( 'TEST_PARAM_1', 'Fine and dandy' );
@@ -108,8 +104,7 @@ set( 'TEST_PARAM_1', 'Now is the winter of our discontent' );
 set( 'TEST_PARAM_4', sub { 1; } );
 1;
 EOS
-print $fh $stuff;
-close $fh;
+App::CELL::Test::populate_file( $full_path, $stuff);
 my %params = ();
 my $count = App::CELL::Load::parse_config_file( File => $full_path, Dest => \%params );
 is( keys( %params ), 4, "Correct number of parameters loaded from file" );

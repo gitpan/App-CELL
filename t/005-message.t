@@ -1,5 +1,5 @@
 #!perl
-use 5.10.0;
+use 5.012;
 use strict;
 use warnings FATAL => 'all';
 use File::ShareDir;
@@ -7,14 +7,17 @@ use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Message;
 #use App::CELL::Test::LogToFile;
-use Test::More;
-
-plan tests => 12;
+use Test::More tests => 14;
 
 $log->init( ident => 'CELLtest' );
 $log->info("----------------------------------------------- ");
 $log->info("---             005-message.t               ---");
 $log->info("----------------------------------------------- ");
+
+is_deeply( App::CELL::Message::supported_languages(), [ 'en' ], 
+    "Hard-coded list of supported languages consists of just 'en'" );
+ok( App::CELL::Message::language_supported( 'en' ), 
+    "English is a supported language" );
 
 my $status = App::CELL::Message->new();
 ok( $status->not_ok, "Message->new with no code is not OK");
