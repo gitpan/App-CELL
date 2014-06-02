@@ -18,11 +18,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.155
+Version 0.156
 
 =cut
 
-our $VERSION = '0.155';
+our $VERSION = '0.156';
 
 
 
@@ -73,7 +73,10 @@ our $site = bless { CELL_CONFTYPE => 'site' }, __PACKAGE__;
 
 
 
-=head1 AUTOLOAD ROUTINE
+=head1 SUBROUTINES
+
+
+=head2 AUTOLOAD
 
 The C<AUTOLOAD> routine handles calls that look like this:
    $meta->MY_PARAM
@@ -98,6 +101,18 @@ sub AUTOLOAD {
     }
     return $core->{$param}->{Value} if defined $core->{$param};
     return;
+}
+
+
+=head2 DESTROY
+
+For some reason, Perl 5.012 seems to want a DESTROY method
+
+=cut 
+
+sub DESTROY {
+    my $self = shift;
+    $self->SUPER::DESTROY if $self->can("SUPER::DESTROY");
 }
 
 

@@ -42,35 +42,35 @@
    "provides" : {
       "App::CELL" : {
          "file" : "lib/App/CELL.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Config" : {
          "file" : "lib/App/CELL/Config.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Guide" : {
          "file" : "lib/App/CELL/Guide.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Load" : {
          "file" : "lib/App/CELL/Load.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Log" : {
          "file" : "lib/App/CELL/Log.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Message" : {
          "file" : "lib/App/CELL/Message.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Status" : {
          "file" : "lib/App/CELL/Status.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Test" : {
          "file" : "lib/App/CELL/Test.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       },
       "App::CELL::Test::LogToFile" : {
          "file" : "lib/App/CELL/Test/LogToFile.pm",
@@ -78,7 +78,7 @@
       },
       "App::CELL::Util" : {
          "file" : "lib/App/CELL/Util.pm",
-         "version" : "0.155"
+         "version" : "0.156"
       }
    },
    "release_status" : "stable",
@@ -91,5 +91,5 @@
          "url" : "https://sourceforge.net/p/perl-cell/code/"
       }
    },
-   "version" : "0.155"
+   "version" : "0.156"
 }

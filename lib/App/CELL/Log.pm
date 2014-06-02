@@ -20,11 +20,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.155
+Version 0.156
 
 =cut
 
-our $VERSION = '0.155';
+our $VERSION = '0.156';
 
 
 
@@ -226,6 +226,18 @@ sub init {
 }
 
 
+=head2 DESTROY
+
+For some reason, Perl 5.012 seems to want a DESTROY method
+
+=cut 
+
+sub DESTROY {
+    my $self = shift;
+    $self->SUPER::DESTROY if $self->can("SUPER::DESTROY");
+}
+
+
 =head2 AUTOLOAD
 
 Call Log::Any methods after some pre-processing
@@ -237,10 +249,6 @@ sub AUTOLOAD {
     my ( $class, $msg_text, @ARGS ) = @_;
     my $method = $AUTOLOAD;
     $method =~ s/.*:://;
-
-    # if method is DESTROY, pass it to SUPER because we haven't implemented
-    # that method
-    return SUPER->DESTROY if $method eq 'DESTROY'; # for Perl <= 5.012
 
     # if method is not in permitted_levels, pass through to Log::Any
     # directly

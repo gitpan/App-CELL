@@ -601,3 +601,6 @@ later are in the perl-CELL project repo.
 - CELL.pm: fix bug in "constructor factory" (upper/lower-case)
 - t/100-cell.t: add basic tests for the new status constructors
 
+0.156  2014-06-02 18:20 CEST
+- Config.pm, Log.pm: add formal DESTROY routine (to appease Perl 5.012)
+
