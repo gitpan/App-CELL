@@ -8,7 +8,7 @@ use App::CELL::Config qw( $meta $core $site );
 use App::CELL::Log qw( $log );
 use App::CELL::Message;
 use App::CELL::Status;
-use App::CELL::Test;
+use App::CELL::Test qw( cmp_arrays );
 use App::CELL::Util qw( is_directory_viable );
 use Data::Dumper;
 use File::Next;
@@ -22,11 +22,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.153
+Version 0.155
 
 =cut
 
-our $VERSION = '0.153';
+our $VERSION = '0.155';
 
 
 
@@ -222,20 +222,20 @@ sub init {
 
     SANITY: {
         my $results = [];
-        my $status = App::CELL::Message->new( code => 'CELL_TEST_MESSAGE');
+        my $status = App::CELL::Message->new( code => 'CELL_LOAD_SANITY_MESSAGE' );
         my $msgobj;
 
         if ( $status->ok ) {
             $msgobj = $status->payload;
             push @$results, (
-                $meta->CELL_META_UNIQUE_VALUE,
-                $core->CELL_SHAREDIR_FULLPATH,
-                $site->CELL_SITE_LOAD_OK,
+                $meta->CELL_LOAD_SANITY_META,
+                $core->CELL_LOAD_SANITY_CORE,
+                $site->CELL_LOAD_SANITY_SITE,
                 $msgobj->text(),
                         );
-            my $cmp_arrays_result = App::CELL::Test::cmp_arrays( 
+            my $cmp_arrays_result = cmp_arrays( 
                 $results, 
-                [ '', 'YES', 'uniq', 'This is a test message' ],
+                [ 'Baz', 'Bar', 'Foo', 'This is a sanity testing message' ],
             );
             last SANITY if $cmp_arrays_result;
         }

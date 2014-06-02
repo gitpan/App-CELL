@@ -1,22 +1,21 @@
+#-------------------------------------------------------------#
+# CELL_MetaConfig.pm
 #
-# App::CELL internal meta configuration parameters
+# App::CELL's own site configuration parameters. This file
+# is stored in the "distro sharedir" and is always loaded 
+# before the files in the application sitedir.
 #
-# This file is part of the App::CELL distro:
-#    https://metacpan.org/pod/App::CELL
+# In addition to being used by App::CELL, the files in the
+# distro sharedir (CELL_MetaConfig.pm, CELL_Config.pm, and
+# CELL_SiteConfig.pm along with CELL_Message_en.conf,
+# CELL_Message_cz.conf, etc.) can be used as models for 
+# populating the application sitedir.
 #
-# Development takes place here:
-#    https://sourceforge.net/projects/perl-cell/
-#
-# This file contains parameters that are internal to App::CELL. It can also
-# serve as a model for setting up and populating the site configuration
-# directory -- see App::CELL::Guide for more information.
-#
+# See App::CELL::Guide for details.
+#-------------------------------------------------------------#
 
-use strict;
-use warnings;
-
-# unique value used by App::CELL::Load->init for sanity check
-set('CELL_META_UNIQUE_VALUE', 'uniq');
+# unique value used by App::CELL::Load::init routine sanity check
+set('CELL_LOAD_SANITY_META', 'Baz');
 
 # boolean value whether App::CELL distro sharedir has been loaded
 # (defaults to 1 since the param is initialized only when distro sharedir
@@ -35,4 +34,9 @@ set('CELL_META_START_DATETIME', '');
 # for unit testing
 set( 'CELL_META_UNIT_TESTING', [ 1, 2, 3, 'a', 'b', 'c' ] );
 
+#-------------------------------------------------------------#
+#           DO NOT EDIT ANYTHING BELOW THIS LINE              #
+#-------------------------------------------------------------#
+use strict;
+use warnings;
 1;

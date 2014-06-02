@@ -1,3 +1,19 @@
+#-------------------------------------------------------------#
+# CELL_Config.pm
+#
+# App::CELL's own core configuration parameters. This file
+# is stored in the "distro sharedir" and is always loaded 
+# before the files in the application sitedir.
+#
+# In addition to being used by App::CELL, the files in the
+# distro sharedir (CELL_MetaConfig.pm, CELL_Config.pm, and
+# CELL_SiteConfig.pm along with CELL_Message_en.conf,
+# CELL_Message_cz.conf, etc.) can be used as models for 
+# populating the application sitedir.
+#
+# See App::CELL::Guide for details.
+#-------------------------------------------------------------#
+
 # CELL_DEBUG_MODE
 #        debug mode means that calls to $log->trace and $log->debug
 #        won't be suppressed - off by default
@@ -28,6 +44,10 @@ set('CELL_LANGUAGE', 'en');
 #        used only for App::CELL unit tests
 set('CELL_CORE_UNIT_TESTING', [ 'nothing special' ] );
 
+# CELL_LOAD_SANITY_CORE
+#        used by App::CELL::Load::init sanity check
+set('CELL_LOAD_SANITY_CORE', 'Bar');
+
 # CELL_CORE_SAMPLE
 #        sample core variable (for demo purposes)
 set('CELL_CORE_SAMPLE', 'layers of sediments' );
@@ -37,7 +57,9 @@ set('CELL_CORE_SAMPLE', 'layers of sediments' );
 #        caller to log messages
 set( 'CELL_LOG_SHOW_CALLER', 1 );
 
+#-------------------------------------------------------------#
+#           DO NOT EDIT ANYTHING BELOW THIS LINE              #
+#-------------------------------------------------------------#
 use strict;
 use warnings;
-
 1;

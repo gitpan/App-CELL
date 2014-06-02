@@ -592,3 +592,12 @@ later are in the perl-CELL project repo.
 - Load.pm: removed more instances of 'a' regex modifier that causes Perl
   5.012 to cry "syntax error"
 
+0.154  2014-06-01 22:44 CEST
+- config/, Load.pm: clean up sanity-testing params (ticket #45)
+- CELL.pm: add "function factory" for status constructors
+
+0.155  2014-06-02 18:09 CEST
+- Config.pm, Log.pm: tweak AUTOLOAD routines for Perl 5.012
+- CELL.pm: fix bug in "constructor factory" (upper/lower-case)
+- t/100-cell.t: add basic tests for the new status constructors
+

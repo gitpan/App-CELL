@@ -20,11 +20,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.153
+Version 0.155
 
 =cut
 
-our $VERSION = '0.153';
+our $VERSION = '0.155';
 
 
 
@@ -237,6 +237,10 @@ sub AUTOLOAD {
     my ( $class, $msg_text, @ARGS ) = @_;
     my $method = $AUTOLOAD;
     $method =~ s/.*:://;
+
+    # if method is DESTROY, pass it to SUPER because we haven't implemented
+    # that method
+    return SUPER->DESTROY if $method eq 'DESTROY'; # for Perl <= 5.012
 
     # if method is not in permitted_levels, pass through to Log::Any
     # directly

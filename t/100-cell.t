@@ -4,10 +4,10 @@ use strict;
 use warnings FATAL => 'all';
 use App::CELL qw( $CELL $log $meta $core $site );
 use App::CELL::Test qw( cmp_arrays );
-#use App::CELL::Test::LogToFile;
-#use Data::Dumper;
+use App::CELL::Test::LogToFile;
+use Data::Dumper;
 use File::ShareDir;
-use Test::More tests => 16;
+use Test::More tests => 32;
 
 my $status;
 $log->init( ident => 'CELLtest' );
@@ -46,6 +46,52 @@ is( $sharedir, File::ShareDir::dist_dir('App-CELL'),
 is( $sharedir, $CELL->sharedir, "Sharedir accessor" );
 
 my $msgobj = $CELL->msg( 'CELL_TEST_MESSAGE' );
-is ( $msgobj->text, "This is a test message", 
+is( $msgobj->text, "This is a test message", 
     "Basic \$CELL->msg functionality");
+
+$status = $CELL->status_crit( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'CRIT' );
+
+$status = $CELL->status_critical( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'CRITICAL' );
+
+$status = $CELL->status_debug( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'DEBUG' );
+
+$status = $CELL->status_emergency( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'EMERGENCY' );
+
+$status = $CELL->status_err( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'ERR' );
+
+$status = $CELL->status_error( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'ERROR' );
+
+$status = $CELL->status_fatal( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'FATAL' );
+
+$status = $CELL->status_info( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'INFO' );
+
+$status = $CELL->status_inform( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'INFORM' );
+
+$status = $CELL->status_not_ok( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'NOT_OK' );
+
+$status = $CELL->status_notice( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'NOTICE' );
+
+$status = $CELL->status_ok( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'OK' );
+
+$status = $CELL->status_trace( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'TRACE' );
+
+$status = $CELL->status_warn( 'CELL_TEST_MESSAGE' );
+ok( $status->level eq 'WARN' );
+
+$status = $CELL->status_warning( 'CELL_TEST_MESSAGE', payload => "bubba");
+ok( $status->level eq 'WARNING' );
+ok( $status->payload eq 'bubba' );
 

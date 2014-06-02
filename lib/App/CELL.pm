@@ -21,11 +21,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.153
+Version 0.155
 
 =cut
 
-our $VERSION = '0.153';
+our $VERSION = '0.155';
 
 
 
@@ -258,6 +258,93 @@ sub load {
 
     return App::CELL::Status->ok;
 }
+
+
+=head2 Status constructors
+
+The following "factory" makes a bunch of status constructor methods
+(wrappers for App::CELL::Status->new )
+
+=cut
+
+BEGIN {
+    foreach (@App::CELL::Log::permitted_levels) {
+        no strict 'refs';
+        my $level_uc = $_;
+        my $level_lc = lc $_;
+        *{"status_$level_lc"} = sub { 
+            my ( $self, $code, @ARGS ) = @_;
+            if ( @ARGS % 2 ) { # odd number of arguments
+                @ARGS = ();
+            }
+            return App::CELL::Status->new(
+                level => $level_uc,
+                code => $code,
+                @ARGS,
+            );
+        }
+    }
+}
+
+=head3 status_crit
+
+Constructor for 'CRIT' status objects
+
+=head3 status_critical
+
+Constructor for 'CRIT' status objects
+
+=head3 status_debug
+
+Constructor for 'DEBUG' status objects
+
+=head3 status_emergency
+
+Constructor for 'DEBUG' status objects
+
+=head3 status_err
+
+Constructor for 'ERR' status objects
+
+=head3 status_error
+
+Constructor for 'ERR' status objects
+
+=head3 status_fatal
+
+Constructor for 'FATAL' status objects
+
+=head3 status_info
+
+Constructor for 'INFO' status objects
+
+=head3 status_inform
+
+Constructor for 'INFORM' status objects
+
+=head3 status_not_ok
+
+Constructor for 'NOT_OK' status objects
+
+=head3 status_notice
+
+Constructor for 'NOTICE' status objects
+
+=head3 status_ok
+
+Constructor for 'OK' status objects
+
+=head3 status_trace
+
+Constructor for 'TRACE' status objects
+
+=head3 status_warn
+
+Constructor for 'WARN' status objects
+
+=head3 status_warning
+
+Constructor for 'WARNING' status objects
 
 
 =head2 msg 
