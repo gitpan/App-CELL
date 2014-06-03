@@ -6,6 +6,7 @@ use 5.012;
 
 use App::CELL::Config;
 use App::CELL::Log qw( $log );
+use App::CELL::Util qw( stringify_args );
 use Data::Dumper;
 use Try::Tiny;
 
@@ -18,11 +19,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.156
+Version 0.157
 
 =cut
 
-our $VERSION = '0.156';
+our $VERSION = '0.157';
 
 
 
@@ -154,7 +155,7 @@ is ok, then the message object will be in the payload. See L</SYNOPSIS>.
 sub new {
 
     my ( $class, %ARGS ) = @_; 
-    my $stringified_args = _stringify_args( \%ARGS );
+    my $stringified_args = stringify_args( \%ARGS );
     my $my_caller;
 
     if ( $ARGS{called_from_status} ) {
@@ -176,6 +177,10 @@ sub new {
             args => [ $stringified_args ],
             caller => $my_caller,
         );
+    }
+
+    if ( $ARGS{lang} ) {
+        $log->debug( $ARGS{code} . ": " . $mesg->{ $ARGS{code} }->{ $ARGS{lang} }->{ 'Text' } );
     }
 
     # This next line is important: it may happen that the developer wants
@@ -234,33 +239,19 @@ sub new {
 
 =head2 lang
 
-Clones the message into another language.
+Clones the message into another language. Returns a status object. On
+success, the new message object will be in the payload.
 
 =cut
 
 sub lang {
     my ( $self, $lang ) = @_;
-    my $fully_blessed = _stringify_args( $self );
-    return $fully_blessed =~ m/\{(.*)\}/
-}
-
-=head3 _stringify_args
-
-Convert args into a string for error reporting
-
-=cut
-
-sub _stringify_args {
-    local $Data::Dumper::Indent = 0;
-    local $Data::Dumper::Terse = 1;
-    my $args = shift;
-    my $args_as_string;
-    if ( %$args ) {
-        $args_as_string = Dumper( $args );
-    } else {
-        $args_as_string = '';
-    }
-    return $args_as_string;
+    my $status = __PACKAGE__->new( 
+                                    code => $self->code, 
+                                    lang => $lang, 
+                                    args => $self->args,
+                                 );
+    return $status;
 }
 
 
@@ -276,6 +267,7 @@ sub stringify {
     my %u_self = %$self;
     return Dumper( \%u_self );
 }
+
 
 =head2 code
 

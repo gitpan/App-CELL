@@ -4,7 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 use App::CELL qw( $CELL $log $meta $core $site );
 use App::CELL::Test qw( cmp_arrays );
-use App::CELL::Test::LogToFile;
+#use App::CELL::Test::LogToFile;
 use Data::Dumper;
 use File::ShareDir;
 use Test::More tests => 32;

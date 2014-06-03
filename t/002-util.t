@@ -19,7 +19,7 @@ $log->info("-------------------------------------------------------- ");
 
 # test that App::CELL::Util::timestamp returns something that looks
 # like a timestamp
-my $timestamp_regex = qr/^\d{4,4}-\d{2,2}-\d{1,2} \d{2,2}:\d{2,2}/a;
+my $timestamp_regex = qr/^\d{4,4}-\d{2,2}-\d{1,2} \d{2,2}:\d{2,2}/;
 my $timestamp = utc_timestamp();
 ok( $timestamp =~ $timestamp_regex, "App::CELL::Util::timestamp" );
 #diag( "Timestamp: " . $timestamp );

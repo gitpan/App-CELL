@@ -14,11 +14,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.156
+Version 0.157
 
 =cut
 
-our $VERSION = '0.156';
+our $VERSION = '0.157';
 
 
 
@@ -102,16 +102,17 @@ objects.
 In order to signify an error, subroutine C<foo_dis> could for example do
 this:
 
-    return $CELL->status(
-        level => 'ERR',
-        code => 'Gidget displacement %s out of range',
+    return $CELL->status_err( code => 'Gidget displacement %s out of range',
         args => [ $displacement ],
     );
 
-Upon success, C<foo_dis> could return an 'OK' status with the gidgit
+(Instead of having the error text in the C<code>, it could be placed in a
+message file in the sitedir with a code like DISP_OUT_OF_RANGE.) 
+
+On success, C<foo_dis> could return an 'OK' status with the gidget
 displacement value in the payload: 
 
-    return $CELL->ok( $displacement );
+    return $CELL->status_ok( payload => $displacement );
 
 The calling function could check the return value like this:
 

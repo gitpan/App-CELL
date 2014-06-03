@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use 5.012;
 
+use Data::Dumper;
 use Date::Format;
 use App::CELL::Status;
 
@@ -15,11 +16,11 @@ App::CELL::Util - generalized, reuseable functions
 
 =head1 VERSION
 
-Version 0.156
+Version 0.157
 
 =cut
 
-our $VERSION = '0.156';
+our $VERSION = '0.157';
 
 
 
@@ -56,7 +57,7 @@ This module provides the following public functions:
 =cut 
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( utc_timestamp is_directory_viable );
+our @EXPORT_OK = qw( utc_timestamp is_directory_viable stringify_args );
 
 
 =head1 FUNCTIONS
@@ -106,5 +107,26 @@ sub is_directory_viable {
     return App::CELL::Status->ok;
 }
 
-1;
+
+=head2 stringify_args
+
+Convert args (or any data structure) into a string -- useful for error
+reporting.
+
+=cut
+
+sub stringify_args {
+    my $args = shift;
+    local $Data::Dumper::Indent = 0;
+    local $Data::Dumper::Terse = 1;
+    my $args_as_string;
+    if ( %$args ) {
+        $args_as_string = Dumper( $args );
+    } else {
+        $args_as_string = '';
+    }
+    return $args_as_string;
+}
+
 # END OF App::CELL::Util.pm
+1;

@@ -21,11 +21,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.156
+Version 0.157
 
 =cut
 
-our $VERSION = '0.156';
+our $VERSION = '0.157';
 
 
 
@@ -222,26 +222,31 @@ On success, it also sets the C<CELL_META_START_DATETIME> meta parameter.
 
 sub load {
 
-    my ( $class, %Args ) = @_;
-    my $status;
-
-    if ( $CELL->loaded eq 'BOTH' ) {
-        $log->debug("Reentering App::CELL->load");
-        return App::CELL::Status->new( level => 'WARN',
-            code => 'CELL_ALREADY_INITIALIZED',
-        );
+    my ( $class, @ARGS ) = @_;
+    if ( @ARGS % 2 ) {
+        return $CELL->status_err( code => "CELL_ODD_ARGS",
+           args => [ '$CELL->load', stringify_args( \@ARGS ) ] );
     }
+    my %ARGS = @ARGS;
+    my $status; 
 
-    $CELL->{'appname'} = __PACKAGE__ if not $CELL->{'appname'};
+    #if ( $CELL->loaded eq 'BOTH' ) {
+    #    $log->debug("Reentering App::CELL->load");
+    #    return App::CELL::Status->new( level => 'WARN',
+    #        code => 'CELL_ALREADY_INITIALIZED',
+    #    );
+    #}
 
-    # $log->init is fully re-entrant, and nothing is actually logged until
-    # the application does something with Log::Any::Adapter, so this will 
-    # probably be convenient, or at least do no harm
+    $CELL->{appname} = $ARGS{appname} if $ARGS{appname};
+    $CELL->{appname} = __PACKAGE__ if not $CELL->{'appname'};
+
+    # Presumably this is what the application wants; if not, it can be
+    # overrided
     $log->ident( $CELL->{'appname'} );
 
     # we only get past this next call if at least the sharedir loads
     # successfully (sitedir is optional)
-    $status = App::CELL::Load::init( %Args );
+    $status = App::CELL::Load::init( %ARGS );
     return $status unless $status->ok;
     $log->info( "App::CELL has finished loading messages and site conf params" );
 

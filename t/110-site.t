@@ -4,11 +4,11 @@ use strict;
 use warnings FATAL => 'all';
 use App::CELL qw( $CELL $log $meta $core $site );
 use App::CELL::Test qw( mktmpdir cleartmpdir populate_file );
-use App::CELL::Test::LogToFile;
-use Data::Dumper;
+#use App::CELL::Test::LogToFile;
+#use Data::Dumper;
 use File::Spec;
 use Scalar::Util qw( blessed );
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 my $status;
 delete $ENV{CELL_DEBUG_MODE};
@@ -85,8 +85,8 @@ is( $msgobj->text, 'NON_EXISTENT_MESSAGE',
 $msgobj = $CELL->msg( 'BAR_ARGS_MSG', "FooBar", 2 );
 is( $msgobj->text, 'This FooBar message takes 2 arguments.' );
 
-#my $cesky_text = $msgobj->lang('cz')->text;
-#is( $cesky_text, "Tato FooBar zpráva bere 2 argumenty." );
-diag( $msgobj->lang );
+$status = $msgobj->lang('cz');
+my $cesky_text = $status->payload->text;
+is( $cesky_text, "Tato FooBar zpráva bere 2 argumenty." );
 
 1;

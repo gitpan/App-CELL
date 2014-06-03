@@ -594,7 +594,7 @@ later are in the perl-CELL project repo.
 
 0.154  2014-06-01 22:44 CEST
 - config/, Load.pm: clean up sanity-testing params (ticket #45)
-- CELL.pm: add "function factory" for status constructors
+- CELL.pm: add "function factory" for status constructors (ticket #39)
 
 0.155  2014-06-02 18:09 CEST
 - Config.pm, Log.pm: tweak AUTOLOAD routines for Perl 5.012
@@ -603,4 +603,12 @@ later are in the perl-CELL project repo.
 
 0.156  2014-06-02 18:20 CEST
 - Config.pm, Log.pm: add formal DESTROY routine (to appease Perl 5.012)
+
+0.157  2014-06-03 13:46 CEST
+- Guide.pm: update to use new status constructors
+- Message.pm, Util.pm: move stringify_args to Util.pm
+- CELL.pm: add "odd number of args" error message to load routine
+- t/002-util.t: remove another 'a' regex modifier that I missed
+- Message.pm: first implementation of 'lang' method
+- t/110-site.t: add test for 'lang' message method
 
