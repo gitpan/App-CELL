@@ -26,11 +26,11 @@ tests)
 
 =head1 VERSION
 
-Version 0.157
+Version 0.159
 
 =cut
 
-our $VERSION = '0.157';
+our $VERSION = '0.159';
 
 
 

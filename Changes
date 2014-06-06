@@ -612,3 +612,11 @@ later are in the perl-CELL project repo.
 - Message.pm: first implementation of 'lang' method
 - t/110-site.t: add test for 'lang' message method
 
+0.158  2014-06-03 23:05 CEST
+- Guide.pm: write new verbiage, edit old verbiage
+
+0.159  2014-06-05 11:26 CEST
+- remove obsolete 'obs' directory from git repo
+- tweak release script
+- CELL_Config.pm: commented out CELL_ALREADY_INITIALIZED
+

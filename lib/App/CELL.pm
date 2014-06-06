@@ -21,11 +21,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.157
+Version 0.159
 
 =cut
 
-our $VERSION = '0.157';
+our $VERSION = '0.159';
 
 
 
@@ -70,10 +70,11 @@ our $VERSION = '0.157';
 =head1 DESCRIPTION
 
 This is the top-level module of App::CELL, the Configuration,
-Error-handling, Localization, and Logging framework for
-applications (or scripts) written in Perl.
+Error-handling, Localization, and Logging framework for applications (or
+scripts) written in Perl.
 
-For details, see the documentation below and in L<App::CELL::Guide>.
+For details, read the POD in the L<App::CELL> distro. For an introduction,
+read L<App::CELL::Guide>.
 
 
 

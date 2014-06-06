@@ -14,11 +14,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.157
+Version 0.159
 
 =cut
 
-our $VERSION = '0.157';
+our $VERSION = '0.159';
 
 
 
@@ -46,43 +46,43 @@ was spun off into a separate project.
 
 
 
-=head1 APPROACH
+=head1 GENERAL APPROACH
 
 This section presents CELL's approach to each of its four principal
 functions: L</Configuration>, L</Error handling>, L<Localization>, and
 L<Logging>.
 
 
-=head2 Configuration
+=head2 Approach to configuration
 
 CELL provides the application developer and site administrator with a
 straightforward and powerful way to define configuration parameters as
-needed by the application. 
+needed by the application. If you are familiar with Request Tracker, you
+will know that there is a directory (C</opt/...> by default) which contains
+two files, called C<RT_Config.pm> and C<RT_SiteConfig.pm> -- as their names
+would indicate, they are actually Perl modules. The former is provided by
+the upstream developers and contains all of RT's configuration parameters
+and their "factory default" settings. The content of the latter is entirely
+up to the RT site administrator and contains only those parameters that
+need to be different from the defaults. Parameter settings in
+C<RT_SiteConfig.pm>, then, override the defaults set in C<RT_Config.pm>.
 
-Configuration parameters are placed in specially-named files within a
-directory referred to by CELL as the "site configuration directory", or
-"sitedir". CELL recognizes three types of configuration parameters (and,
-hence, three types of configuration files). These three types are called
-C<meta>, C<core>, and C<site> parameters, respectively.
+L<App::CELL> provides this same functionality in a drop-in Perl module,
+with some subtle differences. While RT uses a syntax like this:
 
-The first category, C<meta>, consists of "mutable" parameters -- i.e.
-parameters that can be changed by the application program. These are
-similar to global/package variables.
+   set( 'MY_PARAM', ...arguments...);
 
-C<core> and C<site> are the second and third categories, or "namespaces".
-These are used for storing immutable values. Though the values themselves
-are read-only, a given parameter FOOBAR can be "changed" by defining its
-default value in C<core> and then setting the FOOBAR C<site> parameter to a
-different value. In such a case, the C<site> FOOBAR will take precedence
-over its C<core> counterpart. 
+where C<...arguments...> is a list of scalar values (as with any Perl
+subroutine), L<App::CELL> uses a slightly different format:
 
-Since the configuration files themselves are Perl modules, Perl is
-leveraged to parse them. Values can be any legal scalar value, so
-references to arrays, hashes, or subroutines can be used, as well as simple
-numbers and strings. For details, see L</SITE CONFIGURATION DIRECTORY>,
-L<App::CELL::Config> and L<App::CELL::Load>.
+   set( 'MY_PARAM', $scalar );
 
-CELL's configuration logic is inspired by Request Tracker.
+where C<$scalar> can be any scalar value, i.e. including references. 
+
+(Another difference is that L<App::CELL> provides both immutable site
+parameters _and_ mutable C<meta> configuration parameters, whereas RT's
+meta parameters are only used by RT itself.) For more information on
+configuration, see L</Configuration in depth>.
 
 
 =head2 Error handling
@@ -156,7 +156,7 @@ C<App::CELL::Message> could also be extended to provide methods for
 encrypting messages and/or converting them into various target formats
 (JSON, HTML, Morse code, etc.).
 
-For details, see </MESSAGE CONFIGURATION> and <App::CELL::Message>.
+For details, see </Localization in depth> and <App::CELL::Message>.
 
 
 =head2 Logging
@@ -187,19 +187,81 @@ To actually see your log messages, you have to do something like this:
 
 
 
-=head1 SITE CONFIGURATION DIRECTORY
+=head1 DETAILED SPECIFICATIONS
 
-=head2 Two directories
+=head2 Configuration in depth
 
-The site configuration directory, or "sitedir", is where all the
-application's configuration information (C<core>, C<site>, and C<meta>
-parameters; C<message> codes and texts) is stored.
+=head3 Three types of paramters
+
+CELL recognizes three types of configuration parameters: C<meta>, C<core>,
+and C<site>.
+
+=head3 Meta parameters
+
+Meta parameters are by definition mutable: the application can change a
+meta parameter's value any number of times. Initial C<meta> param settings
+are placed in a file entitled C<$appname_MetaConfig.pm> -- in other words,
+if the application name is FooApp, its initial C<meta> parameter settings
+will be contained in the file C<FooApp_MetaConfig.pm>. At initialization
+time, L<App::CELL> will look in the sitedir for files matching this
+description, and attempt to load them.
+
+=head3 Core parameters
+
+As in Request Tracker, C<core> paramters have immutable values and are
+intended to be used as "factory defaults" that the site administrator can
+override by setting site parameters. If the application is called FooApp,
+its core configuration settings will be contained in a file called
+C<FooApp_Config.pm> located in the sitedir.
+
+=head3 Site parameters
+
+Site parameters, set in a file called C<$appname_SiteConfig.pm>, are loaded
+after C<core> parameters. When the application asks for the value of a
+parameter by calling, e.g., C<$CELL->FOO_PARAM>, CELL first looks for a
+C<core> parameter C<FOO_PARAM>. The value of this parameter is returned if,
+and only if, no site parameter C<FOO_PARAM> is defined. If there is a
+C<FOO_PARAM> site parameter, its value is returned instead. In other words,
+site parameters override core parameters of the same name.
+
+=head3 Conclusion
+
+How these three types of parameters are defined and used is up to the
+application. As far as CELL is concerned, they are all optional. CELL
+itself has its own meta, core, and site parameters, but these are located
+elsewhere. However, since CELL's internal parameters are stored in the same
+namespaces as the application's parameters, the application programmer
+should avoid using parameters starting with C<CELL_>.
+
+=head2 How configuration is stored
+
+=head3 sitedir
+
+Configuration parameters are placed in specially-named files within a
+directory referred to by L<App::CELL> as the "site configuration
+directory", or "sitedir". This directory is not a part of the L<App::CELL>
+distribution and L<App::CELL> does not create it. Instead, the application
+is expected to provide the full path to this directory to CELL's
+initialization route, either via an argument to the function call or with
+the help of an environment variable. CELL's initialization routine calls
+L<App::CELL::Load::init> to do the actual work of walking the directory.
+
+This "sitedir" (site configuration directory) is assumed to be the place
+(or a place) where the application can store its configuration information
+in the form of C<core>, C<site>, and C<meta> parameters. For
+L</LOCALIZATION> purposes, C<message> codes and their corresponding texts
+(in one or more languages) can be stored here as well, if desired.
+
+=head3 sharedir
 
 CELL itself has an analogous configuration directory, called the
 "sharedir", where it's own internal configuration defaults are stored.
-CELL's core parameters can be overridden by the application's site params.
+CELL's own core parameters can be overridden by the application's site
+params, and in some cases this can even be desirable. For example, the
+parameter C<CELL_DEBUG_MODE> can be overridden in the site configuration to
+tell CELL to include debug-level messages in the log.
 
-During initialization, CELL recursively walks first the sharedir, and then
+During initialization, CELL walks first the sharedir, and then
 the sitedir, looking through those directories and all their
 subdirectories for meta, core, site, and message configuration files.
 
@@ -207,32 +269,40 @@ The sharedir is part of the App::CELL distro and CELL's initialization
 routine finds it via a call to the C<dist_dir> routine in the
 L<File::ShareDir> module.
 
-=head2 How CELL finds it
+=head2 How the sitedir is found
 
 The sitedir must be created and populated with configuration files by the
-site administrator. CELL's initialization routine finds it by looking in
-three places:
+application programmer. Typically, this directory would form part of the
+application distro and the site administrator would be expected to make a
+site configuration file for parameters that she or he needs or wishes to
+set. CELL's initialization routine, C<< $CELL->load >>, looks for the
+sitedir using the following simple algorithm:
 
 =over
 
-=item C<sitedir> parameter -- the initialization route, C<< $CELL->init >>,
-takes a C<sitedir> parameter containing the full path to the sitedir. For
-portability, the path should be constructed using L<File::Spec> (e.g. the
-C<catfile> method) or similar.
+=item C<sitedir> parameter -- a C<sitedir> parameter containing the
+full path to the sitedir can be passed. For portability, the path should be
+constructed using L<File::Spec> (e.g. the C<catfile> method) or similar.
 
-=item C<enviro> parameter -- if no valid C<sitedir> paramter is given,
-C<init> looks for a parameter called C<enviro> containing the name of an
-environment variable containing the sitedir path.
+=item C<enviro> parameter -- if no valid C<sitedir> parameter is given,
+C<< $CELL->load >> looks for a parameter called C<enviro> containing the
+name of an environment variable containing the sitedir path.
 
 =item C<CELL_SITEDIR> environment variable -- if no viable sitedir can be
-found by consulting the function call parameters, C<init> looks in this
-literal environment variable
+found by consulting the function call parameters, C<load> falls back to 
+this hardcoded environment variable.
 
 =back
 
-For examples of how to call the C<init> routine, see C<App::CELL>.
+If the algorithm completes without finding a sitedir, C<< $CELL->load >>
+returns a "WARN" status. The application can check for this and call
+C<load> again (any number of times). However, once a sitedir has been
+identified, it cannot be changed except by terminating the application and
+running it again.
 
-=head2 How to populate it
+For examples of how to call the C<load> routine, see L<App::CELL/SYNOPSIS>.
+
+=head2 How configuration files are named
 
 Once it finds a valid site configuration directory tree, CELL walks it,
 looking for files matching one four regular expressions:
@@ -250,53 +320,33 @@ looking for files matching one four regular expressions:
 =back
 
 Files with names that don't match any of the above regexes are ignored.
+If multiple files match a given regex, all of them will be parsed (loaded).
 
-For the syntax of these files see CELL's own configuration files in the
-sharedir (C<config/> in the distro). All four types of configuration file
-are represented there, with comments.
+The syntax of these files is very simple and can be easily deduced by
+examining CELL's own configuration files in the sharedir (C<config/> in the
+distro). All four types of configuration file are represented there, with
+comments.
 
+The configuration files are themselves Perl modules, and Perl is leveraged
+to parse them. Values can be any legal scalar value, so references to
+arrays, hashes, or subroutines can be used, as well as simple numbers and
+strings. For details, see L</SITE CONFIGURATION DIRECTORY>,
+L<App::CELL::Config> and L<App::CELL::Load>.
 
-=head1 HOW CONFIG PARAMS ARE INITIALIZED
-
-=for comment
-Old verbiage -- revisit.
-
-All three categories of config params (C<meta>, C<core>, and C<$site>) are
-initialized by C<require>-ing configuration files, which are actually
-simple Perl modules, in the site configuration directory (C<sitedir>).
-
-The C<sitedir> path is determined using the following simple algorithm:
-
-=over
-
-=item 1. if C<sitedir> argument given to C<< $CELL->load >>, assume that is
-the sitedir path; done.
-
-=item 2. if C<enviro> argument given to C<< $CELL->load >>, assume that is
-the name of an environment variable containing the sitedir path; done.
-
-=item 3. look for an environment variable C<CELL_SITEDIR> and if it
-contains a viable sitedir path, done; otherwise trigger a warning that
-there is no sitedir.
-
-=back
-
-CELL's configuration parameters are modelled after those of Request
-Tracker. Configuration files are special Perl modules that are loaded at
-run-time. These modules consist of a series of calls to a C<set> function
-(which resides in L<App::CELL::Config>).
+Message file parsing is done by a parsing routine that resides in
+L<App::CELL::Load>. For details on the syntax and how the parser works, see
+L<LOCALIZATION>.
 
 
+=head2 Error handling in depth
 
-=head1 MESSAGE CONFIGURATION
 
-=for comment
-Old verbiage -- revisit.
+=head2 Localization in depth
 
-=head2 Introduction
+=head3 Introduction
 
 To an application programmer, localization may seem like a daunting
-proposition. All strings the application displays to users must be replaced
+proposition, and All strings the application displays to users must be replaced
 by variable names. Then you have to figure out where to put all the
 strings, translate them into multiple languages, write a library (or find
 an existing one) to display the right string in the right language at the
