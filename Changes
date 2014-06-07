@@ -618,5 +618,16 @@ later are in the perl-CELL project repo.
 0.159  2014-06-05 11:26 CEST
 - remove obsolete 'obs' directory from git repo
 - tweak release script
-- CELL_Config.pm: commented out CELL_ALREADY_INITIALIZED
+- CELL_Config.pm: comment out CELL_ALREADY_INITIALIZED
+
+0.160-0.162  2014-06-07 21:49 CEST
+- clean up git repo
+- move unnecessary file MANIFEST.SKIP from dist/ to staging/
+- Build.PL: don't create LICENSE file every time
+- change LICENSE to BSD-3-Clause
+- misc/boilerplate/: add code for prepending copyright/license notice to
+  each source code file
+- CELL.pm - restore 'LICENSE AND COPYRIGHT' POD section
+- move dev.sh and test.sh from dist/ to top level of git repo because they
+  are not in the distro
 

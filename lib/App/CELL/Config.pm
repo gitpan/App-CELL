@@ -1,3 +1,35 @@
+# ************************************************************************* 
+# Copyright (c) 2014, SUSE LLC
+# 
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+# 
+# 3. Neither the name of SUSE LLC nor the names of its contributors may be
+# used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+# ************************************************************************* 
+
 package App::CELL::Config;
 
 use strict;
@@ -18,11 +50,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.159
+Version 0.162
 
 =cut
 
-our $VERSION = '0.159';
+our $VERSION = '0.162';
 
 
 
@@ -90,7 +122,7 @@ sub AUTOLOAD {
     my $self = shift;
     ( my $param ) = $AUTOLOAD =~ m/.*::(.*)$/;
     return SUPER->DESTROY if $param eq 'DESTROY'; # for Perl <= 5.012
-    my ( $throwaway, $file, $line ) = caller;
+    my ( undef, $file, $line ) = caller;
     die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
     if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
         return $meta->{$param}->{Value} if exists $meta->{$param};
@@ -113,6 +145,33 @@ For some reason, Perl 5.012 seems to want a DESTROY method
 sub DESTROY {
     my $self = shift;
     $self->SUPER::DESTROY if $self->can("SUPER::DESTROY");
+}
+
+
+=head2 get_all
+
+Routine to provide access not only to the value, but also to the metadata
+(file and line number where parameter was defined) associated with a
+given parameter.
+
+Takes: parameter name.  Returns: reference to the hash associated with the
+given parameter, or undef if no parameter found.
+
+=cut
+
+sub get_all {
+    my ( $self, $param ) = @_;
+    my ( undef, $file, $line ) = caller;
+    die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
+    if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
+        return $meta->{$param} if exists $meta->{$param};
+    } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
+        return $core->{$param} if exists $core->{$param};
+    } else {
+        return $site->{$param} if defined $site->{$param};
+    }
+    return $core->{$param} if defined $core->{$param};
+    return;
 }
 
 

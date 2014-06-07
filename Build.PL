@@ -8,8 +8,9 @@ my $build = Module::Build->new(
     module_name        => 'App::CELL',
     dist_author        => q{Smithfarm <presnypreklad@gmail.com>},
     dist_version_from  => 'lib/App/CELL.pm',
-    license            => 'GPL_3',
-    create_license     => 1,
+    license            => 'bsd',
+    create_license     => 0,
+    create_readme      => 1,
     share_dir          => { 
         dist => [ 'config' ], 
     },
