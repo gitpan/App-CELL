@@ -46,11 +46,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.162
+Version 0.164
 
 =cut
 
-our $VERSION = '0.162';
+our $VERSION = '0.164';
 
 
 
@@ -219,6 +219,7 @@ To actually see your log messages, you have to do something like this:
 
 
 
+
 =head1 DETAILED SPECIFICATIONS
 
 =head2 Configuration in depth
@@ -371,6 +372,55 @@ L<LOCALIZATION>.
 
 
 =head2 Error handling in depth
+
+=head3 STATUS OBJECTS
+
+The most frequent case will be a status code of "OK" with no message (shown
+here with optional "payload", which is whatever the function is supposed to
+return on success:
+
+    # all green
+    return App::CELL::Status->new( level => 'OK',
+                                  payload => $my_return_value,
+                                );
+
+To ensure this is as simple as possible in cases when no return value
+(other than the simple fact of an OK status) is needed, we provide a
+special constructor method:
+
+    # all green
+    return App::CELL::Status->ok;
+
+In most other cases, we will want the status message to be linked to the
+filename and line number where the C<new> method was called. If so, we call
+the method like this:
+
+    # relative to me
+    App::CELL::Status->new( level => 'ERR', 
+                           code => 'CODE1',
+                           args => [ 'foo', 'bar' ],
+                         );
+
+It is also possible to report the caller's filename and line number:
+
+    # relative to my caller
+    App::CELL::Status->new( level => 'ERR', 
+                           code => 'CODE1',
+                           args => [ 'foo', 'bar' ],
+                           caller => [ caller ],
+                         );
+
+It is also possible to pass a message object in lieu of C<code> and
+C<msg_args> (this could be useful if we already have an appropriate message
+on hand):
+
+    # with pre-existing message object
+    App::CELL::Status->new( level => 'ERR', 
+                           msg_obj => $my_msg;
+                         );
+
+Permitted levels are listed in the C<@permitted_levels> package
+variable in C<App::CELL::Log>.
 
 
 =head2 Localization in depth
@@ -557,54 +607,13 @@ that parameter has not been set).
 
 
 
-=head1 STATUS OBJECTS
+=head1 CAVEATS
 
-The most frequent case will be a status code of "OK" with no message (shown
-here with optional "payload", which is whatever the function is supposed to
-return on success:
+=head2 Taint mode
 
-    # all green
-    return App::CELL::Status->new( level => 'OK',
-                                  payload => $my_return_value,
-                                );
-
-To ensure this is as simple as possible in cases when no return value
-(other than the simple fact of an OK status) is needed, we provide a
-special constructor method:
-
-    # all green
-    return App::CELL::Status->ok;
-
-In most other cases, we will want the status message to be linked to the
-filename and line number where the C<new> method was called. If so, we call
-the method like this:
-
-    # relative to me
-    App::CELL::Status->new( level => 'ERR', 
-                           code => 'CODE1',
-                           args => [ 'foo', 'bar' ],
-                         );
-
-It is also possible to report the caller's filename and line number:
-
-    # relative to my caller
-    App::CELL::Status->new( level => 'ERR', 
-                           code => 'CODE1',
-                           args => [ 'foo', 'bar' ],
-                           caller => [ caller ],
-                         );
-
-It is also possible to pass a message object in lieu of C<code> and
-C<msg_args> (this could be useful if we already have an appropriate message
-on hand):
-
-    # with pre-existing message object
-    App::CELL::Status->new( level => 'ERR', 
-                           msg_obj => $my_msg;
-                         );
-
-Permitted levels are listed in the C<@permitted_levels> package
-variable in C<App::CELL::Log>.
+Since it imports configuration data at runtime from files supplied by the
+user, L<App::CELL> should not be run under taint mode. The C<< load >>
+routine checks this and will refuse to do anything if running with C<-T>.
 
 
 

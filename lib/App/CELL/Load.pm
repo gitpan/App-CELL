@@ -45,6 +45,7 @@ use App::CELL::Util qw( is_directory_viable );
 use Data::Dumper;
 use File::Next;
 use File::ShareDir;
+use Scalar::Util;
 
 =head1 NAME
 
@@ -54,11 +55,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.162
+Version 0.164
 
 =cut
 
-our $VERSION = '0.162';
+our $VERSION = '0.164';
 
 
 
@@ -197,7 +198,13 @@ sub init {
 
     my %Args = @_;
 
-    $log->debug( "Entering App::CELL::Load::init" );
+    $log->debug( "Entering App::CELL::Load::init version $VERSION" );
+
+    # check for taint mode
+    if ( ${^TAINT} != 0 ) {
+        return App::CELL::Status->new( level => "FATAL",
+            code => "Attempt to load while in taint mode (-T)" );
+    }
 
     # look up sharedir
     if ( not $sharedir ) {
@@ -227,6 +234,8 @@ sub init {
         $meta->set( 'CELL_META_SHAREDIR_LOADED', 1 );
         $sharedir_loaded = 1;
     }
+
+    $log->debug( "sitedir package variable contains ->$sitedir<-" );
 
     # look up sitedir
     if ( not $sitedir ) {
@@ -741,12 +750,7 @@ sub parse_config_file {
         catch {
            my $errmsg = $_;
            $errmsg =~ s/\012/ -- /g;
-           $log->debug( $errmsg );
-           App::CELL::Status->new( 
-               level => 'ERR',
-               code => 'CELL_CONFIG_LOAD_FAIL',
-               args => [ $ARGS{'File'}, $errmsg ], 
-           );
+           $log->err("CELL_CONFIG_LOAD_FAIL on file $ARGS{File} with error message: $errmsg");
            $log->debug( "The count is $count" );
            return $count;
         };

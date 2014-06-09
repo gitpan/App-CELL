@@ -631,3 +631,12 @@ later are in the perl-CELL project repo.
 - move dev.sh and test.sh from dist/ to top level of git repo because they
   are not in the distro
 
+0.163  2014-06-07 23:07 CEST
+- tweak release script after moving dev.sh to parent directory
+
+0.164  2014-06-09 12:45 CEST
+- pod-coverage.t: add missing tests
+- Guide.pm: add CAVEATs section to warn against running in taint mode
+- Load.pm, Message.pm: fix infinite recursion bug in try .. catch ..
+- Load.pm: return fatal error if running in taint mode
+

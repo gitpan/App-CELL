@@ -51,11 +51,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.162
+Version 0.164
 
 =cut
 
-our $VERSION = '0.162';
+our $VERSION = '0.164';
 
 
 
@@ -190,6 +190,7 @@ sub new {
     my $stringified_args = stringify_args( \%ARGS );
     my $my_caller;
 
+    #$log->debug( "Entering Message->new called from " . (caller)[1] . " line " . (caller)[2]);
     if ( $ARGS{called_from_status} ) {
         $my_caller = $ARGS{caller};
     } else {
@@ -242,11 +243,7 @@ sub new {
     catch {
         my $errmsg = $_;
         $errmsg =~ s/\012/ -- /g;
-        return App::CELL::Status->new( level => 'ERR',
-            code => 'CELL_MESSAGE_ARGUMENT_MISMATCH',
-            args => [ $ARGS{code}, $errmsg ],
-            caller => $my_caller,
-        );
+        $log->err("CELL_MESSAGE_ARGUMENT_MISMATCH on $ARGS{code}, error was: $errmsg");
         #my $buffer = $mesg->{ 'CELL_MESSAGE_ARGUMENT_MISMATCH' }->{ 'en' }->{ 'Text' };
         #if ( $buffer ) {
         #    $buffer = sprintf( $buffer, $ARGS{code}, $errmsg );
