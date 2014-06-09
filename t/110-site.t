@@ -58,7 +58,7 @@ populate_file( $full_path, $stuff );
 $full_path = File::Spec->catfile( $sitedir, 'CELL_SiteConfig.pm' );
 $stuff = <<'EOS';
 # set supported languages
-set( 'CELL_SUPPORTED_LANGUAGES', [ 'en', 'cz' ] );
+set( 'CELL_SUPP_LANG', [ 'en', 'cz' ] );
 
 1;
 EOS
@@ -72,7 +72,7 @@ is_deeply( $CELL->supported_languages, [ 'en', 'cz' ],
 ok( $CELL->language_supported( 'en' ), "English is supported" );
 ok( $CELL->language_supported( 'cz' ), "Czech is supported" );
 ok( ! $CELL->language_supported( 'fr' ), "French is not supported" );
-is( $site->CELL_LANGUAGE, 'en', "Site language default is English" );
+is( $site->CELL_DEF_LANG, 'en', "Site language default is English" );
 my $msgobj = $CELL->msg('TEST_MESSAGE');
 ok( blessed($msgobj), "Message object is blessed" );
 is( $msgobj->text, 'This is a test message.', 

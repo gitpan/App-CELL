@@ -44,6 +44,7 @@ $log->not_ok                  ( "NOT_OK log message" );
 $log->contains_only_ok( "NOT_OK log message", 'not_ok works' );
 
 my $status = App::CELL::Load::init( appname => 'CELLtest' );
+diag( $status->level . " " . $status->text ) if $status->not_ok;
 ok( $status->ok, "Messages from sharedir loaded" );
 
 $log->clear();

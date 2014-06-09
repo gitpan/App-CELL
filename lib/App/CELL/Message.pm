@@ -36,7 +36,6 @@ use strict;
 use warnings;
 use 5.012;
 
-use App::CELL::Config;
 use App::CELL::Log qw( $log );
 use App::CELL::Util qw( stringify_args );
 use Data::Dumper;
@@ -51,11 +50,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.165
+Version 0.166
 
 =cut
 
-our $VERSION = '0.165';
+our $VERSION = '0.166';
 
 
 
@@ -142,9 +141,21 @@ are localizable.
 The C<App::CELL::Message> module stores messages in a package variable, C<$mesg>
 (which is a hashref).
 
+=head2 C<@supp_lang>
+
+List of supported languages. Set by C<< $CELL->load >> from the value of
+CELL_SUPP_LANG
+
+=head2 C<$def_lang>
+
+The defined, or default, language. Set by C<< $CELL->load >> from the value
+of CELL_DEF_LANG
+
 =cut 
 
 our $mesg;
+our $supp_lang;
+our $def_lang;
 
 
 
@@ -158,8 +169,8 @@ Get reference to list of supported languages.
 =cut
 
 sub supported_languages {
-    my $supp_lang = $App::CELL::Config::site->CELL_SUPPORTED_LANGUAGES || [ 'en' ];
-    return $supp_lang;
+    my $sl = $supp_lang || [ 'en' ];
+    return $sl;
 }
 
 
@@ -173,6 +184,18 @@ sub language_supported {
     my ( $lang ) = @_;
     return 1 if grep( /$lang/, @{ supported_languages() } );
     return 0;
+}
+
+
+=head2 default_language
+
+Return the default language.
+
+=cut
+
+sub default_language {
+    my $dl = $def_lang || 'en';
+    return $dl;
 }
 
 
@@ -221,7 +244,7 @@ sub new {
     # text from the value of 'code'.
     my $text = $mesg->
                { $ARGS{code} }->
-               { $ARGS{lang} || $App::CELL::Config::site->CELL_LANGUAGE || 'en' }->
+               { $ARGS{lang} || $def_lang || 'en' }->
                { 'Text' } 
                || $ARGS{code};
 

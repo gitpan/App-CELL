@@ -2,7 +2,7 @@ NAME
     App::CELL - Configuration, Error-handling, Localization, and Logging
 
 VERSION
-    Version 0.165
+    Version 0.166
 
 SYNOPSIS
         # imagine you have a script/app called 'foo' . . . 
@@ -11,9 +11,11 @@ SYNOPSIS
         use App::CELL qw( $CELL $log $meta $site );
 
         # load config params and messages from sitedir
-        my $status = $CELL->load( appname => 'foo', 
-                                  sitedir => '/etc/foo' );
+        my $status = $CELL->load( sitedir => '/etc/foo' );
         return $status unless $status->ok;
+
+        # set appname to FOO_APPNAME (a config param just loaded from sitedir)
+        $CELL->appname( $CELL->FOO_APPNAME || "foo" );
 
         # write to the log
         $log->notice("Configuration loaded from /etc/foo");
@@ -59,8 +61,12 @@ EXPORTS
 
 METHODS
   appname
-    Get the `appname' attribute, i.e. the name of the application or script
-    that is using App::CELL for its configuration, error handling, etc.
+    If no argument is given, returns the `appname' -- i.e. the name of the
+    application or script that is using App::CELL for its configuration,
+    error handling, etc.
+
+    If an argument is given, assumes that it denotes the desired `appname'
+    and sets it. Also initializes the logger.
 
   enviro
     Get the `enviro' attribute, i.e. the name of the environment variable
@@ -84,18 +90,18 @@ METHODS
   supported_languages
     Get list of supported languages. Equivalent to:
 
-        $site->CELL_SUPPORTED_LANGUAGES || [ 'en ]
+        $site->CELL_SUPP_LANG || [ 'en ]
 
   language_supported
     Determine if a given language is supported.
 
-  load
+  `load'
     Attempt to load messages and configuration parameters from the sharedir
     and, possibly, the sitedir as well.
 
-    Takes: a PARAMHASH that should include `appname' and at least one of
-    `enviro' or `sitedir' (if both are given, `enviro' takes precedence with
-    `sitedir' as a fallback).
+    Takes: a PARAMHASH that should include at least one of `enviro' or
+    `sitedir' (if both are given, `enviro' takes precedence with `sitedir'
+    as a fallback).
 
     Returns: an `App::CELL::Status' object, which could be any of the
     following: OK success WARN previous call already succeeded, nothing to

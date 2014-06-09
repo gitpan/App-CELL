@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.165
+Version 0.166
 
 =cut
 
-our $VERSION = '0.165';
+our $VERSION = '0.166';
 
 
 
@@ -208,12 +208,11 @@ sub init {
     # look up sharedir
     if ( not $sharedir ) {
         my $tmp_sharedir = File::ShareDir::dist_dir('App-CELL');
-        my $status = is_directory_viable( $tmp_sharedir );
-        if ( $status->not_ok ) {
+        if ( ! is_directory_viable( $tmp_sharedir ) ) {
             return App::CELL::Status->new( 
                 level => 'ERR', 
                 code => 'CELL_SHAREDIR_NOT_VIABLE',
-                args => [ $tmp_sharedir, $status->payload ],
+                args => [ $tmp_sharedir, $App::CELL::Util::not_viable_reason ],
             );
         } 
         $log->info( "Found viable CELL configuration directory " . 
@@ -404,9 +403,10 @@ sub get_sitedir {
         $log->debug( "SITEDIR SEARCH, ROUND 1:" );
         if ( $sitedir = $paramhash{sitedir} ) {
             $log_message = "Viable site directory passed in argument PARAMHASH";
-            $status = is_directory_viable( $paramhash{sitedir} );
-            last GET_CANDIDATE_DIR if $status->ok;
-            $log->err( "Invalid sitedir ->" . $paramhash{sitedir} . "<- passed to App::CELL->init" );
+            last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
+            $log->err( "Invalid sitedir ->" . $sitedir .  "<- " . 
+                       "(" . $App::CELL::Util::not_viable_reason .  ") " .
+                       "passed to App::CELL->init" );
             return; # returns undef in scalar context
         }
         $log->info( "looked at function arguments but they do not contain a literal site dir path" );
@@ -418,8 +418,7 @@ sub get_sitedir {
             if ( $sitedir = $ENV{ $paramhash{enviro} } ) {
                 $log_message = "Found viable sitedir in " . $paramhash{enviro}
                                . " environment variable";
-                $status = is_directory_viable( $sitedir );
-                last GET_CANDIDATE_DIR if $status->ok;
+                last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
             }
         }
         else 
@@ -427,8 +426,7 @@ sub get_sitedir {
             if ( $sitedir = $ENV{ 'CELL_SITEDIR' } ) {
                 $log_message = "Found viable sitedir in CELL_SITEDIR"
                                . " environment variable";
-                $status = is_directory_viable( $sitedir );
-                last GET_CANDIDATE_DIR if $status->ok;
+                last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
             }
         }
     

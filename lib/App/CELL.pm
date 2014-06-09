@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.165
+Version 0.166
 
 =cut
 
-our $VERSION = '0.165';
+our $VERSION = '0.166';
 
 
 
@@ -69,9 +69,11 @@ our $VERSION = '0.165';
     use App::CELL qw( $CELL $log $meta $site );
 
     # load config params and messages from sitedir
-    my $status = $CELL->load( appname => 'foo', 
-                              sitedir => '/etc/foo' );
+    my $status = $CELL->load( sitedir => '/etc/foo' );
     return $status unless $status->ok;
+
+    # set appname to FOO_APPNAME (a config param just loaded from sitedir)
+    $CELL->appname( $CELL->FOO_APPNAME || "foo" );
 
     # write to the log
     $log->notice("Configuration loaded from /etc/foo");
@@ -150,12 +152,21 @@ our $CELL = bless {
 
 =head2 appname
 
-Get the C<appname> attribute, i.e. the name of the application or script
-that is using L<App::CELL> for its configuration, error handling, etc.
+If no argument is given, returns the C<appname> -- i.e. the name of the
+application or script that is using L<App::CELL> for its configuration,
+error handling, etc.
+
+If an argument is given, assumes that it denotes the desired C<appname> and sets
+it. Also initializes the logger.
 
 =cut
 
-sub appname { return $CELL->{appname}; }
+sub appname { 
+    my @ARGS = @_;
+    return $CELL->{appname} if not @ARGS; 
+    $CELL->{appname} = $ARGS[0];
+    $log->ident( $CELL->{'appname'} );
+}
 
 
 =head2 enviro
@@ -216,7 +227,7 @@ sub sitedir {
 
 Get list of supported languages. Equivalent to:
 
-    $site->CELL_SUPPORTED_LANGUAGES || [ 'en ]
+    $site->CELL_SUPP_LANG || [ 'en ]
 
 =cut
 
@@ -236,14 +247,14 @@ sub language_supported {
 }
 
 
-=head2 load
+=head2 C<load>
 
 Attempt to load messages and configuration parameters from the sharedir
 and, possibly, the sitedir as well.
 
-Takes: a PARAMHASH that should include C<appname> and at least one of 
-C<enviro> or C<sitedir> (if both are given, C<enviro> takes precedence with
-C<sitedir> as a fallback).
+Takes: a PARAMHASH that should include at least one of C<enviro> or
+C<sitedir> (if both are given, C<enviro> takes precedence with C<sitedir>
+as a fallback). 
 
 Returns: an C<App::CELL::Status> object, which could be any of the
 following: 
@@ -272,13 +283,6 @@ sub load {
     #    );
     #}
 
-    $CELL->{appname} = $ARGS{appname} if $ARGS{appname};
-    $CELL->{appname} = __PACKAGE__ if not $CELL->{'appname'};
-
-    # Presumably this is what the application wants; if not, it can be
-    # overrided
-    $log->ident( $CELL->{'appname'} );
-
     # we only get past this next call if at least the sharedir loads
     # successfully (sitedir is optional)
     $status = App::CELL::Load::init( %ARGS );
@@ -288,16 +292,16 @@ sub load {
     $log->show_caller( $site->CELL_LOG_SHOW_CALLER );
     $log->debug_mode ( $site->CELL_DEBUG_MODE );
 
-    # initialize package variables in Message.pm
-    @App::CELL::Message::supp_lang = @{ $site->CELL_SUPPORTED_LANGUAGES };
-    $App::CELL::Message::default_lang = $site->CELL_LANGUAGE || 'en';
+    $App::CELL::Message::supp_lang = $site->CELL_SUPP_LANG || [ 'en' ];
+    $App::CELL::Message::def_lang = $site->CELL_DEF_LANG || 'en';
 
     $meta->set( 'CELL_META_START_DATETIME', utc_timestamp() );
-    $log->info( "**************** CELL started at " . 
+    $log->info( "**************** App::CELL $VERSION started at " . 
                 $meta->CELL_META_START_DATETIME     . " (UTC)" );
 
     return App::CELL::Status->ok;
 }
+
 
 
 =head2 Status constructors

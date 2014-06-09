@@ -38,7 +38,6 @@ use 5.012;
 
 use Data::Dumper;
 use Date::Format;
-use App::CELL::Status;
 
 =head1 NAME
 
@@ -48,11 +47,11 @@ App::CELL::Util - generalized, reuseable functions
 
 =head1 VERSION
 
-Version 0.165
+Version 0.166
 
 =cut
 
-our $VERSION = '0.165';
+our $VERSION = '0.166';
 
 
 
@@ -92,6 +91,15 @@ use Exporter qw( import );
 our @EXPORT_OK = qw( utc_timestamp is_directory_viable stringify_args );
 
 
+
+=head1 PACKAGE VARIABLES
+
+=cut
+
+our $not_viable_reason = '';
+
+
+
 =head1 FUNCTIONS
 
 
@@ -107,8 +115,9 @@ sub utc_timestamp {
 =head2 is_directory_viable
 
 Run viability checks on a directory. Takes: full path to directory. Returns
-paramhash containing two keys: 'status' (true/false) and 'problem'
-(description of problem).
+true (directory viable) or false (directory not viable). If the directory
+is not viable, it sets the package variable
+C<< $App::CELL::Util::not_viable_reason >>.
 
 =cut
 
@@ -133,10 +142,11 @@ sub is_directory_viable {
     } # CRIT_CHECK
 
     if ( $problem ) {
-        return App::CELL::Status->not_ok( $problem );
+        $not_viable_reason = $problem;
+        return 0;
     }
 
-    return App::CELL::Status->ok;
+    return 1;
 }
 
 

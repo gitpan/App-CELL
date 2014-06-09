@@ -33,9 +33,9 @@ $status = $CELL->load( appname => 'CELLfoo' );
 ok( $status->ok, "CELL initialization from ShareDir ok" );
 ok( $CELL->loaded eq 'SHARE', "$CELL->loaded says SHARE");
 
-is_deeply( $site->CELL_SUPPORTED_LANGUAGES, [ 'en' ], 
-    "CELL_SUPPORTED_LANGUAGES is set to just English" );
-is_deeply( $CELL->supported_languages, $site->CELL_SUPPORTED_LANGUAGES,
+is_deeply( $site->CELL_SUPP_LANG, [ 'en' ], 
+    "CELL_SUPP_LANG is set to just English" );
+is_deeply( $CELL->supported_languages, $site->CELL_SUPP_LANG,
     "Two different ways of getting supported_languages list" );
 
 my $sharedir = $site->CELL_SHAREDIR_FULLPATH; 

@@ -61,16 +61,16 @@ set('CELL_SHAREDIR_FULLPATH', '');
 #        overrided by site param when siteconf dir is loaded
 set('CELL_SITEDIR_FULLPATH', '');
 
-# CELL_SUPPORTED_LANGUAGES
+# CELL_SUPP_LANG
 #        reference to a list of supported language tags
 #        (i.e. languages for which we have _all_ messages
 #        translated)
-set( 'CELL_SUPPORTED_LANGUAGES', [ 'en' ] );
+set( 'CELL_SUPP_LANG', [ 'en' ] );
 
-# CELL_LANGUAGE
+# CELL_DEF_LANG
 #        the language that messages will be displayed in by default,
 #        when no language is specified by other means
-set('CELL_LANGUAGE', 'en');
+set('CELL_DEF_LANG', 'en');
 
 # CELL_CORE_UNIT_TESTING
 #        used only for App::CELL unit tests

@@ -30,12 +30,13 @@ my $test_dir = File::Spec->catfile (
                );
 #diag( "Testing directory $test_dir" );
 $status = is_directory_viable( $test_dir );
-ok( $status->ok, "Root directory is viable" );
+ok( $status, "Root directory is viable" );
 
 # App::CELL::Util::is_directory_viable with a non-viable directory
 $test_dir = "###foobarbazblat342###";
 #diag( "Testing directory $test_dir" );
 $status = is_directory_viable( $test_dir );
-#diag( $status->payload ) if $status->payload;
-ok( $status->not_ok, "Invalid directory is not viable" );
-is( $status->payload, "does not exist", "Invalid directory is not viable for the right reason" );
+#diag( $App::CELL::Util::not_viable_reason ) unless $status;
+ok( ! $status, "Invalid directory is not viable" );
+is( $App::CELL::Util::not_viable_reason, "does not exist", 
+    "Invalid directory is not viable for the right reason" );

@@ -649,3 +649,10 @@ later are in the perl-CELL project repo.
   present, stringify them and append to text
 - Util.pm: fix bug "stringify_args can only take hashrefs"
 
+0.166  2014-06-09 18:16 CEST
+- masochistically change CELL_SUPPORTED_LANGUAGES and CELL_LANGUAGE to
+  CELL_SUPP_LANG and CELL_DEF_LANG, respectively
+- CELL.pm: make 'load' take sitedir only, make 'appname' method both
+  get and set appname
+- Util.pm: make is_directory_viable return boolean
+
