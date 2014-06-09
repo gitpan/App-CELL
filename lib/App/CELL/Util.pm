@@ -48,11 +48,11 @@ App::CELL::Util - generalized, reuseable functions
 
 =head1 VERSION
 
-Version 0.164
+Version 0.165
 
 =cut
 
-our $VERSION = '0.164';
+our $VERSION = '0.165';
 
 
 
@@ -152,10 +152,10 @@ sub stringify_args {
     local $Data::Dumper::Indent = 0;
     local $Data::Dumper::Terse = 1;
     my $args_as_string;
-    if ( %$args ) {
+    if ( ref $args ) {
         $args_as_string = Dumper( $args );
     } else {
-        $args_as_string = '';
+        $args_as_string = $args;
     }
     return $args_as_string;
 }

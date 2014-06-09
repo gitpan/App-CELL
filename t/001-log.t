@@ -8,7 +8,7 @@ use App::CELL::Log qw( $log );
 use Log::Any::Test; # BE AWARE THAT App::CELL::Test::LogToFile is 
                     # incompatible with Log::Any::Test !!
 
-use Test::More tests => 18;
+use Test::More tests => 17;
 
 # check environment
 delete $ENV{CELL_DEBUG_MODE};
@@ -49,7 +49,6 @@ ok( $status->ok, "Messages from sharedir loaded" );
 $log->clear();
 $status = App::CELL::Status->new( level => 'NOTICE', 
               code => 'CELL_TEST_MESSAGE' );
-$log->contains_ok( 'DEBUG: Creating message object' );
 $log->contains_only_ok( "NOTICE: This is a test message", "NOTICE test message ok" );
 
 $log->init( debug_mode => 0 );

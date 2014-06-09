@@ -37,6 +37,7 @@ use warnings;
 use 5.012;
 
 use App::CELL::Log qw( $log );
+use App::CELL::Util qw( stringify_args );
 use Scalar::Util qw( blessed );
 
 
@@ -49,11 +50,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.164
+Version 0.165
 
 =cut
 
-our $VERSION = '0.164';
+our $VERSION = '0.165';
 
 
 
@@ -157,7 +158,11 @@ sub new {
             $ARGS{text} = $parent->text;
         } else {
             $ARGS{code} = $status->code;
-            $ARGS{text} = $status->text;
+            if ( $ARGS{args} ) {
+               $ARGS{text} = $status->text . stringify_args( $ARGS{args} );
+            } else {
+               $ARGS{text} = $status->text;
+            }
         }
     }
 

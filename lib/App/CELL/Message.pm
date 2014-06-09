@@ -51,11 +51,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.164
+Version 0.165
 
 =cut
 
-our $VERSION = '0.164';
+our $VERSION = '0.165';
 
 
 
@@ -200,14 +200,12 @@ sub new {
     if ( not exists( $ARGS{'code'} ) ) {
         return App::CELL::Status->new( level => 'ERR', 
             code => 'CELL_MESSAGE_NO_CODE', 
-            args => [ $stringified_args ],
             caller => $my_caller,
         );
     }
     if ( not $ARGS{'code'} ) {
         return App::CELL::Status->new( level => 'ERR', 
             code => 'CELL_MESSAGE_CODE_UNDEFINED',
-            args => [ $stringified_args ],
             caller => $my_caller,
         );
     }
@@ -231,30 +229,40 @@ sub new {
     $text =~ s/\n//g;
     $text =~ s/\012/ -- /g;
 
-    # insert the arguments into the message text -- needs to be in an eval
-    # block because we have no control over what crap the application
-    # programmer might send us
-    try { 
-        local $SIG{__WARN__} = sub {
-            die;
-        };
-        $ARGS{text} = sprintf( $text, @{ $ARGS{args} || [] } ); 
-    }
-    catch {
-        my $errmsg = $_;
-        $errmsg =~ s/\012/ -- /g;
-        $log->err("CELL_MESSAGE_ARGUMENT_MISMATCH on $ARGS{code}, error was: $errmsg");
-        #my $buffer = $mesg->{ 'CELL_MESSAGE_ARGUMENT_MISMATCH' }->{ 'en' }->{ 'Text' };
-        #if ( $buffer ) {
-        #    $buffer = sprintf( $buffer, $ARGS{code}, $errmsg );
-        #} else {
-        #    $buffer = "CELL_MESSAGE_ARGUMENT_MISMATCH on " . $ARGS{code} .
-        #              " (sprintf said ->$errmsg<-)";
-        #}
-        #$log->err( $buffer );
-    };
+    if ( defined $ARGS{args} and @{ $ARGS{args} } and not $text =~ m/%s/ ) {
+        my $stringy = stringify_args( $ARGS{args} );
+        $ARGS{text} = $text . " ARGS: $stringy";
+    } else {
 
-    $log->debug( "Creating message object ->" . $ARGS{code} .  "<-", caller => $my_caller);
+        # insert the arguments into the message text -- needs to be in an eval
+        # block because we have no control over what crap the application
+        # programmer might send us
+        try { 
+            local $SIG{__WARN__} = sub {
+                die;
+            };
+            $ARGS{text} = sprintf( $text, @{ $ARGS{args} || [] } ); 
+        }
+        catch {
+            my $errmsg = $_;
+            $errmsg =~ s/\012/ -- /g;
+            $log->err("CELL_MESSAGE_ARGUMENT_MISMATCH on $ARGS{code}, error was: $errmsg");
+            #my $buffer = $mesg->{ 'CELL_MESSAGE_ARGUMENT_MISMATCH' }->{ 'en' }->{ 'Text' };
+            #if ( $buffer ) {
+            #    $buffer = sprintf( $buffer, $ARGS{code}, $errmsg );
+            #} else {
+            #    $buffer = "CELL_MESSAGE_ARGUMENT_MISMATCH on " . $ARGS{code} .
+            #              " (sprintf said ->$errmsg<-)";
+            #}
+            #$log->err( $buffer );
+        };
+
+    }
+
+    # uncomment if needed
+    #$log->debug( "Creating message object ->" . $ARGS{code} . 
+    #             "<- with args ->$stringified_args<-", 
+    #             caller => $my_caller);
 
     # bless into objecthood
     my $self = bless \%ARGS, 'App::CELL::Message';

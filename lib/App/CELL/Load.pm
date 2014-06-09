@@ -45,7 +45,6 @@ use App::CELL::Util qw( is_directory_viable );
 use Data::Dumper;
 use File::Next;
 use File::ShareDir;
-use Scalar::Util;
 
 =head1 NAME
 
@@ -55,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.164
+Version 0.165
 
 =cut
 
-our $VERSION = '0.164';
+our $VERSION = '0.165';
 
 
 

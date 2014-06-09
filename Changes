@@ -640,3 +640,12 @@ later are in the perl-CELL project repo.
 - Load.pm, Message.pm: fix infinite recursion bug in try .. catch ..
 - Load.pm: return fatal error if running in taint mode
 
+0.165  2014-06-09 13:55 CEST
+- Message.pm: if args sent to constructor but text cannot take them,
+  stringify them and append to message text
+- Message.pm: comment out "Creating message object" debug message
+- t/001-log.t: do not test for "Creating message object" debug message
+- Status.pm: if message object creation fails in constructor and args are
+  present, stringify them and append to text
+- Util.pm: fix bug "stringify_args can only take hashrefs"
+
