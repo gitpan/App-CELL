@@ -49,13 +49,13 @@
 # unique value used by App::CELL::Load::init routine sanity check
 set('CELL_LOAD_SANITY_META', 'Baz');
 
-# boolean value whether App::CELL distro sharedir has been loaded
-# (defaults to 1 since the param is initialized only when distro sharedir
-# is loaded)
-set('CELL_META_SHAREDIR_LOADED', 1);
-
-# boolean value whether site config dir has been loaded
+# boolean value expressing whether _any_ sitedir has been loaded this is
+# incremented on every sitedir load, so it also expresses how many sitedirs
+# have been loaded
 set('CELL_META_SITEDIR_LOADED', 0);
+
+# list of sitedirs found and loaded
+set('CELL_META_SITEDIR_LIST', []);
 
 # boolean value whether App::CELL has been initialized
 set('CELL_META_INIT_STATUS_BOOL', 0);

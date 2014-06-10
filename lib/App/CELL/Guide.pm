@@ -46,11 +46,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.166
+Version 0.170
 
 =cut
 
-our $VERSION = '0.166';
+our $VERSION = '0.170';
 
 
 
@@ -224,47 +224,67 @@ To actually see your log messages, you have to do something like this:
 
 =head2 Configuration in depth
 
-=head3 Three types of paramters
+=head3 Three types of parameters
 
 CELL recognizes three types of configuration parameters: C<meta>, C<core>,
-and C<site>.
+and C<site>. These parameters and their values are loaded from files
+prepared and placed in the sitedir in advance.
 
 =head3 Meta parameters
 
 Meta parameters are by definition mutable: the application can change a
-meta parameter's value any number of times. Initial C<meta> param settings
-are placed in a file entitled C<$appname_MetaConfig.pm> -- in other words,
-if the application name is FooApp, its initial C<meta> parameter settings
-will be contained in the file C<FooApp_MetaConfig.pm>. At initialization
-time, L<App::CELL> will look in the sitedir for files matching this
-description, and attempt to load them.
+meta parameter's value any number of times, and L<App::CELL> will not care.
+Initial C<meta> param settings are placed in a file entitled
+C<$str_MetaConfig.pm> (where C<$str> is a string free of underscore
+characters) in the sitedir. For example, if the application name is FooApp, its
+initial C<meta> parameter settings could be contained in a file called
+C<FooApp_MetaConfig.pm>. At initialization time, L<App::CELL> looks in
+the sitedir for files matching this description, and attempts to load them.
+(See L</How configuration files are named>.)
 
 =head3 Core parameters
 
 As in Request Tracker, C<core> paramters have immutable values and are
-intended to be used as "factory defaults" that the site administrator can
-override by setting site parameters. If the application is called FooApp,
-its core configuration settings will be contained in a file called
-C<FooApp_Config.pm> located in the sitedir.
+intended to be used as "factory defaults", set by the developer, that the
+site administrator can override by setting site parameters. If the
+application is called FooApp, its core configuration settings could be
+contained in a file called C<FooApp_Config.pm> located in the sitedir. 
+(See L</How configuration files are named> for details.)
 
 =head3 Site parameters
 
-Site parameters, set in a file called C<$appname_SiteConfig.pm>, are loaded
-after C<core> parameters. When the application asks for the value of a
-parameter by calling, e.g., C<$CELL->FOO_PARAM>, CELL first looks for a
-C<core> parameter C<FOO_PARAM>. The value of this parameter is returned if,
-and only if, no site parameter C<FOO_PARAM> is defined. If there is a
-C<FOO_PARAM> site parameter, its value is returned instead. In other words,
-site parameters override core parameters of the same name.
+Site parameters are kept separate from core parameters, but are closely
+related to them. As far as the application is concerned, there are only
+site parameters. How this works is best explained by two examples.
+
+Let C<FOO> be an application that uses L<App::CELL>.
+
+In the first example, core param C<FOO> is set to "Bar" and site param
+C<FOO> is I<not> set at all. When the application calls C<< $site->FOO >>
+the core parameter value "Bar" is returned.
+
+In the second example, the core param C<FOO> is set to "Bar" and site
+param C<FOO> is also set, but to a different value: "Whizzo". In this
+scenario, when the application calls C<< $site->FOO >> the site parameter
+("Whizzo") value is returned. 
+
+This setup allows the site administrator to customize the application.
+
+Site parameters are set in a file called C<$str_SiteConfig.pm>, where
+C<$str> could be the appname.
 
 =head3 Conclusion
 
 How these three types of parameters are defined and used is up to the
-application. As far as CELL is concerned, they are all optional. CELL
-itself has its own meta, core, and site parameters, but these are located
-elsewhere. However, since CELL's internal parameters are stored in the same
-namespaces as the application's parameters, the application programmer
-should avoid using parameters starting with C<CELL_>.
+application. As far as L<App::CELL> is concerned, they are all optional.
+
+L<App::CELL> itself has its own internal meta, core, and site parameters,
+but these are located elsewhere -- in the so-called "sharedir", a directory
+that is internal to the L<App::CELL> distro/package. 
+
+All these internal parameters start with C<CELL_> and are stored in the
+same namespaces as the application's parameters. That means the application
+programmer should avoid using parameters starting with C<CELL_>.
 
 =head2 How configuration is stored
 
@@ -600,14 +620,36 @@ programmer to use, either directly via CELL::Message->new or
 indirectly as status codes.
 
 If a message code has text strings in multiple languages, these language
-variants can be obtained by specifying the C<Lang> parameter to
-CELL::Message->new. If the C<Lang> parameter is not specified, CELL will
-always try to use the default language (C<CELL_DEFAULT_LANGUAGE> or English if
+variants can be obtained by specifying the C<lang> parameter to
+CELL::Message->new. If the C<lang> parameter is not specified, CELL will
+always try to use the default language (C<CELL_DEF_LANG> or English if
 that parameter has not been set).
 
 
 
 =head1 CAVEATS
+
+
+=head2 Internal parameters
+
+L<App::CELL> stores its own parameters (mostly meta and core, but also one
+site param) in a separate directory, but when loaded they end up in the
+same namespaces as the application's meta, core, and site parameters.
+The names of these internal parameters are always prefixed with C<CELL_>.
+
+Therefore, the application programmer should avoid using parameters
+starting with C<CELL_>.
+
+
+=head2 Mutable and immutable parameters
+
+It is important to realize that, although core parameters can be overriden
+by site parameters, internally the values of both are immutable. Although
+it is possible to change them by cheating, the 'set' method of C<$core> and
+C<$site> will refuse to change the value of an existing core/site parameter.
+
+Therefore, use C<$meta> to store mutable values.
+
 
 =head2 Taint mode
 
@@ -615,6 +657,7 @@ Since it imports configuration data at runtime from files supplied by the
 user, L<App::CELL> should not be run under taint mode. The C<< load >>
 routine checks this and will refuse to do anything if running with C<-T>.
 
+To recapitulate: don't run L<App::CELL> in taint mode.
 
 
 =head1 COMPONENTS

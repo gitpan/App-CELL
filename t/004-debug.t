@@ -19,7 +19,7 @@ use Test::More;
 # To activate debugging, uncomment the following
 #
 #use App::CELL::Test::LogToFile;
-#$log->init( debug_mode => 0 );
+#$log->init( debug_mode => 1 );
 
 plan tests => 1;
 

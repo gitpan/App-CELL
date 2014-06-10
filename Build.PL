@@ -38,6 +38,7 @@ my $build = Module::Build->new(
             repository => 'https://sourceforge.net/p/perl-cell/code/',
         }
     },
+    add_to_cleanup     => [ 'App-CELL-*' ],
 );
 
 $build->create_build_script;

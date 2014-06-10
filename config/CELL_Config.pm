@@ -51,15 +51,15 @@
 #        won't be suppressed - off by default
 set('CELL_DEBUG_MODE', 0);
 
+# boolean value expressing whether sharedir has been loaded
+# (defaults to 1 since the param is initialized only when distro sharedir
+# is loaded)
+set('CELL_SHAREDIR_LOADED', 1);
+
 # CELL_SHAREDIR_FULLPATH
 #        full path of App::CELL distro sharedir
 #        overrided by site param when sharedir is loaded
 set('CELL_SHAREDIR_FULLPATH', '');
-
-# CELL_SITEDIR_FULLPATH
-#        full path of siteconf dir
-#        overrided by site param when siteconf dir is loaded
-set('CELL_SITEDIR_FULLPATH', '');
 
 # CELL_SUPP_LANG
 #        reference to a list of supported language tags

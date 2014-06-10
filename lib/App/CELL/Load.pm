@@ -41,7 +41,7 @@ use App::CELL::Log qw( $log );
 use App::CELL::Message;
 use App::CELL::Status;
 use App::CELL::Test qw( cmp_arrays );
-use App::CELL::Util qw( is_directory_viable );
+use App::CELL::Util qw( stringify_args is_directory_viable );
 use Data::Dumper;
 use File::Next;
 use File::ShareDir;
@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.166
+Version 0.170
 
 =cut
 
-our $VERSION = '0.166';
+our $VERSION = '0.170';
 
 
 
@@ -116,7 +116,7 @@ This module provides the following package variables
 
 our $sharedir = '';
 our $sharedir_loaded = 0;
-our $sitedir = '';
+our @sitedir = ();
 our $sitedir_loaded = 0;
 
 
@@ -146,27 +146,27 @@ site params from it.
 
 =back
 
-Subsequent calls check state variables to determine status of previous
-calls. For example, if no share dir is found, a critical error is raised.
+Subsequent calls check package variables to determine status of previous
+calls. For example, if no sharedir is found, a critical error is raised.
 The application could theoretically attempt to fix this and try again. Or,
-it might happen that the share dir is loaded as expected, but the site
-dir is not found, in which case on the second call the initialization
-routine would try again to find the site dir.
+it might happen that the sharedir is loaded as expected, but the sitedir
+is not found, in which case on the second call the initialization
+routine would try again to find the sitedir.
 
-Once the share dir and site dir are successfully initialized, there is no
-way to undo that.
+Once a directory has been loaded, there is no way to "undo" it, and
+L<App::CELL> will not look at that directory again.
 
 Upon success the routine sets the following App::CELL params:
 
 =over
 
-=item C<CELL_META_SHAREDIR_LOADED> - meta param
+=item C<CELL_META_SHAREDIR_LOADED> - meta param (boolean)
 
-=item C<CELL_SHAREDIR_FULLPATH> - site param
+=item C<CELL_SHAREDIR_FULLPATH> - site param (scalar)
 
-=item C<CELL_META_SITEDIR_LOADED> - meta param
+=item C<CELL_META_SITEDIR_LOADED> - meta param (boolean)
 
-=item C<CELL_SITEDIR_FULLPATH> - site param
+=item C<CELL_SITEDIR_FULLPATH> - site param (array ref)
 
 =back
 
@@ -176,7 +176,7 @@ Optionally takes a PARAMHASH. The following arguments are recognized:
 
 =item C<appname> - name of the application
 
-=item C<sitedir> - full path to the site dir
+=item C<sitedir> - full path to the/a site dir
 
 =back
 
@@ -185,19 +185,33 @@ E.g.:
     my $status = App::CELL::Load::init( appname => 'FooBar', 
         sitedir => '/etc/FooBar' );
 
-Return status is 'ok' provided at least the sharedir was found and loaded,
-otherwise an 'ERR' status is returned.
+If no sitedir is provided (through either the argument list or the
+environment), return status will be 'ok' provided the sharedir was found
+and loaded; otherwise, an 'ERR' status is returned.
 
-A warning is generated if no site dir is found, but the return status will
-still be 'ok'.
+If a sitedir is provided, yet not successfully loaded, an 'ERR' status will
+be returned.
 
 =cut
 
 sub init {
+    my @ARGS = @_;
 
-    my %Args = @_;
+    my $return_status;
 
-    $log->debug( "Entering App::CELL::Load::init version $VERSION" );
+    # check for even number of arguments
+    return App::CELL::Status->new( 
+               level => 'err', 
+               code => 'CELL_BAD_PARAMHASH' 
+           ) if @ARGS % 2 != 0 ;
+
+    my %ARGS = @ARGS;
+
+    if ( @ARGS ) {
+        $log->notice( "Entering App::CELL::Load::init version $VERSION ARGS: " . stringify_args( \%ARGS ) );
+    } else {
+        $log->notice( "Entering App::CELL::Load::init version $VERSION NO ARGS" );
+    }
 
     # check for taint mode
     if ( ${^TAINT} != 0 ) {
@@ -229,36 +243,53 @@ sub init {
         $status = meta_core_site_files( $sharedir );
         $load_status = _report_load_status( $sharedir, 'App:CELL distro sharedir', 'config params', $status );
         return $load_status if $load_status->not_ok;
-        $meta->set( 'CELL_META_SHAREDIR_LOADED', 1 );
+        $site->set( 'CELL_SHAREDIR_LOADED', 1 );
         $sharedir_loaded = 1;
     }
 
-    $log->debug( "sitedir package variable contains ->$sitedir<-" );
+    my $sitedir_expected = ( ( $ARGS{sitedir} or $ARGS{enviro} ) ? 1 : 0 );
+    if ( $sitedir_expected ) {
+        $log->debug( "We are expected to load a sitedir" );
+    } else {
+        $log->debug( "We are _not_ expected to load a sitedir" );
+    }
+
+    if ( @sitedir ) {
+        $log->debug( "sitedir package variable contains ->" . 
+                     join( ':', @sitedir ) . "<-" );
+    } else {
+        $log->debug( "sitedir package variable is empty" );
+    }
 
     # look up sitedir
-    if ( not $sitedir ) {
-        my $tmp_sitedir = get_sitedir( %Args );
-        if ( $tmp_sitedir ) {
-            $site->set( 'CELL_SITEDIR_FULLPATH', $tmp_sitedir );
-            $sitedir = $tmp_sitedir;
-        } else {
-            App::CELL::Status->new (
-                level => 'WARN',
-                code => 'CELL_SITEDIR_MISSING',
+    my $sitedir_candidate;
+    if ( $sitedir_expected ) {
+        $sitedir_candidate = get_sitedir( %ARGS );
+        if ( ! $sitedir_candidate ) {
+            my $source = ( $ARGS{sitedir} ? "PARAMHASH" : "environment" );
+            return App::CELL::Status->new (
+                level => 'ERR',
+                code => 'CELL_SITEDIR_NOT_FOUND',
+                args => [ $sitedir_candidate, $source ],
             );
         }
     }
 
     # walk sitedir
-    if ( $sitedir and not $sitedir_loaded ) {
-        my $status = message_files( $sitedir );
-        _report_load_status( $sitedir, 'site dir', 'messages', $status );
-        $status = meta_core_site_files( $sitedir );
-        _report_load_status( $sitedir, 'site conf dir', 'config params', $status );
-        $meta->set( 'CELL_META_SITEDIR_LOADED', 1 );
-        $sitedir_loaded = 1;
+    if ( $sitedir_expected and $sitedir_candidate ) {
+        my $status = message_files( $sitedir_candidate );
+        my $messages_loaded = _report_load_status( $sitedir_candidate, 'site dir', 'messages', $status );
+        $status = meta_core_site_files( $sitedir_candidate );
+        my $params_loaded = _report_load_status( $sitedir_candidate, 'sitedir', 'config params', $status );
+        if ( $messages_loaded->ok or $params_loaded->ok ) {
+            $meta->set( 'CELL_META_SITEDIR_LOADED', 
+                        ( $meta->CELL_META_SITEDIR_LOADED + 1 ) );
+            push @sitedir, $sitedir_candidate;
+            $meta->set( 'CELL_META_SITEDIR_LIST', \@sitedir );
+        }
     }
 
+    # check that at least sharedir has really been loaded
     SANITY: {
         my $results = [];
         my $status = App::CELL::Message->new( code => 'CELL_LOAD_SANITY_MESSAGE' );

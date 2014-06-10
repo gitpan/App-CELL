@@ -620,7 +620,7 @@ later are in the perl-CELL project repo.
 - tweak release script
 - CELL_Config.pm: comment out CELL_ALREADY_INITIALIZED
 
-0.160-0.162  2014-06-07 21:49 CEST
+0.160-0.163  2014-06-07 21:49 CEST
 - clean up git repo
 - move unnecessary file MANIFEST.SKIP from dist/ to staging/
 - Build.PL: don't create LICENSE file every time
@@ -631,16 +631,11 @@ later are in the perl-CELL project repo.
 - move dev.sh and test.sh from dist/ to top level of git repo because they
   are not in the distro
 
-0.163  2014-06-07 23:07 CEST
-- tweak release script after moving dev.sh to parent directory
-
-0.164  2014-06-09 12:45 CEST
+0.164-0.165  2014-06-09 13:55 CEST
 - pod-coverage.t: add missing tests
 - Guide.pm: add CAVEATs section to warn against running in taint mode
 - Load.pm, Message.pm: fix infinite recursion bug in try .. catch ..
 - Load.pm: return fatal error if running in taint mode
-
-0.165  2014-06-09 13:55 CEST
 - Message.pm: if args sent to constructor but text cannot take them,
   stringify them and append to message text
 - Message.pm: comment out "Creating message object" debug message
@@ -649,10 +644,24 @@ later are in the perl-CELL project repo.
   present, stringify them and append to text
 - Util.pm: fix bug "stringify_args can only take hashrefs"
 
-0.166  2014-06-09 18:16 CEST
+0.166-0.168  2014-06-09 18:16 CEST
 - masochistically change CELL_SUPPORTED_LANGUAGES and CELL_LANGUAGE to
   CELL_SUPP_LANG and CELL_DEF_LANG, respectively
 - CELL.pm: make 'load' take sitedir only, make 'appname' method both
   get and set appname
 - Util.pm: make is_directory_viable return boolean
+- tweak Build.PL to clean App-CELL-* tarballs
+- Load.pm, etc.: support multiple sitedirs (tests for this still to be
+  written, though)
+- t/110-site.t: add a multiple-sitedir-related unit test
+
+0.169  2014-06-10 09:07 CEST
+- clarify that site params cannot be overwritten
+- move CELL_SITEDIR_LOADED and CELL_SITEDIR_LIST to CELL_META_SITEDIR_LOADED 
+  and CELL_META_SITEDIR_LIST, respectively
+- t/110-site.t: add some unit tests for the new "multiple sitedirs" feature
+- work on Guide.pm
+
+0.170  2014-06-10 11:46 CEST
+- fix version
 
