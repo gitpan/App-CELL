@@ -8,7 +8,7 @@ use App::CELL::Test qw( mktmpdir cleartmpdir populate_file );
 #use Data::Dumper;
 use File::Spec;
 use Scalar::Util qw( blessed );
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 my $status;
 delete $ENV{CELL_DEBUG_MODE};
@@ -71,7 +71,8 @@ populate_file( $full_path, $stuff );
 ok( ! defined( $meta->CELL_META_SITEDIR_LOADED ), "Meta param undefined before load");
 $status = $CELL->load( sitedir => $sitedir );
 ok( $status->ok, "CELL initialization with sitedir OK" );
-ok( $meta->CELL_META_SITEDIR_LOADED, "Meta param set correctly after load");
+ok( $meta->CELL_META_SITEDIR_LOADED, "Meta param set correctly after load" );
+is( $CELL->loaded, "BOTH", "Both sharedir and sitedir have been loaded" );
 is_deeply( $meta->CELL_META_SITEDIR_LIST, [ $sitedir ], "List of sitedirs is correct" );
 is_deeply( $CELL->supported_languages, [ 'en', 'cz' ], 
     "CELL now supports two languages instead of just one" );

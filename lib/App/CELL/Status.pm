@@ -50,11 +50,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.170
+Version 0.171
 
 =cut
 
-our $VERSION = '0.170';
+our $VERSION = '0.171';
 
 
 

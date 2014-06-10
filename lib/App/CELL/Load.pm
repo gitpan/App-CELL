@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.170
+Version 0.171
 
 =cut
 
-our $VERSION = '0.170';
+our $VERSION = '0.171';
 
 
 
@@ -286,6 +286,7 @@ sub init {
                         ( $meta->CELL_META_SITEDIR_LOADED + 1 ) );
             push @sitedir, $sitedir_candidate;
             $meta->set( 'CELL_META_SITEDIR_LIST', \@sitedir );
+            $sitedir_loaded = 1;
         }
     }
 

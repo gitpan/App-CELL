@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.170
+Version 0.171
 
 =cut
 
-our $VERSION = '0.170';
+our $VERSION = '0.171';
 
 
 
@@ -270,18 +270,11 @@ sub load {
 
     my ( $class, @ARGS ) = @_;
     if ( @ARGS % 2 ) {
-        return $CELL->status_err( code => "CELL_ODD_ARGS",
-           args => [ '$CELL->load', stringify_args( \@ARGS ) ] );
+        return App::CELL->status_err( code => "CELL_ODD_ARGS",
+           args => [ 'App::CELL::load', stringify_args( \@ARGS ) ] );
     }
     my %ARGS = @ARGS;
     my $status; 
-
-    #if ( $CELL->loaded eq 'BOTH' ) {
-    #    $log->debug("Reentering App::CELL->load");
-    #    return App::CELL::Status->new( level => 'WARN',
-    #        code => 'CELL_ALREADY_INITIALIZED',
-    #    );
-    #}
 
     # we only get past this next call if at least the sharedir loads
     # successfully (sitedir is optional)
