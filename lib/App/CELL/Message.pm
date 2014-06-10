@@ -50,11 +50,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.171
+Version 0.172
 
 =cut
 
-our $VERSION = '0.171';
+our $VERSION = '0.172';
 
 
 
@@ -252,11 +252,12 @@ sub new {
     $text =~ s/\n//g;
     $text =~ s/\012/ -- /g;
 
+    my $stringy = stringify_args( $ARGS{args} ) || '';
     if ( defined $ARGS{args} and @{ $ARGS{args} } and not $text =~ m/%s/ ) {
-        my $stringy = stringify_args( $ARGS{args} );
         $ARGS{text} = $text . " ARGS: $stringy";
     } else {
 
+        $log->debug( "About to try sprintf on ->$text<- with arguments ->$stringy<-" );
         # insert the arguments into the message text -- needs to be in an eval
         # block because we have no control over what crap the application
         # programmer might send us

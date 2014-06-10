@@ -671,3 +671,9 @@ later are in the perl-CELL project repo.
 - Load.pm: fix bug "$CELL->loaded returning 'SHARE' even though sharedir
   and sitedir are loaded"
 
+0.172  2014-06-10 13:42 CEST
+- CELL_Message_en.conf: add reason to CELL_SITEDIR_NOT_FOUND
+- Load.pm: fix bug "Load.pm->init doesn't return meaningful error when
+  get_sitedir fails"
+- Message.pm, t/001-log.t: tweak debug message
+

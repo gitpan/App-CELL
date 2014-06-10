@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.171
+Version 0.172
 
 =cut
 
-our $VERSION = '0.171';
+our $VERSION = '0.172';
 
 
 
@@ -72,7 +72,7 @@ our $VERSION = '0.171';
     return $status if $status->not_ok;
 
     # attempt to determine the site configuration directory
-    my $sitedir = App::CELL::Load::get_sitedir();
+    my $resulthash = App::CELL::Load::get_sitedir();
 
     # get a reference to a list of configuration files (full paths) of a
     # given type under a given directory
@@ -264,13 +264,19 @@ sub init {
     # look up sitedir
     my $sitedir_candidate;
     if ( $sitedir_expected ) {
-        $sitedir_candidate = get_sitedir( %ARGS );
-        if ( ! $sitedir_candidate ) {
+        my $result_hash = get_sitedir( %ARGS );
+        if ( $result_hash->{succeeded} ) {
+            $sitedir_candidate = $result_hash->{sitedir_candidate};
+        } else {
             my $source = ( $ARGS{sitedir} ? "PARAMHASH" : "environment" );
             return App::CELL::Status->new (
                 level => 'ERR',
                 code => 'CELL_SITEDIR_NOT_FOUND',
-                args => [ $sitedir_candidate, $source ],
+                args => [ 
+                            $result_hash->{sitedir_candidate}, 
+                            $source, 
+                            $result_hash->{failure_reason},
+                        ],
             );
         }
     }
@@ -419,14 +425,21 @@ sub meta_core_site_files {
 
 Look in various places (in a pre-defined order) for the site
 configuration directory. Stop as soon as we come up with a viable
-candidate. On success, returns a string containing an absolute
-directory path. On failure, returns undef.
+candidate. Always returns a hashref containing the following parameters:
+
+   { 
+     succeeded => 1 or 0,
+     sitedir_candidate => full path of candidate directory derived from the
+                          arguments or the environment,
+     failure_reason => description of why the lookup failed
+   }
 
 =cut
 
 sub get_sitedir {
 
     my %paramhash = @_;
+    my $reason;
 
     my ( $sitedir, $log_message, $status );
     GET_CANDIDATE_DIR: {
@@ -436,10 +449,10 @@ sub get_sitedir {
         if ( $sitedir = $paramhash{sitedir} ) {
             $log_message = "Viable site directory passed in argument PARAMHASH";
             last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
-            $log->err( "Invalid sitedir ->" . $sitedir .  "<- " . 
-                       "(" . $App::CELL::Util::not_viable_reason .  ") " .
-                       "passed to App::CELL->init" );
-            return; # returns undef in scalar context
+            $reason = "Invalid sitedir argument ->$sitedir<- " .
+                      "($App::CELL::Util::not_viable_reason)";
+            $log->err( $reason );
+            return { succeeded => 0, sitedir_candidate => $sitedir, failure_reason => $reason };
         }
         $log->info( "looked at function arguments but they do not contain a literal site dir path" );
 
@@ -451,6 +464,7 @@ sub get_sitedir {
                 $log_message = "Found viable sitedir in " . $paramhash{enviro}
                                . " environment variable";
                 last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
+                $reason = "No valid sitedir found in environment variable " . $paramhash{enviro} . " ";
             }
         }
         else 
@@ -459,17 +473,20 @@ sub get_sitedir {
                 $log_message = "Found viable sitedir in CELL_SITEDIR"
                                . " environment variable";
                 last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
+                $reason .= "No valid sitedir found in fallback environment variable CELL_SITEDIR";
             }
         }
     
         # FAIL
         $log->info( "looked in the environment, but no viable sitedir there, either" );
-        return; # returns undef in scalar context
+
+        return { succeeded => 0, sitedir_candidate => '<NONE_FOUND>', 
+                 failure_reason => $reason }; 
     }
 
     # SUCCEED
     $log->notice( $log_message );
-    return $sitedir;
+    return { succeeded => 1, sitedir_candidate => $sitedir, failure_reason => '' };
 }
 
 

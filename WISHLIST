@@ -9,6 +9,7 @@ MIGHT IMPLEMENT SOMEDAY
          variable, return an error status if sitedir not loaded
 20140610 Clarify that messages cannot be overwritten
 20140610 Implement Status.pm->dump (currently just a stub)
+20140610 Change debug_mode to log_level (for finer granularity of control)
 
 
 WILL PROBABLY NEVER IMPLEMENT
