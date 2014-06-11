@@ -8,7 +8,7 @@ use App::CELL::Test qw( mktmpdir cleartmpdir populate_file );
 #use Data::Dumper;
 use File::Spec;
 use Scalar::Util qw( blessed );
-use Test::More tests => 7;
+use Test::More tests => 10;
 
 my $status;
 delete $ENV{CELL_DEBUG_MODE};
@@ -25,4 +25,10 @@ $status = $CELL->load( sitedir => $sitedir );
 is( $CELL->loaded, "SHARE", "\$CELL->loaded is SHARE after unsuccessful call to \$CELL->load" );
 ok( $status->not_ok, "CELL initialization with non-existent sitedir NOT ok" );
 is( $status->level, "ERR", "Status is ERR" );
-is( $status->code, "CELL_SITEDIR_NOT_FOUND", "Status code is CELL_SITEDIR_NOT_FOUND" );
+like( $status->code, qr/\(does not exist\)/, "Status code contains expected string" );
+
+$status = $CELL->load();
+ok( $status->ok, "Load with no parameters is OK" );
+$status = $CELL->load( enviro => 'FOO_BAR_ENVIRO_PARAM' );
+ok( $status->not_ok, "Load with non-existent enviro param is NOT_OK" );
+is( $status->level, 'ERR', "Load with non-existent enviro param yields ERR status" );

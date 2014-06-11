@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.172
+Version 0.174
 
 =cut
 
-our $VERSION = '0.172';
+our $VERSION = '0.174';
 
 
 
@@ -264,21 +264,9 @@ sub init {
     # look up sitedir
     my $sitedir_candidate;
     if ( $sitedir_expected ) {
-        my $result_hash = get_sitedir( %ARGS );
-        if ( $result_hash->{succeeded} ) {
-            $sitedir_candidate = $result_hash->{sitedir_candidate};
-        } else {
-            my $source = ( $ARGS{sitedir} ? "PARAMHASH" : "environment" );
-            return App::CELL::Status->new (
-                level => 'ERR',
-                code => 'CELL_SITEDIR_NOT_FOUND',
-                args => [ 
-                            $result_hash->{sitedir_candidate}, 
-                            $source, 
-                            $result_hash->{failure_reason},
-                        ],
-            );
-        }
+        my $status = get_sitedir( %ARGS );
+        return $status unless $status->ok;
+        $sitedir_candidate = $status->payload;
     }
 
     # walk sitedir
@@ -287,6 +275,10 @@ sub init {
         my $messages_loaded = _report_load_status( $sitedir_candidate, 'site dir', 'messages', $status );
         $status = meta_core_site_files( $sitedir_candidate );
         my $params_loaded = _report_load_status( $sitedir_candidate, 'sitedir', 'config params', $status );
+        #
+        # sitedir candidate is accepted only if something is actually
+        # loaded
+        #
         if ( $messages_loaded->ok or $params_loaded->ok ) {
             $meta->set( 'CELL_META_SITEDIR_LOADED', 
                         ( $meta->CELL_META_SITEDIR_LOADED + 1 ) );
@@ -423,16 +415,19 @@ sub meta_core_site_files {
 
 =head2 get_sitedir
 
-Look in various places (in a pre-defined order) for the site
+This function implements the algorithm described in
+L<App::CELL::Guide/Sitedir search algorithm> to find a sitedir candidate.
 configuration directory. Stop as soon as we come up with a viable
-candidate. Always returns a hashref containing the following parameters:
+candidate. On success, return a status object:
 
    { 
-     succeeded => 1 or 0,
-     sitedir_candidate => full path of candidate directory derived from the
-                          arguments or the environment,
-     failure_reason => description of why the lookup failed
+     level => 'OK',
+     payload => full path of candidate directory derived from the
+                arguments or the environment,
    }
+
+On failure, return an ERR or WARN status object containing all the
+details of what happened.
 
 =cut
 
@@ -445,48 +440,69 @@ sub get_sitedir {
     GET_CANDIDATE_DIR: {
 
         # look in paramhash for sitedir
-        $log->debug( "SITEDIR SEARCH, ROUND 1:" );
+        $log->debug( "SITEDIR SEARCH, ROUND 1 (sitedir parameter):" );
         if ( $sitedir = $paramhash{sitedir} ) {
             $log_message = "Viable site directory passed in argument PARAMHASH";
             last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
-            $reason = "Invalid sitedir argument ->$sitedir<- " .
-                      "($App::CELL::Util::not_viable_reason)";
+            $reason = "CELL->load report: received 'sitedir' argument ->$sitedir<- " .
+                      "but this is not a viable directory ($App::CELL::Util::not_viable_reason)";
             $log->err( $reason );
-            return { succeeded => 0, sitedir_candidate => $sitedir, failure_reason => $reason };
+            return App::CELL::Status->new( level => 'ERR', code => $reason );
         }
-        $log->info( "looked at function arguments but they do not contain a literal site dir path" );
+        $log->debug( "looked at function arguments but they do not contain a literal site dir path" );
 
         # look in paramhash for name of environment variable
-        $log->debug( "SITEDIR SEARCH, ROUND 2:" );
+        $log->debug( "SITEDIR SEARCH, ROUND 2 (enviro parameter):" );
         if ( $paramhash{enviro} ) 
         {
             if ( $sitedir = $ENV{ $paramhash{enviro} } ) {
                 $log_message = "Found viable sitedir in " . $paramhash{enviro}
                                . " environment variable";
                 last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
-                $reason = "No valid sitedir found in environment variable " . $paramhash{enviro} . " ";
+                $reason = "CELL->load report: received 'enviro' argument ->$paramhash{enviro}<- " .
+                      "which expanded to ->$sitedir<- but this is not a viable directory " . 
+                      "($App::CELL::Util::not_viable_reason)";
+                return App::CELL::Status->new( level => 'ERR', code => $reason );
+            } else {
+                $reason = "CELL->load report: enviro argument contained ->$paramhash{enviro}<- " .
+                      "but no such variable found in the environment";
+                return App::CELL::Status->new( level => 'ERR', code => $reason );
             }
         }
-        else 
-        {
-            if ( $sitedir = $ENV{ 'CELL_SITEDIR' } ) {
-                $log_message = "Found viable sitedir in CELL_SITEDIR"
-                               . " environment variable";
-                last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
-                $reason .= "No valid sitedir found in fallback environment variable CELL_SITEDIR";
+
+        # fall back to hard-coded environment variable
+        $log->debug( "SITEDIR SEARCH, ROUND 3 (fallback to CELL_SITEDIR environment variable):" );
+        if ( $sitedir = $ENV{ 'CELL_SITEDIR' } ) {
+            $log_message = "Found viable sitedir in CELL_SITEDIR environment variable";
+            last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
+            $reason = "CELL->load report: no 'sitedir', 'enviro' arguments specified; " . 
+                "fell back to CELL_SITEDIR environment variable, which exists " .
+                "with value ->$sitedir<- but this is not a viable directory" .
+                "($App::CELL::Util::not_viable_reason)";
+            if ( $meta->CELL_META_SITEDIR_LOADED ) {
+                $log->warn( $reason );
+                $log->notice( "The following sitedirs have been loaded already " .
+                              join( ' ', @{ $meta->CELL_META_SITEDIR_LIST } ) );
+                return App::CELL::Status->ok;
             }
+            return App::CELL::Status->new( level => 'WARN', code => $reason );
         }
     
-        # FAIL
-        $log->info( "looked in the environment, but no viable sitedir there, either" );
-
-        return { succeeded => 0, sitedir_candidate => '<NONE_FOUND>', 
-                 failure_reason => $reason }; 
+        # failed to find a sitedir
+        $reason = "CELL->load report: no sitedir argument, no enviro
+                  argument, no CELL_SITEDIR environment variable; giving up";
+        if ( $meta->CELL_META_SITEDIR_LOADED ) {
+            $log->warn( $reason );
+            $log->notice( "The following sitedirs have been loaded already " .
+                          join( ' ', @{ $meta->CELL_META_SITEDIR_LIST } ) );
+            return App::CELL::Status->ok;
+        }
+        return App::CELL::Status->new( level => 'WARN', code => $reason );
     }
 
     # SUCCEED
     $log->notice( $log_message );
-    return { succeeded => 1, sitedir_candidate => $sitedir, failure_reason => '' };
+    return App::CELL::Status->ok( $sitedir );
 }
 
 

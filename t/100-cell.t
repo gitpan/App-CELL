@@ -7,7 +7,7 @@ use App::CELL::Test qw( cmp_arrays );
 #use App::CELL::Test::LogToFile;
 use Data::Dumper;
 use File::ShareDir;
-use Test::More tests => 32;
+use Test::More tests => 33;
 
 my $status;
 $log->init( ident => 'CELLtest' );
@@ -20,7 +20,7 @@ is_deeply( $CELL->supported_languages, [ 'en' ],
 ok( $CELL->language_supported( 'en' ), "English is supported" );
 ok( ! $CELL->language_supported( 'fr' ), "French is not supported" );
 
-my $bool = $meta->META_CELL_STATUS_BOOL;
+my $bool = $meta->CELL_META_SITEDIR_LOADED;
 ok( ! defined($bool), "Random config param not loaded yet" );
 ok( ! $CELL->loaded, "CELL doesn't think it's loaded" );
 ok( ! $log->{debug_mode}, "And we're not in debug mode" );
@@ -30,8 +30,8 @@ ok( ! $CELL->sitedir, "And sitedir hasn't been loaded, either" );
 # first try without pointing to site config directory -- CELL will
 # configure itself from the distro's ShareDir
 $status = $CELL->load( appname => 'CELLfoo' ); 
-ok( $status->ok, "CELL initialization from ShareDir ok" );
-ok( $CELL->loaded eq 'SHARE', "$CELL->loaded says SHARE");
+ok( $status->ok, "Load.pm->init success" );
+ok( $CELL->loaded eq 'SHARE', "\$CELL->loaded says SHARE");
 
 is_deeply( $site->CELL_SUPP_LANG, [ 'en' ], 
     "CELL_SUPP_LANG is set to just English" );
@@ -43,7 +43,7 @@ ok( defined( $sharedir ), "CELL_SHAREDIR_FULLPATH is defined" );
 
 is( $sharedir, File::ShareDir::dist_dir('App-CELL'),
     "CELL_SHAREDIR_FULLPATH is properly set to the ShareDir");
-is( $sharedir, $CELL->sharedir, "Sharedir accessor" );
+is( $sharedir, $CELL->sharedir, "Sharedir accessor works" );
 
 my $msgobj = $CELL->msg( 'CELL_TEST_MESSAGE' );
 is( $msgobj->text, "This is a test message", 
@@ -88,7 +88,8 @@ ok( $status->level eq 'OK' );
 $status = $CELL->status_trace( 'CELL_TEST_MESSAGE' );
 ok( $status->level eq 'TRACE' );
 
-$status = $CELL->status_warn( 'CELL_TEST_MESSAGE' );
+$status = $CELL->status_warn( 'The very big %s', args => [ "Bubba" ] );
+is( $status->text, 'The very big Bubba', "Status constructor takes argument" );
 ok( $status->level eq 'WARN' );
 
 $status = $CELL->status_warning( 'CELL_TEST_MESSAGE', payload => "bubba");

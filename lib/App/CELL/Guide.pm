@@ -46,11 +46,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.172
+Version 0.174
 
 =cut
 
-our $VERSION = '0.172';
+our $VERSION = '0.174';
 
 
 
@@ -322,36 +322,79 @@ The sharedir is part of the App::CELL distro and CELL's initialization
 routine finds it via a call to the C<dist_dir> routine in the
 L<File::ShareDir> module.
 
-=head2 How the sitedir is found
+=head2 How the sitedir is specified
 
 The sitedir must be created and populated with configuration files by the
 application programmer. Typically, this directory would form part of the
 application distro and the site administrator would be expected to make a
-site configuration file for parameters that she or he needs or wishes to
-set. CELL's initialization routine, C<< $CELL->load >>, looks for the
-sitedir using the following simple algorithm:
+site configuration file for application-specific parameters. The
+application developer and site administrator have flexibility in this
+regard -- CELL's initialization routine, C<< $CELL->load >> will work
+without a sitedir, with one sitedir, or even with multiple sitedirs.
+
+=head3 No sitedir
+
+It is possible, but probably not useful, to call C<< $CELL->load >> without
+a sitedir parameter and without any sitedir specified in the environment.
+In this case, CELL just loads the sharedir and returns OK.
+
+=head3 One sitedir
+
+If there is only one sitedir, there are three possible ways to specify it
+to CELL's load routine: (1) a C<sitedir> parameter, (2) an
+C<enviro> parameter, or (3) the hard-coded C<CELL_SITEDIR> environment
+variable.
+
+=head3 Multiple sitedirs
+
+If the application needs to load configuration parameters from multiple
+sitedirs, this can be accomplished simply by calling C<< $CELL->load >>
+multiple times with different C<sitedir> arguments.
+
+=head2 Sitedir search algorithm
+
+Every time it is called, the load routine uses the following algorithm
+to search for a/the sitedir:
 
 =over
 
-=item C<sitedir> parameter -- a C<sitedir> parameter containing the
-full path to the sitedir can be passed. For portability, the path should be
-constructed using L<File::Spec> (e.g. the C<catfile> method) or similar.
+=item C<sitedir> parameter -- 
+a C<sitedir> parameter containing the full path to the sitedir can be
+passed. If it is present, CELL will try it first. If needed for
+portability, the path can be constructed using L<File::Spec> (e.g. the
+C<catfile> method) or similar. It should be string containing the full path
+to the directory.  If the C<sitedir> argument points to a valid sitedir, it
+is loaded and OK is returned. If a C<sitedir> argument is present but
+invalid, an ERR status results. If no C<sitedir> argument was given, CELL
+continues to the next step.
 
-=item C<enviro> parameter -- if no valid C<sitedir> parameter is given,
-C<< $CELL->load >> looks for a parameter called C<enviro> containing the
-name of an environment variable containing the sitedir path.
+=item C<enviro> parameter -- 
+if no C<sitedir> parameter is given, C<< $CELL->load >> looks for a
+parameter called C<enviro> which it interprets as the name of an
+environment variable containing the sitedir path.  If the C<enviro>
+argument points to a valid sitedir, it is loaded and OK is returned. If an
+C<enviro> argument is present but invalid, an ERR status results. If there
+is no C<enviro> argument at all, CELL continues to the next step.
 
-=item C<CELL_SITEDIR> environment variable -- if no viable sitedir can be
-found by consulting the function call parameters, C<load> falls back to 
-this hardcoded environment variable.
+=item C<CELL_SITEDIR> environment variable -- 
+if no viable sitedir can be found by consulting the function call
+parameters, CELL's load routine falls back to this hardcoded environment
+variable. If the C<CELL_SITEDIR> environment variable exists and points to
+a valid sitedir, it is loaded and OK is returned. If it exists but the
+directory is invalid, an ERR status is returned. If the environment
+variable doesn't exist, CELL writes a warning to the log (all attempts to
+find the sitedir failed). The return status in this case can be either WARN
+(if no sitedir was found in a previous call to the function) or OK if at
+least one sitedir has been loaded.
 
 =back
 
-If the algorithm completes without finding a sitedir, C<< $CELL->load >>
-returns a "WARN" status. The application can check for this and call
-C<load> again (any number of times). However, once a sitedir has been
-identified, it cannot be changed except by terminating the application and
-running it again.
+The C<load> routine is re-entrant, meaning that it can be called any number
+of times. The first time it is called, it will load CELL's sharedir and any
+sitedir that can be found using the above algorithm. All further calls will
+just run the sitedir search algorithm. When the algorithm finds a sitedir
+candidate, it  once a sitedir has been identified, it cannot be changed
+except by terminating the application and running it again.
 
 For examples of how to call the C<load> routine, see L<App::CELL/SYNOPSIS>.
 
