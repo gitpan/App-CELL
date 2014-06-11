@@ -8,7 +8,7 @@ use App::CELL::Test qw( mktmpdir cleartmpdir populate_file );
 #use Data::Dumper;
 use File::Spec;
 use Scalar::Util qw( blessed );
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 my $status;
 delete $ENV{CELL_DEBUG_MODE};
@@ -27,8 +27,15 @@ ok( $status->not_ok, "CELL initialization with non-existent sitedir NOT ok" );
 is( $status->level, "ERR", "Status is ERR" );
 like( $status->code, qr/\(does not exist\)/, "Status code contains expected string" );
 
+$status = undef; 
+delete $ENV{'CELL_SITEDIR'};
 $status = $CELL->load();
-ok( $status->ok, "Load with no parameters is OK" );
+is( $status->level, 'WARN', "No arguments, no environment, no previous sitedir -> warning" );
 $status = $CELL->load( enviro => 'FOO_BAR_ENVIRO_PARAM' );
 ok( $status->not_ok, "Load with non-existent enviro param is NOT_OK" );
 is( $status->level, 'ERR', "Load with non-existent enviro param yields ERR status" );
+
+$ENV{'CELL_SITEDIR'} = 'NON-EXISTENT-FOO-BAR-DIRECTORY';
+$status = undef;
+$status = $CELL->load();
+ok( $status->not_ok, "Load without arguments, with CELL_SITEDIR defined to a bad value, returns NOT_OK status" );

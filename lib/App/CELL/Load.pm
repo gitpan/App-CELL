@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.174
+Version 0.175
 
 =cut
 
-our $VERSION = '0.174';
+our $VERSION = '0.175';
 
 
 
@@ -247,13 +247,6 @@ sub init {
         $sharedir_loaded = 1;
     }
 
-    my $sitedir_expected = ( ( $ARGS{sitedir} or $ARGS{enviro} ) ? 1 : 0 );
-    if ( $sitedir_expected ) {
-        $log->debug( "We are expected to load a sitedir" );
-    } else {
-        $log->debug( "We are _not_ expected to load a sitedir" );
-    }
-
     if ( @sitedir ) {
         $log->debug( "sitedir package variable contains ->" . 
                      join( ':', @sitedir ) . "<-" );
@@ -261,16 +254,13 @@ sub init {
         $log->debug( "sitedir package variable is empty" );
     }
 
-    # look up sitedir
-    my $sitedir_candidate;
-    if ( $sitedir_expected ) {
-        my $status = get_sitedir( %ARGS );
-        return $status unless $status->ok;
-        $sitedir_candidate = $status->payload;
-    }
+    # get sitedir from args or environment
+    my $status = get_sitedir( %ARGS );
+    return $status unless $status->ok;
+    my $sitedir_candidate = $status->payload;
 
     # walk sitedir
-    if ( $sitedir_expected and $sitedir_candidate ) {
+    if ( $sitedir_candidate ) {
         my $status = message_files( $sitedir_candidate );
         my $messages_loaded = _report_load_status( $sitedir_candidate, 'site dir', 'messages', $status );
         $status = meta_core_site_files( $sitedir_candidate );
@@ -472,6 +462,7 @@ sub get_sitedir {
 
         # fall back to hard-coded environment variable
         $log->debug( "SITEDIR SEARCH, ROUND 3 (fallback to CELL_SITEDIR environment variable):" );
+        $sitedir = undef;
         if ( $sitedir = $ENV{ 'CELL_SITEDIR' } ) {
             $log_message = "Found viable sitedir in CELL_SITEDIR environment variable";
             last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
@@ -489,8 +480,8 @@ sub get_sitedir {
         }
     
         # failed to find a sitedir
-        $reason = "CELL->load report: no sitedir argument, no enviro
-                  argument, no CELL_SITEDIR environment variable; giving up";
+        $reason = "CELL->load report: no sitedir argument, no enviro " . 
+                  "argument, no CELL_SITEDIR environment variable; giving up";
         if ( $meta->CELL_META_SITEDIR_LOADED ) {
             $log->warn( $reason );
             $log->notice( "The following sitedirs have been loaded already " .

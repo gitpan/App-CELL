@@ -13,15 +13,13 @@ use warnings FATAL => 'all';
 use App::CELL::Config;
 use App::CELL::Load;
 use App::CELL::Log qw( $log );
-use Test::More;
+use Test::More tests => 1;
 
 #
 # To activate debugging, uncomment the following
 #
 #use App::CELL::Test::LogToFile;
 #$log->init( debug_mode => 1 );
-
-plan tests => 1;
 
 my $status;
 $log->init( ident => 'CELLtest' );
@@ -30,7 +28,4 @@ $log->info("---                   004-debug.t                     ---");
 $log->info("---------------------------------------------------------");
 
 $status = App::CELL::Load::init();
-if ( $status->not_ok ) {
-    diag( $status->msgobj->code . ": " . $status->msgobj->text );
-}
-ok( $status->ok, "Loaded App::CELL configuration from distro share dir" );
+is( $status->level, "WARN", "Load without sitedir results gives warning" );

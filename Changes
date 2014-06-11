@@ -685,3 +685,7 @@ later are in the perl-CELL project repo.
 - Load.pm: work on sitedir logic
 - t/: add tests for new sitedir logic
 
+0.175  2014-06-11 13:04 CEST
+- Load.pm: make sitedir lookup work as documented
+- t/: adapt unit tests
+

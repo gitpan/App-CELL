@@ -40,7 +40,7 @@ $status = $meta->CELL_META_TEST_PARAM_BLOOEY;
 is( $status, "Blooey", "Blooey has the right value via get_param" );
 
 $status = App::CELL::Load::init( appname => 'CELLtest' );
-ok( $status->ok, "CELLtest load OK" );
+is( $status->level, "WARN", "Load without sitedir gives warning" );
 
 # 'exists' returns undef on failure
 $status = $meta->CELL_META_UNIT_TESTING;

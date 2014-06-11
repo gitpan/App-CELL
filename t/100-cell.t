@@ -30,8 +30,8 @@ ok( ! $CELL->sitedir, "And sitedir hasn't been loaded, either" );
 # first try without pointing to site config directory -- CELL will
 # configure itself from the distro's ShareDir
 $status = $CELL->load( appname => 'CELLfoo' ); 
-ok( $status->ok, "Load.pm->init success" );
-ok( $CELL->loaded eq 'SHARE', "\$CELL->loaded says SHARE");
+is( $status->level, "WARN", "Load without sitedir gives warning" );
+is( $CELL->loaded, "SHARE", "\$CELL->loaded says SHARE");
 
 is_deeply( $site->CELL_SUPP_LANG, [ 'en' ], 
     "CELL_SUPP_LANG is set to just English" );
