@@ -701,3 +701,9 @@ later are in the perl-CELL project repo.
 0.178  2014-06-13 09:34 CEST
 - release to CPAN
 
+0.179  2014-06-13 15:40 CEST
+- add OBS CI functionality to release script
+
+0.180  2014-06-13 15:41 CEST
+- add OBS CI functionality to release script
+
