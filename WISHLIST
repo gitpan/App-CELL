@@ -10,12 +10,15 @@ MIGHT IMPLEMENT SOMEDAY
 20140610 Clarify that messages cannot be overwritten
 20140610 Implement Status.pm->dump (currently just a stub)
 20140610 Change debug_mode to log_level (for finer granularity of control)
+20140613 Log.pm: add a check for (caller)[0] -- if being called from
+         App::CELL itself, check a flag that toggles _all_ App::CELL log 
+         messages so the application developer can suppress them if needed
 
 
 WILL PROBABLY NEVER IMPLEMENT
 20140516 put meta, core, and site params directly in the module's symbol
          table like RT does it
-20140516 get App::CELL to pass CPAN Testers (100%) on all Perls back to 5.10.0
+20140516 get App::CELL to build on Perl 5.10.0 (SLE_11_SP3)
 20140524 add 'testing' mode to Load->init (prefix all paths, e.g., with 
          '/tmp')
 20140610 get App::CELL to run in taint mode

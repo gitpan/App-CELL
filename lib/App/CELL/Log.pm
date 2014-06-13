@@ -52,11 +52,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.175
+Version 0.178
 
 =cut
 
-our $VERSION = '0.175';
+our $VERSION = '0.178';
 
 
 
@@ -158,11 +158,21 @@ logging 'OK' and 'NOT_OK' statuses.
 
 =head2 debug_mode
 
-Set the $debug_mode package variable
+If argument provided, set the $debug_mode package variable.
+If no argument, simply return the current debug-mode setting.
+Examples:
+
+    $log->debug_mode(0); # turn debug mode off
+    $log->debug_mode(1); # turn debug mode on
+    print "Debug mode is on\n" if $log->debug_mode;
 
 =cut
 
-sub debug_mode { return $debug_mode = $_[1]; }
+sub debug_mode { 
+    my ( $self, @ARGS ) = @_;
+    return $debug_mode = $ARGS[0] if @ARGS;
+    return $debug_mode;
+}
 
 
 =head2 ident

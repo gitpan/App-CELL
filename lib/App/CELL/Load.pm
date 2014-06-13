@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.175
+Version 0.178
 
 =cut
 
-our $VERSION = '0.175';
+our $VERSION = '0.178';
 
 
 
@@ -203,15 +203,16 @@ sub init {
     return App::CELL::Status->new( 
                level => 'err', 
                code => 'CELL_BAD_PARAMHASH' 
-           ) if @ARGS % 2 != 0 ;
-
+           ) if ( @ARGS % 2 );
     my %ARGS = @ARGS;
 
+    my $args_string;
     if ( @ARGS ) {
-        $log->notice( "Entering App::CELL::Load::init version $VERSION ARGS: " . stringify_args( \%ARGS ) );
+        $args_string = "with arguments: " . stringify_args( \%ARGS );
     } else {
-        $log->notice( "Entering App::CELL::Load::init version $VERSION NO ARGS" );
+        $args_string = "without arguments";
     }
+    $log->debug( "Entering App::CELL::Load::init version $VERSION $args_string" );
 
     # check for taint mode
     if ( ${^TAINT} != 0 ) {
@@ -325,7 +326,7 @@ sub _report_load_status {
         # trigger a log message: note that we can't use an OK status here
         # because log messages for those are suppressed
         App::CELL::Status->new (
-            level => 'NOTICE',
+            level => 'INFO',
             code => 'CELL_DIR_WALKED_ITEMS_LOADED',
             args => [ $quantitems, $what, $quantfiles, $dir_desc, $dir_path ],
             caller => [ caller ],
@@ -492,7 +493,7 @@ sub get_sitedir {
     }
 
     # SUCCEED
-    $log->notice( $log_message );
+    $log->info( $log_message );
     return App::CELL::Status->ok( $sitedir );
 }
 
@@ -574,7 +575,7 @@ sub find_files {
         }
         if ( not -r $file ) {
             App::CELL::Status->new ( 
-                level => 'WARN', 
+                level => 'INFO', 
                 code => 'Load operation passed over file ->%s<- (not readable)',
                 args => [ $file ],
             );
@@ -589,7 +590,7 @@ sub find_files {
         }
         if ( not $counter ) {
             App::CELL::Status->new ( 
-                level => 'WARN', 
+                level => 'INFO', 
                 code => 'Load operation passed over file %s (type not recognized)',
                 args => [ $file ],
             );

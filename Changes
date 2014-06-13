@@ -689,3 +689,15 @@ later are in the perl-CELL project repo.
 - Load.pm: make sitedir lookup work as documented
 - t/: adapt unit tests
 
+0.176  2014-06-12 15:14 CEST
+- obs.sh: new OBS CI script
+
+0.177  2014-06-13 08:40 CEST
+- Log.pm: debug_mode method can now both set and get the debug_mode package
+  variable
+- Load.pm: tone down (reduce level) of several log messages, re-learn how
+  modulo operator works
+
+0.178  2014-06-13 09:34 CEST
+- release to CPAN
+
