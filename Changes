@@ -677,33 +677,25 @@ later are in the perl-CELL project repo.
   get_sitedir fails"
 - Message.pm, t/001-log.t: tweak debug message
 
-0.173  2014-06-11 09:26 CEST
+0.173-0.175  2014-06-11 13:04 CEST
 - t/: add unit tests for sitedir logic
-- Load.pm, Guide.pm: work on sitedir logic
-
-0.174  2014-06-11 10:45 CEST
-- Load.pm: work on sitedir logic
+- Load.pm, Guide.pm: work on sitedir logic (make it work as documented)
 - t/: add tests for new sitedir logic
-
-0.175  2014-06-11 13:04 CEST
-- Load.pm: make sitedir lookup work as documented
 - t/: adapt unit tests
 
-0.176  2014-06-12 15:14 CEST
+0.176-0.180  2014-06-13 15:41 CEST
 - obs.sh: new OBS CI script
-
-0.177  2014-06-13 08:40 CEST
 - Log.pm: debug_mode method can now both set and get the debug_mode package
   variable
 - Load.pm: tone down (reduce level) of several log messages, re-learn how
   modulo operator works
+- call obs.sh (OBS CI script) from release script
 
-0.178  2014-06-13 09:34 CEST
-- release to CPAN
-
-0.179  2014-06-13 15:40 CEST
-- add OBS CI functionality to release script
-
-0.180  2014-06-13 15:41 CEST
-- add OBS CI functionality to release script
+0.181  2014-06-16 22:20 CEST
+- Message.pm: fix bug caused by failure to properly initialize $mesg
+  package variable
+- load routine was spamming the log: make this "spamming" happen only when
+  caller passes "verbose => 1" to load routine
+- be more careful about which messages actually get logged and under what
+  conditions
 

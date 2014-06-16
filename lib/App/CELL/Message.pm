@@ -50,11 +50,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.180
+Version 0.181
 
 =cut
 
-our $VERSION = '0.180';
+our $VERSION = '0.181';
 
 
 
@@ -153,7 +153,7 @@ of CELL_DEF_LANG
 
 =cut 
 
-our $mesg;
+our $mesg = {};
 our $supp_lang;
 our $def_lang;
 

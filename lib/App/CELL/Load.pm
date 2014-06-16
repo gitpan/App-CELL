@@ -42,7 +42,7 @@ use App::CELL::Message;
 use App::CELL::Status;
 use App::CELL::Test qw( cmp_arrays );
 use App::CELL::Util qw( stringify_args is_directory_viable );
-use Data::Dumper;
+#use Data::Dumper;
 use File::Next;
 use File::ShareDir;
 
@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.180
+Version 0.181
 
 =cut
 
-our $VERSION = '0.180';
+our $VERSION = '0.181';
 
 
 
@@ -106,9 +106,7 @@ This module provides the following package variables
 
 =item C<$sharedir_loaded> - whether it has been loaded or not
 
-=item C<$sitedir> - the full path of the site configuration directory
-
-=item C<$sitedir_loaded> - whether it has been loaded or not
+=item C<@sitedir> - the full path of the site configuration directory
 
 =back
 
@@ -117,7 +115,6 @@ This module provides the following package variables
 our $sharedir = '';
 our $sharedir_loaded = 0;
 our @sitedir = ();
-our $sitedir_loaded = 0;
 
 
 =head1 MODULES
@@ -126,93 +123,49 @@ our $sitedir_loaded = 0;
 
 Re-entrant initialization function.
 
-On first call, initializes all three site configuration hashes by
-performing the following actions:
-
-=over
-
-=item 1. load App::CELL's internal messages and meta, core, and site
-params from the distro share directory determined using File::ShareDir
-(i.e. the C<config/> directory of the distro, wherever it happens to be
-installed)
-
-=item 2. determine the "site dir" (site configuration directory) by first
-looking for a 'sitedir' argument to the function and, failing that,
-looking for a 'CELL_SITE
-procedure described in ...WIP...
-
-=item 3. if a viable site dir is found, load messages and meta, core, and
-site params from it.
-
-=back
-
-Subsequent calls check package variables to determine status of previous
-calls. For example, if no sharedir is found, a critical error is raised.
-The application could theoretically attempt to fix this and try again. Or,
-it might happen that the sharedir is loaded as expected, but the sitedir
-is not found, in which case on the second call the initialization
-routine would try again to find the sitedir.
-
-Once a directory has been loaded, there is no way to "undo" it, and
-L<App::CELL> will not look at that directory again.
-
-Upon success the routine sets the following App::CELL params:
-
-=over
-
-=item C<CELL_META_SHAREDIR_LOADED> - meta param (boolean)
-
-=item C<CELL_SHAREDIR_FULLPATH> - site param (scalar)
-
-=item C<CELL_META_SITEDIR_LOADED> - meta param (boolean)
-
-=item C<CELL_SITEDIR_FULLPATH> - site param (array ref)
-
-=back
-
 Optionally takes a PARAMHASH. The following arguments are recognized:
 
 =over
 
-=item C<appname> - name of the application
+=item C<sitedir> -- full path to the/a site dir
 
-=item C<sitedir> - full path to the/a site dir
+=item C<enviro> -- name of environment variable containing sitedir path
+
+=item C<verbose> -- increase logging verbosity of the load routine
 
 =back
 
 E.g.: 
 
-    my $status = App::CELL::Load::init( appname => 'FooBar', 
-        sitedir => '/etc/FooBar' );
+    my $status = App::CELL::Load::init( 
+                                         sitedir => '/etc/foo', 
+                                         verbose => 1 
+                                      );
 
-If no sitedir is provided (through either the argument list or the
-environment), return status will be 'ok' provided the sharedir was found
-and loaded; otherwise, an 'ERR' status is returned.
-
-If a sitedir is provided, yet not successfully loaded, an 'ERR' status will
-be returned.
+See L<App::CELL::Guide> for details.
 
 =cut
 
 sub init {
     my @ARGS = @_;
-
-    my $return_status;
-
-    # check for even number of arguments
+    # process args
     return App::CELL::Status->new( 
                level => 'err', 
-               code => 'CELL_BAD_PARAMHASH' 
+               code => 'Odd number of arguments provided to load routine',
            ) if ( @ARGS % 2 );
     my %ARGS = @ARGS;
 
+    # determine verbosity level
     my $args_string;
     if ( @ARGS ) {
         $args_string = "with arguments: " . stringify_args( \%ARGS );
     } else {
         $args_string = "without arguments";
     }
-    $log->debug( "Entering App::CELL::Load::init version $VERSION $args_string" );
+    $meta->set('CELL_META_LOAD_VERBOSE', $ARGS{'verbose'} || 0);
+
+    $log->info( "Entering App::CELL::Load::init " . 
+        "version $VERSION $args_string" ) if $site->CELL_META_LOAD_VERBOSE;
 
     # check for taint mode
     if ( ${^TAINT} != 0 ) {
@@ -231,7 +184,7 @@ sub init {
             );
         } 
         $log->info( "Found viable CELL configuration directory " . 
-            $tmp_sharedir . " in App::CELL distro" );
+            $tmp_sharedir . " in App::CELL distro" ) if $meta->CELL_META_LOAD_VERBOSE;
         $site->set( 'CELL_SHAREDIR_FULLPATH', $tmp_sharedir );
         $sharedir = $tmp_sharedir;
     }
@@ -239,20 +192,22 @@ sub init {
     # walk sharedir
     if ( $sharedir and not $sharedir_loaded ) {
         my $status = message_files( $sharedir );
-        my $load_status = _report_load_status( $sharedir, 'App:CELL distro sharedir', 'messages', $status );
+        my $load_status = _report_load_status( $sharedir, 'sharedir', 'messages', $status );
         return $load_status if $load_status->not_ok;
         $status = meta_core_site_files( $sharedir );
-        $load_status = _report_load_status( $sharedir, 'App:CELL distro sharedir', 'config params', $status );
+        $load_status = _report_load_status( $sharedir, 'sharedir', 'config params', $status );
         return $load_status if $load_status->not_ok;
         $site->set( 'CELL_SHAREDIR_LOADED', 1 );
         $sharedir_loaded = 1;
     }
 
-    if ( @sitedir ) {
-        $log->debug( "sitedir package variable contains ->" . 
-                     join( ':', @sitedir ) . "<-" );
-    } else {
-        $log->debug( "sitedir package variable is empty" );
+    if ( $site->CELL_META_LOAD_VERBOSE ) {
+        if ( @sitedir ) {
+            $log->debug( "sitedir package variable contains ->" . 
+                         join( ':', @sitedir ) . "<-" );
+        } else {
+            $log->debug( "sitedir package variable is empty" );
+        }
     }
 
     # get sitedir from args or environment
@@ -263,30 +218,31 @@ sub init {
     # walk sitedir
     if ( $sitedir_candidate ) {
         my $status = message_files( $sitedir_candidate );
-        my $messages_loaded = _report_load_status( $sitedir_candidate, 'site dir', 'messages', $status );
+        my $messages_loaded = _report_load_status( $sitedir_candidate, 'sitedir', 'messages', $status );
         $status = meta_core_site_files( $sitedir_candidate );
         my $params_loaded = _report_load_status( $sitedir_candidate, 'sitedir', 'config params', $status );
         #
         # sitedir candidate is accepted only if something is actually
         # loaded
+        # FIXME: these meta params are probably not documented
         #
         if ( $messages_loaded->ok or $params_loaded->ok ) {
             $meta->set( 'CELL_META_SITEDIR_LOADED', 
                         ( $meta->CELL_META_SITEDIR_LOADED + 1 ) );
             push @sitedir, $sitedir_candidate;
             $meta->set( 'CELL_META_SITEDIR_LIST', \@sitedir );
-            $sitedir_loaded = 1;
         }
     }
 
     # check that at least sharedir has really been loaded
     SANITY: {
         my $results = [];
+
+        # remember, message constructor returns a status object
         my $status = App::CELL::Message->new( code => 'CELL_LOAD_SANITY_MESSAGE' );
-        my $msgobj;
 
         if ( $status->ok ) {
-            $msgobj = $status->payload;
+            my $msgobj = $status->payload;
             push @$results, (
                 $meta->CELL_LOAD_SANITY_META,
                 $core->CELL_LOAD_SANITY_CORE,
@@ -305,7 +261,8 @@ sub init {
         );
     }
         
-    $log->debug( "Leaving App::CELL::Load::init" );
+    $log->debug( "Leaving App::CELL::Load::init" ) 
+        if $site->CELL_META_LOAD_VERBOSE;
 
     return App::CELL::Status->ok;
 }
@@ -313,26 +270,26 @@ sub init {
 
 sub _report_load_status {
     my ( $dir_path, $dir_desc, $what, $status ) = @_;
+    my $return_status = App::CELL::Status->ok;
     my $quantitems = ${ $status->payload }{quantitems} || 0; 
     my $quantfiles = ${ $status->payload }{quantfiles} || 0;
     if ( $quantitems == 0 ) {
-        return App::CELL::Status->new(
+        $return_status = App::CELL::Status->new(
             level => 'WARN',
             code => 'CELL_DIR_WALKED_NOTHING_FOUND',
             args => [ $dir_desc, $dir_path, $quantfiles, $what ],
             caller => [ caller ],
         );
-    } else {
-        # trigger a log message: note that we can't use an OK status here
-        # because log messages for those are suppressed
-        App::CELL::Status->new (
-            level => 'INFO',
-            code => 'CELL_DIR_WALKED_ITEMS_LOADED',
-            args => [ $quantitems, $what, $quantfiles, $dir_desc, $dir_path ],
-            caller => [ caller ],
-        );
-        return App::CELL::Status->ok;
     }
+    # trigger a log message: note that we can't use an OK status here
+    # because log messages for those are suppressed
+    App::CELL::Status->new (
+        level => 'INFO',
+        code => 'CELL_DIR_WALKED_ITEMS_LOADED',
+        args => [ $quantitems, $what, $quantfiles, $dir_desc, $dir_path ],
+        caller => [ caller ],
+    ) if ( $dir_desc eq 'sitedir' ) or ( $dir_desc eq 'sharedir' and $meta->CELL_META_LOAD_VERBOSE );
+    return $return_status;
 }
 
 =head2 message_files
@@ -352,8 +309,10 @@ sub message_files {
     $reshash{quantitems} = 0;
 
     my $file_list = find_files( 'message', $confdir );
+    $log->info( "Found message files: " . join( ',', @$file_list ) ) if $meta->CELL_META_LOAD_VERBOSE;
     foreach my $file ( @$file_list ) {
         $reshash{quantfiles} += 1;
+        die "INTERNAL ERROR (App::CELL::Message::mesg is not a reference)" if not ref( $App::CELL::Message::mesg );
         $reshash{quantitems} += parse_message_file( 
             File => $file,
             Dest => $App::CELL::Message::mesg,
@@ -433,9 +392,9 @@ sub get_sitedir {
         # look in paramhash for sitedir
         $log->debug( "SITEDIR SEARCH, ROUND 1 (sitedir parameter):" );
         if ( $sitedir = $paramhash{sitedir} ) {
-            $log_message = "Viable site directory passed in argument PARAMHASH";
+            $log_message = "Viable sitedir passed as argument";
             last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
-            $reason = "CELL->load report: received 'sitedir' argument ->$sitedir<- " .
+            $reason = "CELL load routine received 'sitedir' argument ->$sitedir<- " .
                       "but this is not a viable directory ($App::CELL::Util::not_viable_reason)";
             $log->err( $reason );
             return App::CELL::Status->new( level => 'ERR', code => $reason );
@@ -450,12 +409,12 @@ sub get_sitedir {
                 $log_message = "Found viable sitedir in " . $paramhash{enviro}
                                . " environment variable";
                 last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
-                $reason = "CELL->load report: received 'enviro' argument ->$paramhash{enviro}<- " .
+                $reason = "CELL load routine received 'enviro' argument ->$paramhash{enviro}<- " .
                       "which expanded to ->$sitedir<- but this is not a viable directory " . 
                       "($App::CELL::Util::not_viable_reason)";
                 return App::CELL::Status->new( level => 'ERR', code => $reason );
             } else {
-                $reason = "CELL->load report: enviro argument contained ->$paramhash{enviro}<- " .
+                $reason = "CELL load routine: enviro argument contained ->$paramhash{enviro}<- " .
                       "but no such variable found in the environment";
                 return App::CELL::Status->new( level => 'ERR', code => $reason );
             }
@@ -467,7 +426,7 @@ sub get_sitedir {
         if ( $sitedir = $ENV{ 'CELL_SITEDIR' } ) {
             $log_message = "Found viable sitedir in CELL_SITEDIR environment variable";
             last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
-            $reason = "CELL->load report: no 'sitedir', 'enviro' arguments specified; " . 
+            $reason = "CELL load routine: no 'sitedir', 'enviro' arguments specified; " . 
                 "fell back to CELL_SITEDIR environment variable, which exists " .
                 "with value ->$sitedir<- but this is not a viable directory" .
                 "($App::CELL::Util::not_viable_reason)";
@@ -481,8 +440,8 @@ sub get_sitedir {
         }
     
         # failed to find a sitedir
-        $reason = "CELL->load report: no sitedir argument, no enviro " . 
-                  "argument, no CELL_SITEDIR environment variable; giving up";
+        $reason = "CELL load routine gave up (no sitedir argument, no enviro " . 
+                  "argument, no CELL_SITEDIR environment variable)";
         if ( $meta->CELL_META_SITEDIR_LOADED ) {
             $log->warn( $reason );
             $log->notice( "The following sitedirs have been loaded already " .
@@ -536,6 +495,10 @@ our $max_files = 1000;
 sub find_files {
     my ( $type, $dirpath ) = @_;
 
+    #
+    # FIXME: convert $dirpath into an absolute path so it's always the same
+    #
+
     # re-entrant function
     use feature "state";
     state $resultcache = {};
@@ -543,11 +506,12 @@ sub find_files {
     # If $dirpath key exists in %resultcache, we are re-entering.
     # In other words, $dirpath has already been walked and all the 
     # filepaths are already in the array stored within %resultcache
-    if ( exists ${ $resultcache }{ $dirpath } ) {
-        $log->debug( "Re-entering find_files for $dirpath (type '$type')" );
-        return ${ $resultcache }{ $dirpath }{ $type };
+    if ( exists $resultcache->{ $dirpath } ) {
+        $log->debug( "Re-entering find_files for $dirpath (type '$type')" )
+            if $site->CELL_META_LOAD_VERBOSE;
+        return $resultcache->{ $dirpath }->{ $type };
     } else { # create it
-        ${ $resultcache }{ $dirpath } = {  
+        $resultcache->{ $dirpath } = {  
               'meta' => [],
               'core' => [],
               'site' => [],
@@ -575,28 +539,27 @@ sub find_files {
         }
         if ( not -r $file ) {
             App::CELL::Status->new ( 
-                level => 'INFO', 
+                level => 'WARN', 
                 code => 'Load operation passed over file ->%s<- (not readable)',
                 args => [ $file ],
             );
             next ITER_LOOP; # jump to next file
         }
+        # $file is now a "candidate"
         my $counter = 0;
         foreach my $type ( 'meta', 'core', 'site', 'message' ) {
             if ( $file =~ /${ $typeregex }{ $type }/ ) { 
-                push @{ ${ $resultcache }{ $dirpath}{ $type } }, $file;
+                push @{ $resultcache->{ $dirpath}->{ $type } }, $file;
                 $counter += 1;
+                next ITER_LOOP;
             }
         }
-        if ( not $counter ) {
-            App::CELL::Status->new ( 
-                level => 'INFO', 
-                code => 'Load operation passed over file %s (type not recognized)',
-                args => [ $file ],
-            );
-        }
+        $log->info( "Load operation passed over file $file (type not recognized)" ) 
+            if not $counter and $site->CELL_META_LOAD_VERBOSE;
     }
-    return ${ $resultcache }{ $dirpath }{ $type };
+    $log->debug( "Returning " . join( ',', @{ $resultcache->{ $dirpath }->{ $type } } ) )
+        if $site->CELL_META_LOAD_VERBOSE;
+    return $resultcache->{ $dirpath }->{ $type };
 }
 
 
@@ -645,28 +608,19 @@ sub parse_message_file {
             $text = $text . " " . $_;
         }
         $text =~ s/^\s+//g;
-        $log->debug( "Parsed message CODE ->$code<- LANG ->$lang<- TEXT ->$text<-" );
         if ( $code and $lang and $text ) {
+            $log->debug( "Parsed message CODE ->$code<- LANG ->$lang<- TEXT ->$text<-" );
             # we have a candidate, but we don't want to overwrite
             # an existing entry with the same $code-$lang pair
-            if ( exists $destref->{ $code }->{ $lang } ) {
+            if ( $destref->{ $code }->{ $lang } ) {
                 my $existing_text = $destref->{ $code }->{ $lang }->{ 'Text' };
-                if ( $existing_text )
-                { # it already has a text
-                    $log->info( "ERROR: not loading code-lang pair ->$code"
+                $log->error( "ERROR: not loading code-lang pair ->$code"
                         . "/$lang<- with text ->$text<- because this would"
                         . " overwrite existing pair with text ->$existing_text<-" );
-                } 
-                else
-                { # it has no text
-                    # assign this text to it
-                    $destref->{ $code }->{ $lang } = {
-                        'Text' => $text,
-                        'File' => $file,
-                    }; 
-                    return 1;
-                }
+                return 0;
             } else {
+                $log->info( "OK: loading code-lang pair ->$code/$lang<- with text ->$text<-" )
+                    if $meta->CELL_META_LOAD_VERBOSE;
                 $destref->{ $code }->{ $lang } = {
                     'Text' => $text,
                     'File' => $file,
@@ -674,13 +628,14 @@ sub parse_message_file {
                 return 1;
             }
         }
+        $log->error( "Parsed " . ( $code || "<NO_CODE>" ) . " but something missing!!" );
         return 0;
     };
 
     # determine language from file name
     my ( $lang ) = $ARGS{'File'} =~ m/_Message_([^_]+).conf$/;
     if ( not $lang ) {
-        $log->info( "Could not determine language from filename "
+        $log->warn( "Could not determine language from filename "
             . "$ARGS{'File'} -- reverting to default language "
             . "->en<-" );
         $lang = 'en';
@@ -716,9 +671,9 @@ sub parse_message_file {
 
     close $fh;
 
-    #$log->info( "Parsed and loaded $count configuration stanzas "
-    #          . "from $ARGS{'File'}" );
-    #p( %{ $ARGS{'Dest'} } );
+#    $log->info( "Parsed and loaded $count configuration stanzas "
+#              . "from $ARGS{'File'}" );
+#    $log->info( Dumper( $ARGS{'Dest'} ) );
     
     return $count;
 };
@@ -782,7 +737,7 @@ sub parse_config_file {
     # but in this routine I have no easy way of telling one from the other
     $log->debug( "Loading =>$ARGS{'File'}<=" );
     if ( not ref( $ARGS{'Dest'} ) ) {
-        $log->info("Something strange happened: " . ref( $ARGS{'Dest'} ));
+        $log->warn("Something strange happened: destination is not a reference?!?");
     }
 
     {
@@ -855,8 +810,9 @@ sub _conf_from_config {
                                     'File'  => $file,
                                     'Line'  => $line,
                                 }; 
-        $log->debug( "Parsed parameter $param with value ->$value<- " .
-                     "from $file, line $line", suppress_caller => 1 );
+        $log->info( "Parsed parameter $param with value ->$value<- " .
+                    "from $file, line $line", suppress_caller => 1 )
+            if $meta->CELL_META_LOAD_VERBOSE;
         return 1;
     } 
 }

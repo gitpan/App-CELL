@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.180
+Version 0.181
 
 =cut
 
-our $VERSION = '0.180';
+our $VERSION = '0.181';
 
 
 
@@ -190,9 +190,9 @@ Get the current load status, which can be any of the following:
 
 sub loaded {
     return 'SHARE' if $App::CELL::Load::sharedir_loaded and not
-                      $App::CELL::Load::sitedir_loaded;
+                      @App::CELL::Load::sitedir;
     return 'BOTH'  if $App::CELL::Load::sharedir_loaded and
-                      $App::CELL::Load::sitedir_loaded;
+                      @App::CELL::Load::sitedir;
     return 0;
 }
 
@@ -254,7 +254,9 @@ and, possibly, the sitedir as well.
 
 Takes: a PARAMHASH that should include at least one of C<enviro> or
 C<sitedir> (if both are given, C<enviro> takes precedence with C<sitedir>
-as a fallback). 
+as a fallback). The PARAMHASH can also include a C<verbose> parameter
+which, when set to a true value, causes the load routine to log more
+verbosely.
 
 Returns: an C<App::CELL::Status> object, which could be any of the
 following: 
@@ -280,7 +282,8 @@ sub load {
     # successfully (sitedir is optional)
     $status = App::CELL::Load::init( %ARGS );
     return $status unless $status->ok;
-    $log->info( "App::CELL has finished loading messages and site conf params" );
+    $log->info( "App::CELL has finished loading messages and site conf params" )
+        if $meta->CELL_META_LOAD_VERBOSE;
 
     $log->show_caller( $site->CELL_LOG_SHOW_CALLER );
     $log->debug_mode ( $site->CELL_DEBUG_MODE );
@@ -289,8 +292,8 @@ sub load {
     $App::CELL::Message::def_lang = $site->CELL_DEF_LANG || 'en';
 
     $meta->set( 'CELL_META_START_DATETIME', utc_timestamp() );
-    $log->info( "**************** App::CELL $VERSION started at " . 
-                $meta->CELL_META_START_DATETIME     . " (UTC)" );
+    $log->info( "**************** App::CELL $VERSION loaded and ready ****************", 
+                suppress_caller => 1 );
 
     return App::CELL::Status->ok;
 }
