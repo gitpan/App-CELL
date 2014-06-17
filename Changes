@@ -699,3 +699,10 @@ later are in the perl-CELL project repo.
 - be more careful about which messages actually get logged and under what
   conditions
 
+0.182  2014-06-17 08:48 CEST
+- Guide.pm, Load.pm: improve documentation
+
+0.183  2014-06-17 22:46 CEST
+- Load.pm: some logging-related fixes
+- Guide.pm: some work on documentation
+

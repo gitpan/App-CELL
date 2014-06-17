@@ -46,11 +46,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.181
+Version 0.183
 
 =cut
 
-our $VERSION = '0.181';
+our $VERSION = '0.183';
 
 
 
@@ -222,7 +222,7 @@ To actually see your log messages, you have to do something like this:
 
 =head1 DETAILED SPECIFICATIONS
 
-=head2 Configuration in depth
+=head2 Configuration
 
 =head3 Three types of parameters
 
@@ -230,7 +230,7 @@ CELL recognizes three types of configuration parameters: C<meta>, C<core>,
 and C<site>. These parameters and their values are loaded from files
 prepared and placed in the sitedir in advance.
 
-=head3 Meta parameters
+=head4 Meta parameters
 
 Meta parameters are by definition mutable: the application can change a
 meta parameter's value any number of times, and L<App::CELL> will not care.
@@ -242,7 +242,7 @@ C<FooApp_MetaConfig.pm>. At initialization time, L<App::CELL> looks in
 the sitedir for files matching this description, and attempts to load them.
 (See L</How configuration files are named>.)
 
-=head3 Core parameters
+=head4 Core parameters
 
 As in Request Tracker, C<core> paramters have immutable values and are
 intended to be used as "factory defaults", set by the developer, that the
@@ -251,7 +251,7 @@ application is called FooApp, its core configuration settings could be
 contained in a file called C<FooApp_Config.pm> located in the sitedir. 
 (See L</How configuration files are named> for details.)
 
-=head3 Site parameters
+=head4 Site parameters
 
 Site parameters are kept separate from core parameters, but are closely
 related to them. As far as the application is concerned, there are only
@@ -273,7 +273,7 @@ This setup allows the site administrator to customize the application.
 Site parameters are set in a file called C<$str_SiteConfig.pm>, where
 C<$str> could be the appname.
 
-=head3 Conclusion
+=head4 Conclusion
 
 How these three types of parameters are defined and used is up to the
 application. As far as L<App::CELL> is concerned, they are all optional.
@@ -286,9 +286,9 @@ All these internal parameters start with C<CELL_> and are stored in the
 same namespaces as the application's parameters. That means the application
 programmer should avoid using parameters starting with C<CELL_>.
 
-=head2 How configuration is stored
+=head3 Where configuration files are located
 
-=head3 sitedir
+=head4 sitedir
 
 Configuration parameters are placed in specially-named files within a
 directory referred to by L<App::CELL> as the "site configuration
@@ -305,7 +305,7 @@ in the form of C<core>, C<site>, and C<meta> parameters. For
 L</LOCALIZATION> purposes, C<message> codes and their corresponding texts
 (in one or more languages) can be stored here as well, if desired.
 
-=head3 sharedir
+=head4 sharedir
 
 CELL itself has an analogous configuration directory, called the
 "sharedir", where it's own internal configuration defaults are stored.
@@ -322,7 +322,7 @@ The sharedir is part of the App::CELL distro and CELL's initialization
 routine finds it via a call to the C<dist_dir> routine in the
 L<File::ShareDir> module.
 
-=head2 How the sitedir is specified
+=head3 How the sitedir is specified
 
 The sitedir must be created and populated with configuration files by the
 application programmer. Typically, this directory would form part of the
@@ -332,26 +332,26 @@ application developer and site administrator have flexibility in this
 regard -- CELL's initialization routine, C<< $CELL->load >> will work
 without a sitedir, with one sitedir, or even with multiple sitedirs.
 
-=head3 No sitedir
+=head4 No sitedir
 
 It is possible, but probably not useful, to call C<< $CELL->load >> without
 a sitedir parameter and without any sitedir specified in the environment.
 In this case, CELL just loads the sharedir and returns OK.
 
-=head3 One sitedir
+=head4 One sitedir
 
 If there is only one sitedir, there are three possible ways to specify it
 to CELL's load routine: (1) a C<sitedir> parameter, (2) an
 C<enviro> parameter, or (3) the hard-coded C<CELL_SITEDIR> environment
 variable.
 
-=head3 Multiple sitedirs
+=head4 Multiple sitedirs
 
 If the application needs to load configuration parameters from multiple
 sitedirs, this can be accomplished simply by calling C<< $CELL->load >>
 multiple times with different C<sitedir> arguments.
 
-=head2 Sitedir search algorithm
+=head3 Sitedir search algorithm
 
 Every time it is called, the load routine uses the following algorithm
 to search for a/the sitedir:
@@ -389,19 +389,20 @@ least one sitedir has been loaded.
 
 =back
 
-The C<load> routine is re-entrant, meaning that it can be called any number
-of times. The first time it is called, it will load CELL's sharedir and any
-sitedir that can be found using the above algorithm. All further calls will
-just run the sitedir search algorithm. When the algorithm finds a sitedir
-candidate, it  once a sitedir has been identified, it cannot be changed
-except by terminating the application and running it again.
+The C<load> routine is re-entrant: it can be called any number of times.
+On first call, it will load CELL's own sharedir, as well as any sitedir
+that can be found using the above algorithm. All further calls will just
+run the sitedir search algorithm again. Each time it will find and load at
+most one sitedir. CELL maintains a list of loaded sitedirs in 
+C<< $meta->CELL_META_SITEDIR_LIST >>.
 
 For examples of how to call the C<load> routine, see L<App::CELL/SYNOPSIS>.
 
-=head2 How configuration files are named
+=head3 How configuration files are named
 
-Once it finds a valid site configuration directory tree, CELL walks it,
-looking for files matching one four regular expressions:
+Once it finds a valid sitedir, CELL walks it (including I<all> its
+subdirectories), assembling a list of filenames matching one four regular
+expressions:
 
 =over
 
@@ -416,14 +417,16 @@ looking for files matching one four regular expressions:
 =back
 
 Files with names that don't match any of the above regexes are ignored.
-If multiple files match a given regex, all of them will be parsed (loaded).
 
-The syntax of these files is very simple and can be easily deduced by
-examining CELL's own configuration files in the sharedir (C<config/> in the
-distro). All four types of configuration file are represented there, with
-comments.
+After the directory is walked, the files are loaded (i.e. parsed for config
+params and messages).
 
-The configuration files are themselves Perl modules, and Perl is leveraged
+The syntax of these files is simple and should be obvious from an
+examination of CELL's own configuration files in the sharedir (C<config/>
+in the distro). All four types of configuration file are there,
+with comments.
+
+Since the configuration files are Perl modules, Perl itself is leveraged
 to parse them. Values can be any legal scalar value, so references to
 arrays, hashes, or subroutines can be used, as well as simple numbers and
 strings. For details, see L</SITE CONFIGURATION DIRECTORY>,
@@ -434,7 +437,54 @@ L<App::CELL::Load>. For details on the syntax and how the parser works, see
 L<LOCALIZATION>.
 
 
-=head2 Error handling in depth
+=head2 Configuration diagnostics
+
+CELL provides several ways for the application to find out if the
+configuration files were loaded properly. First of all, the load routine
+(C<< $CELL->load >>) returns a status object: if the status is not OK,
+something went wrong and the application should look at the status more
+closely.
+
+After program control returns from the load routine, the following methods
+and attributes can be used to find out what happened:
+
+=over
+
+=item C<< $site->CELL_SHAREDIR_LOADED >> (boolean value)
+
+=item C<< $site->CELL_SHAREDIR_FULLPATH >> (full path of CELL's sharedir)
+
+=item C<< $meta->CELL_META_SITEDIR_LOADED >> (boolean value: true if at
+least one sitedir has been loaded)
+
+=item C<< $meta->CELL_META_SITEDIR_LIST >> (reference to a list of all sitedirs
+that have been loaded -- full paths)
+
+=back
+
+=head3 Verbose and debug mode
+
+The load routine takes two options to increase its verbosity. The first
+option, C<verbose>, can be passed like this:
+
+    my $status = $CELL->load( verbose => 1 );
+
+It causes the load routine to write additional information to the log. 
+Since even this can easily be too much, the default value for C<verbose> is
+zero (terse logging).
+
+The load routine also has a C<debug> mode which should be activated in
+combination with C<verbose>. Debug mode is actually a function of the CELL
+logger, and is activated like this:
+
+    $log->init( debug_mode => 1 );
+
+Ordinarily the logger suppresses all log messages below C<info> level
+(i.e., C<debug> and C<trace>). When C<debug_mode> is activated, all
+messages are logged, regardless of level.
+
+
+=head2 Error handling
 
 =head3 STATUS OBJECTS
 
@@ -486,7 +536,7 @@ Permitted levels are listed in the C<@permitted_levels> package
 variable in C<App::CELL::Log>.
 
 
-=head2 Localization in depth
+=head2 Localization
 
 =head3 Introduction
 
@@ -668,6 +718,26 @@ CELL::Message->new. If the C<lang> parameter is not specified, CELL will
 always try to use the default language (C<CELL_DEF_LANG> or English if
 that parameter has not been set).
 
+
+=head2 Logging
+
+CELL's logging facility is based on L<Log::Any>. In practice, this means
+that L<App::CELL::Log> is simply a wrapper around this useful module. To
+use it, one imports the L<Log::Any> singleton via L<App::CELL> like
+this:
+
+    use App::CELL qw( $log );
+
+Since this I<is> the L<Log::Any> singleton, all L<Log::Any> methods can be
+used with it. CELL provides some conveniences, but they are optional.
+Actually, if the developer does not intend to use any of CELL's
+conveniences, there is no reason to import it through L<App::CELL> at all
+and one can use L<Log::Any> directly. In this case, CELL's log messages
+will go to the same log as the application's provided the L<Log::Any>
+category is the same as the CELL C<appname>.
+
+See L</Verbose and debug mode> for a description of how to increase logging
+verbosity of the load routine.
 
 
 =head1 CAVEATS

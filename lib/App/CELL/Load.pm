@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.181
+Version 0.183
 
 =cut
 
-our $VERSION = '0.181';
+our $VERSION = '0.183';
 
 
 
@@ -165,7 +165,7 @@ sub init {
     $meta->set('CELL_META_LOAD_VERBOSE', $ARGS{'verbose'} || 0);
 
     $log->info( "Entering App::CELL::Load::init " . 
-        "version $VERSION $args_string" ) if $site->CELL_META_LOAD_VERBOSE;
+        "version $VERSION caller is " . (caller)[0] . " $args_string" ) if $meta->CELL_META_LOAD_VERBOSE;
 
     # check for taint mode
     if ( ${^TAINT} != 0 ) {
@@ -201,7 +201,7 @@ sub init {
         $sharedir_loaded = 1;
     }
 
-    if ( $site->CELL_META_LOAD_VERBOSE ) {
+    if ( $meta->CELL_META_LOAD_VERBOSE ) {
         if ( @sitedir ) {
             $log->debug( "sitedir package variable contains ->" . 
                          join( ':', @sitedir ) . "<-" );
@@ -224,7 +224,6 @@ sub init {
         #
         # sitedir candidate is accepted only if something is actually
         # loaded
-        # FIXME: these meta params are probably not documented
         #
         if ( $messages_loaded->ok or $params_loaded->ok ) {
             $meta->set( 'CELL_META_SITEDIR_LOADED', 
@@ -262,7 +261,7 @@ sub init {
     }
         
     $log->debug( "Leaving App::CELL::Load::init" ) 
-        if $site->CELL_META_LOAD_VERBOSE;
+        if $meta->CELL_META_LOAD_VERBOSE;
 
     return App::CELL::Status->ok;
 }
@@ -277,7 +276,7 @@ sub _report_load_status {
         $return_status = App::CELL::Status->new(
             level => 'WARN',
             code => 'CELL_DIR_WALKED_NOTHING_FOUND',
-            args => [ $dir_desc, $dir_path, $quantfiles, $what ],
+            args => [ $what, $dir_desc, $dir_path, $quantfiles ],
             caller => [ caller ],
         );
     }
@@ -309,7 +308,13 @@ sub message_files {
     $reshash{quantitems} = 0;
 
     my $file_list = find_files( 'message', $confdir );
-    $log->info( "Found message files: " . join( ',', @$file_list ) ) if $meta->CELL_META_LOAD_VERBOSE;
+
+    if ( @$file_list ) {
+        $log->info( "Found message files: " . join( ',', @$file_list )) if $meta->CELL_META_LOAD_VERBOSE;
+    } else {
+        $log->warn( "No message files found" );
+    }
+
     foreach my $file ( @$file_list ) {
         $reshash{quantfiles} += 1;
         die "INTERNAL ERROR (App::CELL::Message::mesg is not a reference)" if not ref( $App::CELL::Message::mesg );
@@ -367,17 +372,14 @@ sub meta_core_site_files {
 
 This function implements the algorithm described in
 L<App::CELL::Guide/Sitedir search algorithm> to find a sitedir candidate.
-configuration directory. Stop as soon as we come up with a viable
-candidate. On success, return a status object:
+configuration directory. 
 
-   { 
-     level => 'OK',
-     payload => full path of candidate directory derived from the
-                arguments or the environment,
-   }
+On success -- i.e., as soon as the algorithm finds a viable sitedir
+candidate -- the sitedir (full path) is added to CELL_META_SITEDIR_LIST and
+an OK status object is returned, with the sitedir in the payload.
 
-On failure, return an ERR or WARN status object containing all the
-details of what happened.
+On failure, the function returns an ERR or WARN status object containing
+a description of what went wrong.
 
 =cut
 
@@ -508,7 +510,7 @@ sub find_files {
     # filepaths are already in the array stored within %resultcache
     if ( exists $resultcache->{ $dirpath } ) {
         $log->debug( "Re-entering find_files for $dirpath (type '$type')" )
-            if $site->CELL_META_LOAD_VERBOSE;
+            if $meta->CELL_META_LOAD_VERBOSE;
         return $resultcache->{ $dirpath }->{ $type };
     } else { # create it
         $resultcache->{ $dirpath } = {  
@@ -555,10 +557,10 @@ sub find_files {
             }
         }
         $log->info( "Load operation passed over file $file (type not recognized)" ) 
-            if not $counter and $site->CELL_META_LOAD_VERBOSE;
+            if not $counter and $meta->CELL_META_LOAD_VERBOSE;
     }
     $log->debug( "Returning " . join( ',', @{ $resultcache->{ $dirpath }->{ $type } } ) )
-        if $site->CELL_META_LOAD_VERBOSE;
+        if $meta->CELL_META_LOAD_VERBOSE;
     return $resultcache->{ $dirpath }->{ $type };
 }
 
@@ -619,7 +621,7 @@ sub parse_message_file {
                         . " overwrite existing pair with text ->$existing_text<-" );
                 return 0;
             } else {
-                $log->info( "OK: loading code-lang pair ->$code/$lang<- with text ->$text<-" )
+                $log->debug( "OK: loading code-lang pair ->$code/$lang<- with text ->$text<-" )
                     if $meta->CELL_META_LOAD_VERBOSE;
                 $destref->{ $code }->{ $lang } = {
                     'Text' => $text,
@@ -810,7 +812,7 @@ sub _conf_from_config {
                                     'File'  => $file,
                                     'Line'  => $line,
                                 }; 
-        $log->info( "Parsed parameter $param with value ->$value<- " .
+        $log->debug( "Parsed parameter $param with value ->$value<- " .
                     "from $file, line $line", suppress_caller => 1 )
             if $meta->CELL_META_LOAD_VERBOSE;
         return 1;
