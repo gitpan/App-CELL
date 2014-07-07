@@ -50,11 +50,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.183
+Version 0.185
 
 =cut
 
-our $VERSION = '0.183';
+our $VERSION = '0.185';
 
 
 
@@ -234,7 +234,8 @@ sub new {
     }
 
     if ( $ARGS{lang} ) {
-        $log->debug( $ARGS{code} . ": " . $mesg->{ $ARGS{code} }->{ $ARGS{lang} }->{ 'Text' } );
+        $log->debug( $ARGS{code} . ": " . $mesg->{ $ARGS{code} }->{ $ARGS{lang} }->{ 'Text' }, 
+                     cell => 1 );
     }
 
     # This next line is important: it may happen that the developer wants
@@ -257,7 +258,8 @@ sub new {
         $ARGS{text} = $text . " ARGS: $stringy";
     } else {
 
-        $log->debug( "About to try sprintf on ->$text<- with arguments ->$stringy<-" );
+        $log->debug( "About to try sprintf on ->$text<- with arguments ->$stringy<-", 
+                     cell => 1 );
         # insert the arguments into the message text -- needs to be in an eval
         # block because we have no control over what crap the application
         # programmer might send us
@@ -270,15 +272,8 @@ sub new {
         catch {
             my $errmsg = $_;
             $errmsg =~ s/\012/ -- /g;
-            $log->err("CELL_MESSAGE_ARGUMENT_MISMATCH on $ARGS{code}, error was: $errmsg");
-            #my $buffer = $mesg->{ 'CELL_MESSAGE_ARGUMENT_MISMATCH' }->{ 'en' }->{ 'Text' };
-            #if ( $buffer ) {
-            #    $buffer = sprintf( $buffer, $ARGS{code}, $errmsg );
-            #} else {
-            #    $buffer = "CELL_MESSAGE_ARGUMENT_MISMATCH on " . $ARGS{code} .
-            #              " (sprintf said ->$errmsg<-)";
-            #}
-            #$log->err( $buffer );
+            $log->err("CELL_MESSAGE_ARGUMENT_MISMATCH on $ARGS{code}, error was: $errmsg", 
+                      cell => 1);
         };
 
     }
@@ -286,7 +281,7 @@ sub new {
     # uncomment if needed
     #$log->debug( "Creating message object ->" . $ARGS{code} . 
     #             "<- with args ->$stringified_args<-", 
-    #             caller => $my_caller);
+    #             caller => $my_caller, cell => 1);
 
     # bless into objecthood
     my $self = bless \%ARGS, 'App::CELL::Message';

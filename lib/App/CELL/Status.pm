@@ -50,11 +50,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.183
+Version 0.185
 
 =cut
 
-our $VERSION = '0.183';
+our $VERSION = '0.185';
 
 
 
@@ -330,7 +330,7 @@ sub payload {
     my ( $self, $new_payload ) = @_;
     if ( defined $new_payload ) {
         $log->warn( "Changing payload of status object. Old payload was " . 
-                    "->$self->{payload}<-" ) if $self->{payload};
+                    "->$self->{payload}<-", cell => 1 ) if $self->{payload};
         $self->{payload} = $new_payload;
     }
     return $self->{payload};

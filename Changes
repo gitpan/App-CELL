@@ -706,3 +706,13 @@ later are in the perl-CELL project repo.
 - Load.pm: some logging-related fixes
 - Guide.pm: some work on documentation
 
+0.184  2014-06-19 09:38 CEST
+- started adding "cell => 1" to all $log calls to enable the developer to
+  suppress all log messages coming from CELL, if desired
+
+0.185  2014-07-07 22:47 CEST
+- continue implementing 'cell => 1' parameter to $log-> functions so
+  developer can suppress CELL's log messages if desired
+- Build.PL: require Log::Any::Adapter version 0.10 or higher, because
+  earlier versions lack File.pm, which we rely on for log-to-file
+

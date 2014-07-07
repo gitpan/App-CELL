@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.183
+Version 0.185
 
 =cut
 
-our $VERSION = '0.183';
+our $VERSION = '0.185';
 
 
 
@@ -165,7 +165,8 @@ sub init {
     $meta->set('CELL_META_LOAD_VERBOSE', $ARGS{'verbose'} || 0);
 
     $log->info( "Entering App::CELL::Load::init " . 
-        "version $VERSION caller is " . (caller)[0] . " $args_string" ) if $meta->CELL_META_LOAD_VERBOSE;
+        "version $VERSION from " . (caller)[0] . " $args_string",
+        cell => 1) if $meta->CELL_META_LOAD_VERBOSE;
 
     # check for taint mode
     if ( ${^TAINT} != 0 ) {
@@ -184,7 +185,7 @@ sub init {
             );
         } 
         $log->info( "Found viable CELL configuration directory " . 
-            $tmp_sharedir . " in App::CELL distro" ) if $meta->CELL_META_LOAD_VERBOSE;
+            $tmp_sharedir . " in App::CELL distro", cell => 1 ) if $meta->CELL_META_LOAD_VERBOSE;
         $site->set( 'CELL_SHAREDIR_FULLPATH', $tmp_sharedir );
         $sharedir = $tmp_sharedir;
     }
@@ -192,7 +193,7 @@ sub init {
     # walk sharedir
     if ( $sharedir and not $sharedir_loaded ) {
         my $status = message_files( $sharedir );
-        my $load_status = _report_load_status( $sharedir, 'sharedir', 'messages', $status );
+        my $load_status = _report_load_status( $sharedir, 'sharedir', 'message', $status );
         return $load_status if $load_status->not_ok;
         $status = meta_core_site_files( $sharedir );
         $load_status = _report_load_status( $sharedir, 'sharedir', 'config params', $status );
@@ -204,9 +205,9 @@ sub init {
     if ( $meta->CELL_META_LOAD_VERBOSE ) {
         if ( @sitedir ) {
             $log->debug( "sitedir package variable contains ->" . 
-                         join( ':', @sitedir ) . "<-" );
+                         join( ':', @sitedir ) . "<-", cell => 1 );
         } else {
-            $log->debug( "sitedir package variable is empty" );
+            $log->debug( "sitedir package variable is empty", cell => 1 );
         }
     }
 
@@ -218,7 +219,7 @@ sub init {
     # walk sitedir
     if ( $sitedir_candidate ) {
         my $status = message_files( $sitedir_candidate );
-        my $messages_loaded = _report_load_status( $sitedir_candidate, 'sitedir', 'messages', $status );
+        my $messages_loaded = _report_load_status( $sitedir_candidate, 'sitedir', 'message', $status );
         $status = meta_core_site_files( $sitedir_candidate );
         my $params_loaded = _report_load_status( $sitedir_candidate, 'sitedir', 'config params', $status );
         #
@@ -260,7 +261,7 @@ sub init {
         );
     }
         
-    $log->debug( "Leaving App::CELL::Load::init" ) 
+    $log->debug( "Leaving App::CELL::Load::init", cell => 1 ) 
         if $meta->CELL_META_LOAD_VERBOSE;
 
     return App::CELL::Status->ok;
@@ -310,9 +311,11 @@ sub message_files {
     my $file_list = find_files( 'message', $confdir );
 
     if ( @$file_list ) {
-        $log->info( "Found message files: " . join( ',', @$file_list )) if $meta->CELL_META_LOAD_VERBOSE;
+        $log->info( "Found message files: " . join( ',', @$file_list ),
+                    cell => 1 ) if $meta->CELL_META_LOAD_VERBOSE;
     } else {
-        $log->warn( "No message files found" );
+        $log->warn( "No message files found in $confdir", cell => 1 ) 
+            if $meta->CELL_META_LOAD_VERBOSE;
     }
 
     foreach my $file ( @$file_list ) {
@@ -392,19 +395,20 @@ sub get_sitedir {
     GET_CANDIDATE_DIR: {
 
         # look in paramhash for sitedir
-        $log->debug( "SITEDIR SEARCH, ROUND 1 (sitedir parameter):" );
+        $log->debug( "SITEDIR SEARCH, ROUND 1 (sitedir parameter):", cell => 1 );
         if ( $sitedir = $paramhash{sitedir} ) {
             $log_message = "Viable sitedir passed as argument";
             last GET_CANDIDATE_DIR if is_directory_viable( $sitedir );
             $reason = "CELL load routine received 'sitedir' argument ->$sitedir<- " .
                       "but this is not a viable directory ($App::CELL::Util::not_viable_reason)";
-            $log->err( $reason );
+            $log->err( $reason, cell => 1 );
             return App::CELL::Status->new( level => 'ERR', code => $reason );
         }
-        $log->debug( "looked at function arguments but they do not contain a literal site dir path" );
+        $log->debug( "looked at function arguments but they do not " .
+                     "contain a literal site dir path", cell => 1 );
 
         # look in paramhash for name of environment variable
-        $log->debug( "SITEDIR SEARCH, ROUND 2 (enviro parameter):" );
+        $log->debug( "SITEDIR SEARCH, ROUND 2 (enviro parameter):", cell => 1 );
         if ( $paramhash{enviro} ) 
         {
             if ( $sitedir = $ENV{ $paramhash{enviro} } ) {
@@ -423,7 +427,8 @@ sub get_sitedir {
         }
 
         # fall back to hard-coded environment variable
-        $log->debug( "SITEDIR SEARCH, ROUND 3 (fallback to CELL_SITEDIR environment variable):" );
+        $log->debug( "SITEDIR SEARCH, ROUND 3 (fallback to CELL_SITEDIR " .
+                     "environment variable):", cell => 1 );
         $sitedir = undef;
         if ( $sitedir = $ENV{ 'CELL_SITEDIR' } ) {
             $log_message = "Found viable sitedir in CELL_SITEDIR environment variable";
@@ -433,9 +438,10 @@ sub get_sitedir {
                 "with value ->$sitedir<- but this is not a viable directory" .
                 "($App::CELL::Util::not_viable_reason)";
             if ( $meta->CELL_META_SITEDIR_LOADED ) {
-                $log->warn( $reason );
+                $log->warn( $reason, cell => 1 );
                 $log->notice( "The following sitedirs have been loaded already " .
-                              join( ' ', @{ $meta->CELL_META_SITEDIR_LIST } ) );
+                              join( ' ', @{ $meta->CELL_META_SITEDIR_LIST }), 
+                              cell => 1 );
                 return App::CELL::Status->ok;
             }
             return App::CELL::Status->new( level => 'WARN', code => $reason );
@@ -445,16 +451,17 @@ sub get_sitedir {
         $reason = "CELL load routine gave up (no sitedir argument, no enviro " . 
                   "argument, no CELL_SITEDIR environment variable)";
         if ( $meta->CELL_META_SITEDIR_LOADED ) {
-            $log->warn( $reason );
+            $log->warn( $reason, cell => 1 );
             $log->notice( "The following sitedirs have been loaded already " .
-                          join( ' ', @{ $meta->CELL_META_SITEDIR_LIST } ) );
+                          join( ' ', @{ $meta->CELL_META_SITEDIR_LIST } ),
+                          cell => 1 );
             return App::CELL::Status->ok;
         }
         return App::CELL::Status->new( level => 'WARN', code => $reason );
     }
 
     # SUCCEED
-    $log->info( $log_message );
+    $log->info( $log_message, cell => 1 );
     return App::CELL::Status->ok( $sitedir );
 }
 
@@ -509,8 +516,8 @@ sub find_files {
     # In other words, $dirpath has already been walked and all the 
     # filepaths are already in the array stored within %resultcache
     if ( exists $resultcache->{ $dirpath } ) {
-        $log->debug( "Re-entering find_files for $dirpath (type '$type')" )
-            if $meta->CELL_META_LOAD_VERBOSE;
+        $log->debug( "Re-entering find_files for $dirpath (type '$type')",
+            cell => 1) if $meta->CELL_META_LOAD_VERBOSE;
         return $resultcache->{ $dirpath }->{ $type };
     } else { # create it
         $resultcache->{ $dirpath } = {  
@@ -522,14 +529,14 @@ sub find_files {
     }
 
     # walk the directory (do we need some error checking here?)
-    $log->debug( "Preparing to walk $dirpath" );
+    $log->debug( "Preparing to walk $dirpath", cell => 1 );
     my $iter = File::Next::files( $dirpath );
 
     # while we are walking, go ahead and populate the result cache for _all
     # four_ types (even though we were asked for just one type)
     my $walk_counter = 0;
     ITER_LOOP: while ( defined ( my $file = $iter->() ) ) {
-        $log->debug( "Now considering $file" );
+        $log->debug( "Now considering $file", cell => 1 );
         $walk_counter += 1;
         if ( $walk_counter > $max_files ) {
             App::CELL::Status->new ( 
@@ -556,11 +563,11 @@ sub find_files {
                 next ITER_LOOP;
             }
         }
-        $log->info( "Load operation passed over file $file (type not recognized)" ) 
-            if not $counter and $meta->CELL_META_LOAD_VERBOSE;
+        $log->info( "Load operation passed over file $file (type not " . 
+            "recognized)", cell => 1 ) if not $counter and $meta->CELL_META_LOAD_VERBOSE;
     }
-    $log->debug( "Returning " . join( ',', @{ $resultcache->{ $dirpath }->{ $type } } ) )
-        if $meta->CELL_META_LOAD_VERBOSE;
+    $log->debug( "Returning " . join( ',', @{ $resultcache->{ $dirpath }->{ $type } } ), 
+        cell => 1 ) if $meta->CELL_META_LOAD_VERBOSE;
     return $resultcache->{ $dirpath }->{ $type };
 }
 

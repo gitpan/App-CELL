@@ -19,7 +19,7 @@ my $build = Module::Build->new(
         'Software::License'  => 0,
     },
     build_requires     => { 
-        'Log::Any::Adapter'  => 0,
+        'Log::Any::Adapter'  => 0.10,
         'Log::Any::Test'     => 0,
     },
     requires           => {

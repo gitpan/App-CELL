@@ -52,11 +52,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.183
+Version 0.185
 
 =cut
 
-our $VERSION = '0.183';
+our $VERSION = '0.185';
 
 
 
@@ -326,10 +326,14 @@ sub AUTOLOAD {
         ( undef, $file, $line ) = caller;
     }
 
+    # if we were called with 'cell => 1', prepend '(CELL)' to the message
+    my $cell = '';
+    $cell = '(CELL) ' if $ARGS{cell};
+
     $log->init( ident => $ident ) if not $log_any_obj;
     die "No Log::Any object!" if not $log_any_obj;
     return if not $debug_mode and ( $method_lc eq 'debug' or $method_lc eq 'trace' );
-    $log_any_obj->$method_lc( _assemble_log_message( "$level: $msg_text", $file, $line ) );
+    $log_any_obj->$method_lc( _assemble_log_message( "$cell$level: $msg_text", $file, $line ) );
     return;
 }
 

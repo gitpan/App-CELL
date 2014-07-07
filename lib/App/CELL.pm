@@ -41,7 +41,7 @@ use App::CELL::Config qw( $meta $core $site );
 use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Status;
-use App::CELL::Util qw( utc_timestamp );
+use App::CELL::Util qw( stringify_args utc_timestamp );
 use Scalar::Util qw( blessed );
 
 
@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.183
+Version 0.185
 
 =cut
 
-our $VERSION = '0.183';
+our $VERSION = '0.185';
 
 
 
@@ -278,12 +278,16 @@ sub load {
     my %ARGS = @ARGS;
     my $status; 
 
+    $log->info( "CELL version $VERSION called from " . (caller)[0] . 
+                " with arguments " . stringify_args( \%ARGS ),
+                cell => 1, suppress_caller => 1 );
+
     # we only get past this next call if at least the sharedir loads
     # successfully (sitedir is optional)
     $status = App::CELL::Load::init( %ARGS );
     return $status unless $status->ok;
-    $log->info( "App::CELL has finished loading messages and site conf params" )
-        if $meta->CELL_META_LOAD_VERBOSE;
+    $log->info( "App::CELL has finished loading messages and site conf params", 
+        cell => 1 ) if $meta->CELL_META_LOAD_VERBOSE;
 
     $log->show_caller( $site->CELL_LOG_SHOW_CALLER );
     $log->debug_mode ( $site->CELL_DEBUG_MODE );
@@ -293,7 +297,7 @@ sub load {
 
     $meta->set( 'CELL_META_START_DATETIME', utc_timestamp() );
     $log->info( "**************** App::CELL $VERSION loaded and ready ****************", 
-                suppress_caller => 1 );
+                cell => 1, suppress_caller => 1 );
 
     return App::CELL::Status->ok;
 }
