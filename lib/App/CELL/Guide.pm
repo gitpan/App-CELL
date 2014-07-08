@@ -46,11 +46,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.185
+Version 0.186
 
 =cut
 
-our $VERSION = '0.185';
+our $VERSION = '0.186';
 
 
 
@@ -771,6 +771,26 @@ user, L<App::CELL> should not be run under taint mode. The C<< load >>
 routine checks this and will refuse to do anything if running with C<-T>.
 
 To recapitulate: don't run L<App::CELL> in taint mode.
+
+
+=head2 Installation issues with CELL internal sharedir
+
+The easiest way to install L<App::CELL> is to use a package manager (e.g.
+C<zypper>). Another way to install directly from CPAN using, e.g.,
+C<cpanm>). The former way installs to the C<vendor_perl> tree, while the
+latter installs to the C<site_perl> tree.
+
+If you install two different versions of L<App::CELL>, one via package
+manager and another directly from CPAN, a conflict can arise, and it may be
+necessary to examine CELL's log to determine which one is being used.
+
+Even after running, e.g., C<cpanm -U App::CELL>, to uninstall from
+C<site_perl>, I found that CELL's internal sharedir remained intact in the
+C<site_perl> tree and had to be wiped manually.
+
+As long as you always install either one way or other other (i.e. package
+manager or direct from CPAN), you won't get bitten by this.
+
 
 
 =head1 COMPONENTS

@@ -716,3 +716,6 @@ later are in the perl-CELL project repo.
 - Build.PL: require Log::Any::Adapter version 0.10 or higher, because
   earlier versions lack File.pm, which we rely on for log-to-file
 
+0.186  2014-07-08 13:28 CEST
+- Guide.pm: add caveat section about site_perl/vendor_perl conflicts
+
