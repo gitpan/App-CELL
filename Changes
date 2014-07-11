@@ -719,3 +719,7 @@ later are in the perl-CELL project repo.
 0.186  2014-07-08 13:28 CEST
 - Guide.pm: add caveat section about site_perl/vendor_perl conflicts
 
+0.187  2014-07-11 11:56 CEST
+- CELL.pm: have status_XYZ constructors issue a warning when they discard
+  arguments because the argument list has an odd number of elements
+

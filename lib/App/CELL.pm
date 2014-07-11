@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.186
+Version 0.187
 
 =cut
 
-our $VERSION = '0.186';
+our $VERSION = '0.187';
 
 
 
@@ -319,6 +319,9 @@ BEGIN {
         *{"status_$level_lc"} = sub { 
             my ( $self, $code, @ARGS ) = @_;
             if ( @ARGS % 2 ) { # odd number of arguments
+                $log->warn( "status_$level_lc called with odd number (" . 
+                            scalar @ARGS . 
+                            ") of arguments; discarding the arguments!" );
                 @ARGS = ();
             }
             return App::CELL::Status->new(

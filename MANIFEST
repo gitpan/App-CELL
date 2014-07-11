@@ -17,6 +17,7 @@ lib/App/CELL/Status.pm
 lib/App/CELL/Test.pm
 lib/App/CELL/Test/LogToFile.pm
 lib/App/CELL/Util.pm
+lib/cur
 LICENSE
 Makefile.PL
 MANIFEST
