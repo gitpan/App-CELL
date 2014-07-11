@@ -727,3 +727,6 @@ later are in the perl-CELL project repo.
 - fix SF Bug #50 "$CELL->status_err creates status object with bad caller"
 - t/031-status_ok.t: add unit tests for CELL.pm status constructors
 
+0.189  2014-07-11 13:22 CEST
+- LogToFile.pm: move POD up after CPAN started to choke on it
+

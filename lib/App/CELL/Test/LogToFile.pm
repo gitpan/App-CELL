@@ -37,17 +37,6 @@ use warnings;
 use 5.010;
 use Test::More;
 
-BEGIN {
-   use File::Temp;
-   my $tf;
-   use Log::Any::Adapter ('File', $tf = File::Temp->new->filename );
-   diag( "Logging to $tf" );
-}
-
-1;
-
-__END__
-
 =pod 
 
 =head1 NAME
@@ -58,11 +47,11 @@ tests)
 
 =head1 VERSION
 
-Version 0.188
+Version 0.189
 
 =cut
 
-our $VERSION = '0.188';
+our $VERSION = '0.189';
 
 
 
@@ -80,3 +69,13 @@ would probably work outside of unit tests, too, if it weren't for the call
 to C<diag>.
 
 =cut
+
+BEGIN {
+   use File::Temp;
+   my $tf;
+   use Log::Any::Adapter ('File', $tf = File::Temp->new->filename );
+   diag( "Logging to $tf" );
+}
+
+1;
+

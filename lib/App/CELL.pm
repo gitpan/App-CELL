@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.188
+Version 0.189
 
 =cut
 
-our $VERSION = '0.188';
+our $VERSION = '0.189';
 
 
 
