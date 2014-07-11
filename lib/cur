@@ -1,2 +1,0 @@
-- CELL.pm: have status_XYZ constructors issue a warning when they receive
-  an odd number of arguments

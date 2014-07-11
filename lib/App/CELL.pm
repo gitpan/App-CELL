@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.187
+Version 0.188
 
 =cut
 
-our $VERSION = '0.187';
+our $VERSION = '0.188';
 
 
 
@@ -324,10 +324,12 @@ BEGIN {
                             ") of arguments; discarding the arguments!" );
                 @ARGS = ();
             }
+            my %ARGS = @ARGS;
             return App::CELL::Status->new(
                 level => $level_uc,
                 code => $code,
-                @ARGS,
+                caller => [ caller ],
+                %ARGS,
             );
         }
     }

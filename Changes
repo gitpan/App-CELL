@@ -723,3 +723,7 @@ later are in the perl-CELL project repo.
 - CELL.pm: have status_XYZ constructors issue a warning when they discard
   arguments because the argument list has an odd number of elements
 
+0.188  2014-07-11 13:12 CEST
+- fix SF Bug #50 "$CELL->status_err creates status object with bad caller"
+- t/031-status_ok.t: add unit tests for CELL.pm status constructors
+

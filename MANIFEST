@@ -17,7 +17,6 @@ lib/App/CELL/Status.pm
 lib/App/CELL/Test.pm
 lib/App/CELL/Test/LogToFile.pm
 lib/App/CELL/Util.pm
-lib/cur
 LICENSE
 Makefile.PL
 MANIFEST
@@ -32,6 +31,7 @@ t/004-debug.t
 t/005-message.t
 t/006-config.t
 t/030-status.t
+t/031-status_ok.t
 t/050-load.t
 t/070-config.t
 t/100-cell.t
