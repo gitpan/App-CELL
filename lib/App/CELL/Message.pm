@@ -33,7 +33,7 @@
 package App::CELL::Message;
 
 use strict;
-use warnings;
+use warnings FATAL => 'all';
 use 5.012;
 
 use App::CELL::Log qw( $log );
@@ -50,11 +50,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.189
+Version 0.190
 
 =cut
 
-our $VERSION = '0.189';
+our $VERSION = '0.190';
 
 
 
@@ -265,7 +265,7 @@ sub new {
         # programmer might send us
         try { 
             local $SIG{__WARN__} = sub {
-                die;
+                die @_;
             };
             $ARGS{text} = sprintf( $text, @{ $ARGS{args} || [] } ); 
         }
