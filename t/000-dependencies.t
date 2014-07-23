@@ -2,7 +2,7 @@
 use 5.012;
 use strict;
 use warnings FATAL => 'all';
-use Test::More tests => 26;
+use Test::More tests => 28;
 
 BEGIN {
 
@@ -14,9 +14,11 @@ BEGIN {
     use_ok( 'File::Temp' );
     use_ok( 'Module::Build' );
     use_ok( 'Scalar::Util', qw( blessed ) );
+    use_ok( 'Storable' );
     use_ok( 'Test::More' );
 
     # non-core (CPAN) modules
+    use_ok( 'Data::Structure::Util' );
     use_ok( 'Date::Format' );
     use_ok( 'File::HomeDir' );
     use_ok( 'File::Next' );

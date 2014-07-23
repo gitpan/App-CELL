@@ -23,14 +23,15 @@ my $build = Module::Build->new(
         'Log::Any::Test'     => 0,
     },
     requires           => {
-        'perl'               => 5.012,
-        'Date::Format'       => 0,
-        'File::HomeDir'      => 0,
-        'File::ShareDir'     => 0,
-        'File::Next'         => 0,
-        'File::Touch'        => 0,
-        'Log::Any'           => 0,
-        'Try::Tiny'          => 0,
+        'perl'                  => 5.012,
+        'Data::Structure::Util' => 0,
+        'Date::Format'          => 0,
+        'File::HomeDir'         => 0,
+        'File::ShareDir'        => 0,
+        'File::Next'            => 0,
+        'File::Touch'           => 0,
+        'Log::Any'              => 0,
+        'Try::Tiny'             => 0,
     },
     meta_merge => {
         resources => {

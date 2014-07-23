@@ -28,6 +28,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Data::Structure::Util" : "0",
             "Date::Format" : "0",
             "File::HomeDir" : "0",
             "File::Next" : "0",
@@ -42,43 +43,43 @@
    "provides" : {
       "App::CELL" : {
          "file" : "lib/App/CELL.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Config" : {
          "file" : "lib/App/CELL/Config.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Guide" : {
          "file" : "lib/App/CELL/Guide.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Load" : {
          "file" : "lib/App/CELL/Load.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Log" : {
          "file" : "lib/App/CELL/Log.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Message" : {
          "file" : "lib/App/CELL/Message.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Status" : {
          "file" : "lib/App/CELL/Status.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Test" : {
          "file" : "lib/App/CELL/Test.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Test::LogToFile" : {
          "file" : "lib/App/CELL/Test/LogToFile.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       },
       "App::CELL::Util" : {
          "file" : "lib/App/CELL/Util.pm",
-         "version" : "0.193"
+         "version" : "0.194"
       }
    },
    "release_status" : "stable",
@@ -91,5 +92,5 @@
          "url" : "https://sourceforge.net/p/perl-cell/code/"
       }
    },
-   "version" : "0.193"
+   "version" : "0.194"
 }
