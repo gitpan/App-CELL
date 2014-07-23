@@ -730,14 +730,22 @@ later are in the perl-CELL project repo.
 0.189  2014-07-11 13:22 CEST
 - LogToFile.pm: move POD up after CPAN started to choke on it
 
-0.190  
+0.190  2014-07-15
 - Message.pm: fix bug (error not reported properly when sprintf generates a warning)
 
-0.191  
-- Load.pm: parse_message_file now keeps track of line numbers
-- Message.pm: in constructor, only carry over certain attributes
-  from the PARAMHASH into the message object
+0.191  2014-07-23 07:09 CEST
+- Load.pm: keep track of message line numbers in parse_message_file 
+- Message.pm: when constructing message object for status object, take
+  only selected attributes from the PARAMHASH 
 - Status.pm: add an 'expurgate' method 
 - t/110-site.t: comment out a unit test broken by the message constructor
   modifications
+
+0.192  2014-07-23 07:16 CEST
+- release/release.sh: fix bug in script that broke timestamp insertion on
+  Ubuntu 12.04
+
+0.193  2014-07-23 07:52 CEST
+- Status.pm: tweak the new 'expurgate' method
+- t/032-status-expurgate.t: add unit tests
 

@@ -32,6 +32,7 @@ t/005-message.t
 t/006-config.t
 t/030-status.t
 t/031-status_ok.t
+t/032-status-expurgate.t
 t/050-load.t
 t/070-config.t
 t/100-cell.t

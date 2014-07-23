@@ -38,6 +38,8 @@ use 5.012;
 
 use App::CELL::Log qw( $log );
 use App::CELL::Util qw( stringify_args );
+use Data::Structure::Util qw( unbless );
+use Storable qw( dclone );
 use Scalar::Util qw( blessed );
 
 
@@ -50,11 +52,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.191
+Version 0.193
 
 =cut
 
-our $VERSION = '0.191';
+our $VERSION = '0.193';
 
 
 
@@ -362,8 +364,7 @@ sub expurgate {
     my ( $self ) = @_;
     return unless blessed( $self );
 
-    my $udc;
-    # $udc = unbless( dclone( $self ) );
+    my $udc = unbless( dclone( $self ) );
 
     delete $udc->{'args'};
     delete $udc->{'called_from_status'};
