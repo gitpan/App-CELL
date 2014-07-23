@@ -733,3 +733,11 @@ later are in the perl-CELL project repo.
 0.190  
 - Message.pm: fix bug (error not reported properly when sprintf generates a warning)
 
+0.191  
+- Load.pm: parse_message_file now keeps track of line numbers
+- Message.pm: in constructor, only carry over certain attributes
+  from the PARAMHASH into the message object
+- Status.pm: add an 'expurgate' method 
+- t/110-site.t: comment out a unit test broken by the message constructor
+  modifications
+

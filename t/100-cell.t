@@ -50,6 +50,7 @@ is( $msgobj->text, "This is a test message",
     "Basic \$CELL->msg functionality");
 
 $status = $CELL->status_crit( 'CELL_TEST_MESSAGE' );
+#diag( Dumper( $status ) );
 ok( $status->level eq 'CRIT' );
 
 $status = $CELL->status_critical( 'CELL_TEST_MESSAGE' );

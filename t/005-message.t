@@ -7,9 +7,10 @@ use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Message;
 #use App::CELL::Test::LogToFile;
+use Data::Dumper;
 use Test::More tests => 14;
 
-$log->init( ident => 'CELLtest' );
+$log->init( ident => 'CELLtest', debug_mode => 1 );
 $log->info("----------------------------------------------- ");
 $log->info("---             005-message.t               ---");
 $log->info("----------------------------------------------- ");
@@ -19,7 +20,11 @@ is_deeply( App::CELL::Message::supported_languages(), [ 'en' ],
 ok( App::CELL::Message::language_supported( 'en' ), 
     "English is a supported language" );
 
+# N.B.: App::CELL is not initialized at this point, so no messages or
+# config params have been loaded
+
 my $status = App::CELL::Message->new();
+#diag( Dumper $status );
 ok( $status->not_ok, "Message->new with no code is not OK");
 ok( $status->level eq 'ERR', "Message->new with no code returns ERR status");
 is( $status->code, 'CELL_MESSAGE_NO_CODE', "Error message code is correct" );

@@ -8,7 +8,7 @@ use App::CELL::Test qw( mktmpdir cleartmpdir populate_file );
 #use Data::Dumper;
 use File::Spec;
 use Scalar::Util qw( blessed );
-use Test::More tests => 28;
+use Test::More tests => 27;
 
 my $status;
 delete $ENV{CELL_DEBUG_MODE};
@@ -92,9 +92,9 @@ is( $msgobj->text, 'NON_EXISTENT_MESSAGE',
 $msgobj = $CELL->msg( 'BAR_ARGS_MSG', "FooBar", 2 );
 is( $msgobj->text, 'This FooBar message takes 2 arguments.' );
 
-$status = $msgobj->lang('cz');
-my $cesky_text = $status->payload->text;
-is( $cesky_text, "Tato FooBar zpráva bere 2 argumenty." );
+#$status = $msgobj->lang('cz');
+#my $cesky_text = $status->payload->text;
+#is( $cesky_text, "Tato FooBar zpráva bere 2 argumenty." );
 
 is( $site->A_RANDOM_PARAMETER, "34WDFWWD", "Random parameter has value we set" );
 

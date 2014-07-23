@@ -50,11 +50,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.190
+Version 0.191
 
 =cut
 
-our $VERSION = '0.190';
+our $VERSION = '0.191';
 
 
 
@@ -212,6 +212,7 @@ sub new {
     my ( $class, %ARGS ) = @_; 
     my $stringified_args = stringify_args( \%ARGS );
     my $my_caller;
+    my $msgobj = {};
 
     #$log->debug( "Entering Message->new called from " . (caller)[1] . " line " . (caller)[2]);
     if ( $ARGS{called_from_status} ) {
@@ -232,11 +233,21 @@ sub new {
             caller => $my_caller,
         );
     }
+    $msgobj->{'code'} = $ARGS{code};
 
     if ( $ARGS{lang} ) {
         $log->debug( $ARGS{code} . ": " . $mesg->{ $ARGS{code} }->{ $ARGS{lang} }->{ 'Text' }, 
                      cell => 1 );
     }
+    $msgobj->{'lang'} = $ARGS{lang} || $def_lang || 'en';
+    $msgobj->{'file'} = $mesg->
+			{ $msgobj->{code} }->
+ 			{ $msgobj->{lang} }->
+			{ 'File' } || '<NONE>';
+    $msgobj->{'line'} = $mesg->
+			{ $msgobj->{code} }->
+ 			{ $msgobj->{lang} }->
+			{ 'Line' } || '<NONE>';
 
     # This next line is important: it may happen that the developer wants
     # to quickly code some messages/statuses without formally assigning
@@ -244,10 +255,10 @@ sub new {
     # will fail. Instead of throwing an error, we just generate a message
     # text from the value of 'code'.
     my $text = $mesg->
-               { $ARGS{code} }->
-               { $ARGS{lang} || $def_lang || 'en' }->
+               { $msgobj->{code} }->
+               { $msgobj->{lang} }->
                { 'Text' } 
-               || $ARGS{code};
+               || $msgobj->{code};
 
     # strip out anything that resembles a newline
     $text =~ s/\n//g;
@@ -272,11 +283,12 @@ sub new {
         catch {
             my $errmsg = $_;
             $errmsg =~ s/\012/ -- /g;
-            $log->err("CELL_MESSAGE_ARGUMENT_MISMATCH on $ARGS{code}, error was: $errmsg", 
-                      cell => 1);
+            $ARGS{text} = "CELL_MESSAGE_ARGUMENT_MISMATCH on $ARGS{code}, error was: $errmsg"; 
+            $log->err( $ARGS{text}, cell => 1);
         };
 
     }
+    $msgobj->{'text'} = $ARGS{text};
 
     # uncomment if needed
     #$log->debug( "Creating message object ->" . $ARGS{code} . 
@@ -284,7 +296,7 @@ sub new {
     #             caller => $my_caller, cell => 1);
 
     # bless into objecthood
-    my $self = bless \%ARGS, 'App::CELL::Message';
+    my $self = bless $msgobj, __PACKAGE__;
 
     # return ok status with created object in payload
     return App::CELL::Status->new( level => 'OK',

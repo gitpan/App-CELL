@@ -50,11 +50,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.190
+Version 0.191
 
 =cut
 
-our $VERSION = '0.190';
+our $VERSION = '0.191';
 
 
 
@@ -349,5 +349,29 @@ sub msgobj {
     return $self->{msgobj} if exists $self->{msgobj};
     return; # returns undef in scalar context
 }
+
+
+=head2 expurgate
+
+Make a deep copy of the status object, unbless it, and remove certain
+attributes deemed "extraneous".
+
+=cut
+
+sub expurgate {
+    my ( $self ) = @_;
+    return unless blessed( $self );
+
+    my $udc;
+    # $udc = unbless( dclone( $self ) );
+
+    delete $udc->{'args'};
+    delete $udc->{'called_from_status'};
+    delete $udc->{'caller'};
+    delete $udc->{'msgobj'};
+    
+    return $udc;
+}
+
 
 1;

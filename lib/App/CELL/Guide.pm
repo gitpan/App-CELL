@@ -46,11 +46,11 @@ App::CELL::Guide - Introduction to App::CELL (POD-only module)
 
 =head1 VERSION
 
-Version 0.190
+Version 0.191
 
 =cut
 
-our $VERSION = '0.190';
+our $VERSION = '0.191';
 
 
 

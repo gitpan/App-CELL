@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.190
+Version 0.191
 
 =cut
 
-our $VERSION = '0.190';
+our $VERSION = '0.191';
 
 
 
@@ -600,7 +600,7 @@ sub parse_message_file {
     my $process_stanza_sub = sub {
 
         # get arguments
-        my ( $file, $lang, $stanza, $destref ) = @_;
+        my ( $file, $line, $lang, $stanza, $destref ) = @_;
 
         # put first token on first line into $code
         my ( $code ) = $stanza->[0] =~ m/^\s*(\S+)/;
@@ -633,6 +633,7 @@ sub parse_message_file {
                 $destref->{ $code }->{ $lang } = {
                     'Text' => $text,
                     'File' => $file,
+                    'Line' => $line,
                 }; 
                 return 1;
             }
@@ -657,8 +658,10 @@ sub parse_message_file {
     my @stanza = ();
     my $index = 0;
     my $count = 0;
+    my $line = 0;
     while ( <$fh> ) {
         chomp( $_ );
+        $line += 1;
         #$log->debug( "Read line =>$_<= from $ARGS{'File'}" );
         $_ = '' if /^\s+$/;
         if ( $_ ) { 
@@ -668,14 +671,14 @@ sub parse_message_file {
                 $stanza[ $index++ ] = $_; 
             }
         } else {
-            $count += &$process_stanza_sub( $ARGS{'File'}, $lang, \@stanza, 
+            $count += &$process_stanza_sub( $ARGS{'File'}, $line, $lang, \@stanza, 
                           $ARGS{'Dest'} ) if @stanza;
             @stanza = ();
             $index = 0;
         }
     }
     # There might be one stanza left at the end
-    $count += &$process_stanza_sub( $ARGS{'File'}, $lang, \@stanza, 
+    $count += &$process_stanza_sub( $ARGS{'File'}, $line, $lang, \@stanza, 
                  $ARGS{'Dest'} ) if @stanza;
 
     close $fh;
