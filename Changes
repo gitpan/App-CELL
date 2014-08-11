@@ -752,3 +752,9 @@ later are in the perl-CELL project repo.
 0.194  2014-07-23 09:00 CEST
 - Build.PL, t/: update dependencies to include Data::Structure::Util
 
+0.195  2014-08-11 12:06 CEST
+- CELL.pm: minor tweak to eliminate a superfluous line of code
+- Log.pm: if this is a CELL internal debug message, log it only if
+  the CELL_DEBUG_MODE environment variable exists and is true
+- Message.pm: fix POD of 'new' method
+

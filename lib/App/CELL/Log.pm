@@ -52,11 +52,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.194
+Version 0.195
 
 =cut
 
-our $VERSION = '0.194';
+our $VERSION = '0.195';
 
 
 
@@ -247,15 +247,10 @@ sub init {
         $log_any_obj = Log::Any->get_logger(category => $ident);
     }    
 
-    # process 'debug_mode' argument and possibly override it with
-    # CELL_DEBUG_MODE environment variable
+    # process 'debug_mode' argument
     if ( exists( $ARGS{debug_mode} ) ) {
         $debug_mode = 1 if $ARGS{debug_mode};
         $debug_mode = 0 if not $ARGS{debug_mode};
-    }
-    if ( exists( $ENV{ 'CELL_DEBUG_MODE' } ) ) {
-        $debug_mode = 1 if $ENV{ 'CELL_DEBUG_MODE' };
-        $debug_mode = 0 if not $ENV{ 'CELL_DEBUG_MODE' };
     }
     
     # process 'show_caller'
@@ -324,6 +319,12 @@ sub AUTOLOAD {
         }
     } else {
         ( undef, $file, $line ) = caller;
+    }
+
+    # if this is a CELL internal debug message, continue only if
+    # the CELL_DEBUG_MODE environment variable exists and is true
+    if ( $ARGS{'cell'} and ( $method_lc eq 'debug' or $method_lc eq 'trace') ) {
+        return unless $ENV{'CELL_DEBUG_MODE'};
     }
 
     # if we were called with 'cell => 1', prepend '(CELL)' to the message

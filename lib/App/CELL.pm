@@ -53,11 +53,11 @@ App::CELL - Configuration, Error-handling, Localization, and Logging
 
 =head1 VERSION
 
-Version 0.194
+Version 0.195
 
 =cut
 
-our $VERSION = '0.194';
+our $VERSION = '0.195';
 
 
 
@@ -406,8 +406,7 @@ sub msg {
     my ( $self, $code, @ARGS ) = @_;
     my $status = App::CELL::Message->new( code => $code, args => [ @ARGS ] );
     return if $status->not_ok; # will return undef in scalar mode
-    my $msgobj = $status->payload;
-    return $msgobj if blessed $msgobj;
+    return $status->payload if blessed $status->payload;
     return;
 }
 

@@ -50,11 +50,11 @@ App::CELL::Message - handle messages the user might see
 
 =head1 VERSION
 
-Version 0.194
+Version 0.195
 
 =cut
 
-our $VERSION = '0.194';
+our $VERSION = '0.195';
 
 
 
@@ -201,9 +201,11 @@ sub default_language {
 
 =head2 new
   
-Construct a message object. Takes a message code and, optionally, a
-reference to an array of arguments. Returns a status object. If the status
-is ok, then the message object will be in the payload. See L</SYNOPSIS>.
+Construct a message object. Takes a PARAMHASH containing, at least,
+a 'code' attribute as well as, optionally, other attributes such as
+'args' (a reference to an array of arguments). Returns a status object. If
+the status is ok, then the message object will be in the payload. See
+L</SYNOPSIS>.
 
 =cut
 

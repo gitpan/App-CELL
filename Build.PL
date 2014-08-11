@@ -19,7 +19,6 @@ my $build = Module::Build->new(
         'Software::License'  => 0,
     },
     build_requires     => { 
-        'Log::Any::Adapter'  => 0.10,
         'Log::Any::Test'     => 0,
     },
     requires           => {
@@ -31,6 +30,7 @@ my $build = Module::Build->new(
         'File::Next'            => 0,
         'File::Touch'           => 0,
         'Log::Any'              => 0,
+        'Log::Any::Adapter'     => 0.10,
         'Try::Tiny'             => 0,
     },
     meta_merge => {
