@@ -758,3 +758,7 @@ later are in the perl-CELL project repo.
   the CELL_DEBUG_MODE environment variable exists and is true
 - Message.pm: fix POD of 'new' method
 
+0.196  2014-08-12 15:34 CEST
+- Load.pm: when complaining about duplicate message/parameter definitions,
+  include both offending and original file in error message
+

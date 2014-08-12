@@ -2,7 +2,7 @@ NAME
     App::CELL - Configuration, Error-handling, Localization, and Logging
 
 VERSION
-    Version 0.195
+    Version 0.196
 
 SYNOPSIS
         # imagine you have a script/app called 'foo' . . . 

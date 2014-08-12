@@ -42,7 +42,7 @@ use App::CELL::Message;
 use App::CELL::Status;
 use App::CELL::Test qw( cmp_arrays );
 use App::CELL::Util qw( stringify_args is_directory_viable );
-#use Data::Dumper;
+use Data::Dumper;
 use File::Next;
 use File::ShareDir;
 
@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.195
+Version 0.196
 
 =cut
 
-our $VERSION = '0.195';
+our $VERSION = '0.196';
 
 
 
@@ -625,7 +625,7 @@ sub parse_message_file {
                 my $existing_text = $destref->{ $code }->{ $lang }->{ 'Text' };
                 $log->error( "ERROR: not loading code-lang pair ->$code"
                         . "/$lang<- with text ->$text<- because this would"
-                        . " overwrite existing pair with text ->$existing_text<-" );
+                        . " overwrite existing pair from " .  $destref->{$code}->{$lang}->{'File'} );
                 return 0;
             } else {
                 $log->debug( "OK: loading code-lang pair ->$code/$lang<- with text ->$text<-" )
@@ -814,7 +814,9 @@ sub _conf_from_config {
     if ( keys( %{ $desthash->{ $param } } ) ) 
     {
         $log->warn( "ignoring duplicate definition of config "
-                  . "parameter $param in line $line of config file $file" );
+                  . "parameter $param in line $line of config file $file "
+                  . "because it conflicts with a similar parameter in "
+                  . $desthash->{ $param }->{'File'} );
         return 0;
     } else {
         $desthash->{ $param } = {
