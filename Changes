@@ -762,3 +762,8 @@ later are in the perl-CELL project repo.
 - Load.pm: when complaining about duplicate message/parameter definitions,
   include both offending and original file in error message
 
+0.197  2014-10-15 10:25 CEST
+- Config.pm: add 'get_param' routine; rename 'get_all' routine to more
+  descriptive 'get_param_metadata'
+- t/006-config.t: add test case for 'get_param'
+

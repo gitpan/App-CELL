@@ -50,11 +50,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.196
+Version 0.197
 
 =cut
 
-our $VERSION = '0.196';
+our $VERSION = '0.197';
 
 
 
@@ -148,7 +148,29 @@ sub DESTROY {
 }
 
 
-=head2 get_all
+=head2 get_param
+
+Get value of config param provided in the argument.
+
+=cut
+
+sub get_param {
+    my ( $self, $param ) = @_;
+    my ( undef, $file, $line ) = caller;
+    die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
+    if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
+        return $meta->{$param}->{Value} if exists $meta->{$param};
+    } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
+        return $core->{$param}->{Value} if exists $core->{$param};
+    } else {
+        return $site->{$param}->{Value} if defined $site->{$param};
+    }
+    return $core->{$param}->{Value} if defined $core->{$param};
+    return;
+}
+
+
+=head2 get_param_metadata
 
 Routine to provide access not only to the value, but also to the metadata
 (file and line number where parameter was defined) associated with a
@@ -159,7 +181,7 @@ given parameter, or undef if no parameter found.
 
 =cut
 
-sub get_all {
+sub get_param_metadata {
     my ( $self, $param ) = @_;
     my ( undef, $file, $line ) = caller;
     die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
