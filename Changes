@@ -767,3 +767,10 @@ later are in the perl-CELL project repo.
   descriptive 'get_param_metadata'
 - t/006-config.t: add test case for 'get_param'
 
+0.198  2014-10-16 23:08 CEST
+- t/070-config.t: add test case for Bug #51
+  https://sourceforge.net/p/perl-cell/tickets/51/
+
+0.199  2014-10-17 11:56 CEST
+- Config.pm: fix bug "$meta can be used to access site/core parameters"
+

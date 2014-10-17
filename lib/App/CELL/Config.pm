@@ -50,11 +50,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.197
+Version 0.199
 
 =cut
 
-our $VERSION = '0.197';
+our $VERSION = '0.199';
 
 
 
@@ -124,14 +124,26 @@ sub AUTOLOAD {
     return SUPER->DESTROY if $param eq 'DESTROY'; # for Perl <= 5.012
     my ( undef, $file, $line ) = caller;
     die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
-    if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
-        return $meta->{$param}->{Value} if exists $meta->{$param};
-    } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
-        return $core->{$param}->{Value} if exists $core->{$param};
-    } else {
-        return $site->{$param}->{Value} if defined $site->{$param};
+    return _retrieve_param( $self->{'CELL_CONFTYPE'}, $param );
+}
+
+sub _retrieve_param {
+    my ( $type, $param ) = @_;
+    if ( $type eq 'meta' ) {
+        return (exists $meta->{$param})
+            ? $meta->{$param}->{Value}
+            : undef;
+    } elsif ( $type eq 'core' ) {
+        return (exists $core->{$param})
+            ? $core->{$param}->{Value}
+            : undef;
+    } elsif ( $type eq 'site' ) {
+        if (exists $site->{$param}) {
+            return $site->{$param}->{Value};
+        } elsif (exists $core->{$param}) {
+            return $core->{$param}->{Value};
+        }
     }
-    return $core->{$param}->{Value} if defined $core->{$param};
     return;
 }
 
@@ -158,15 +170,7 @@ sub get_param {
     my ( $self, $param ) = @_;
     my ( undef, $file, $line ) = caller;
     die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
-    if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
-        return $meta->{$param}->{Value} if exists $meta->{$param};
-    } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
-        return $core->{$param}->{Value} if exists $core->{$param};
-    } else {
-        return $site->{$param}->{Value} if defined $site->{$param};
-    }
-    return $core->{$param}->{Value} if defined $core->{$param};
-    return;
+    return _retrieve_param( $self->{'CELL_CONFTYPE'}, $param );
 }
 
 

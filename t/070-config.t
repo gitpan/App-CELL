@@ -14,7 +14,8 @@ use App::CELL::Load;
 use App::CELL::Log qw( $log );
 use App::CELL::Test;
 #use App::CELL::Test::LogToFile;
-use Test::More tests => 25;
+use Data::Dumper;
+use Test::More tests => 27;
 
 my $status;
 $log->init( ident => 'CELLtest', debug_mode => 1 );
@@ -61,6 +62,15 @@ $result = undef;
 $result = $meta->CELL_META_UNIT_TESTING;
 is( $result, "different foo", "set_meta really changed the value" );
 # (should also test that this triggers a log message !)
+
+# Bug #51
+# https://sourceforge.net/p/perl-cell/tickets/51/
+$result = undef;
+$result = $meta->CELL_CORE_UNIT_TESTING;
+#diag( "Use meta to access core param: " . Dumper( $result ) );
+ok( ! defined( $result ), 'Cannot use $meta to access a core param' );
+$result = $meta->CELL_SITE_UNIT_TESTING;
+ok( ! defined( $result ), 'Cannot use $meta to access a site param' );
 
 #
 # CORE
