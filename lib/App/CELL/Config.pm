@@ -50,11 +50,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.199
+Version 0.200
 
 =cut
 
-our $VERSION = '0.199';
+our $VERSION = '0.200';
 
 
 
@@ -189,14 +189,22 @@ sub get_param_metadata {
     my ( $self, $param ) = @_;
     my ( undef, $file, $line ) = caller;
     die "Bad call to Config.pm \$$param at $file line $line!" if not blessed $self;
-    if ( $self->{'CELL_CONFTYPE'} eq 'meta' ) {
-        return $meta->{$param} if exists $meta->{$param};
-    } elsif ( $self->{'CELL_CONFTYPE'} eq 'core' ) {
-        return $core->{$param} if exists $core->{$param};
-    } else {
-        return $site->{$param} if defined $site->{$param};
+    my $type = $self->{'CELL_CONFTYPE'};
+    if ( $type eq 'meta' ) {
+        return (exists $meta->{$param})
+            ? $meta->{$param}
+            : undef;
+    } elsif ( $type eq 'core' ) {
+        return (exists $core->{$param})
+            ? $core->{$param}
+            : undef;
+    } elsif ( $type eq 'site' ) {
+        if (exists $site->{$param}) {
+            return $site->{$param};
+        } elsif (exists $core->{$param}) {
+            return $core->{$param};
+        }
     }
-    return $core->{$param} if defined $core->{$param};
     return;
 }
 

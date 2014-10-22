@@ -774,3 +774,8 @@ later are in the perl-CELL project repo.
 0.199  2014-10-17 11:56 CEST
 - Config.pm: fix bug "$meta can be used to access site/core parameters"
 
+0.200  2014-10-22 08:18 CEST
+- Config.pm: fix bug "get_param_meta has same problem where $meta could be used to
+  access $site variables"
+- t/070-config.pm: add test case for this bug
+

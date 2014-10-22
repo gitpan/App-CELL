@@ -15,7 +15,7 @@ use App::CELL::Log qw( $log );
 use App::CELL::Test;
 #use App::CELL::Test::LogToFile;
 use Data::Dumper;
-use Test::More tests => 27;
+use Test::More tests => 29;
 
 my $status;
 $log->init( ident => 'CELLtest', debug_mode => 1 );
@@ -70,6 +70,10 @@ $result = $meta->CELL_CORE_UNIT_TESTING;
 #diag( "Use meta to access core param: " . Dumper( $result ) );
 ok( ! defined( $result ), 'Cannot use $meta to access a core param' );
 $result = $meta->CELL_SITE_UNIT_TESTING;
+ok( ! defined( $result ), 'Cannot use $meta to access a site param' );
+$result = $meta->get_param('CELL_SITE_UNIT_TESTING');
+ok( ! defined( $result ), 'Cannot use $meta to access a site param' );
+$result = $meta->get_param_meta('CELL_SITE_UNIT_TESTING');
 ok( ! defined( $result ), 'Cannot use $meta to access a site param' );
 
 #
