@@ -779,3 +779,7 @@ later are in the perl-CELL project repo.
   access $site variables"
 - t/070-config.pm: add test case for this bug
 
+0.201  2014-11-05 14:58 CET
+- remove dependency on Data::Structure::Util, which does not work with perl
+  5.20
+

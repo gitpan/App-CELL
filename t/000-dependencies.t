@@ -2,7 +2,7 @@
 use 5.012;
 use strict;
 use warnings FATAL => 'all';
-use Test::More tests => 28;
+use Test::More;
 
 BEGIN {
 
@@ -18,7 +18,6 @@ BEGIN {
     use_ok( 'Test::More' );
 
     # non-core (CPAN) modules
-    use_ok( 'Data::Structure::Util' );
     use_ok( 'Date::Format' );
     use_ok( 'File::HomeDir' );
     use_ok( 'File::Next' );
@@ -47,3 +46,5 @@ BEGIN {
 #diag( "Testing Config::Simple $Config::Simple::VERSION, Perl $], $^X" );
 #diag( "Testing CELL $App::CELL::VERSION, Perl $], $^X" );
 #diag( "Testing App::CELL::Config $App::CELL::Config::VERSION, Perl $], $^X" );
+
+done_testing;

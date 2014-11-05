@@ -23,7 +23,7 @@ my $build = Module::Build->new(
     },
     requires           => {
         'perl'                  => 5.012,
-        'Data::Structure::Util' => 0,
+#        'Data::Structure::Util' => 0,
         'Date::Format'          => 0,
         'File::HomeDir'         => 0,
         'File::ShareDir'        => 0,

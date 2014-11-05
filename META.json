@@ -4,7 +4,7 @@
       "Smithfarm <presnypreklad@gmail.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4206",
+   "generated_by" : "Module::Build version 0.4205",
    "license" : [
       "bsd"
    ],
@@ -27,7 +27,6 @@
       },
       "runtime" : {
          "requires" : {
-            "Data::Structure::Util" : "0",
             "Date::Format" : "0",
             "File::HomeDir" : "0",
             "File::Next" : "0",
@@ -43,54 +42,54 @@
    "provides" : {
       "App::CELL" : {
          "file" : "lib/App/CELL.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Config" : {
          "file" : "lib/App/CELL/Config.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Guide" : {
          "file" : "lib/App/CELL/Guide.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Load" : {
          "file" : "lib/App/CELL/Load.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Log" : {
          "file" : "lib/App/CELL/Log.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Message" : {
          "file" : "lib/App/CELL/Message.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Status" : {
          "file" : "lib/App/CELL/Status.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Test" : {
          "file" : "lib/App/CELL/Test.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Test::LogToFile" : {
          "file" : "lib/App/CELL/Test/LogToFile.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       },
       "App::CELL::Util" : {
          "file" : "lib/App/CELL/Util.pm",
-         "version" : "0.200"
+         "version" : "0.201"
       }
    },
    "release_status" : "stable",
    "resources" : {
       "homepage" : "https://sourceforge.net/projects/perl-cell/",
       "license" : [
-         "http://www.opensource.org/licenses/bsd-license.php"
+         "http://opensource.org/licenses/BSD-3-Clause"
       ],
       "repository" : {
          "url" : "https://sourceforge.net/p/perl-cell/code/"
       }
    },
-   "version" : "0.200"
+   "version" : "0.201"
 }
