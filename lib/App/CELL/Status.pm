@@ -40,6 +40,7 @@ use App::CELL::Log qw( $log );
 use App::CELL::Util qw( stringify_args );
 use Storable qw( dclone );
 use Scalar::Util qw( blessed );
+use Try::Tiny;
 
 
 
@@ -51,11 +52,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.201
+Version 0.202
 
 =cut
 
-our $VERSION = '0.201';
+our $VERSION = '0.202';
 
 
 
@@ -363,7 +364,16 @@ sub expurgate {
     my ( $self ) = @_;
     return unless blessed( $self );
 
-    my $clone = dclone( $self );
+    my ( $clone, $status );
+    try {
+        $clone = dclone( $self );
+    } catch {
+        $status = __PACKAGE__->new(
+            level => 'CRIT',
+            code => $_,
+        );
+    };
+    return $status->expurgate if $status;
     my $udc;
     
     foreach my $key ( keys %$clone ) {

@@ -1,5 +1,0 @@
-[TestingAndDebugging::ProhibitNoStrict]
-allow = refs
-
-[Subroutines::RequireArgUnpacking]
-short_subroutine_statements = 3

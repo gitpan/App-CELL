@@ -783,3 +783,7 @@ later are in the perl-CELL project repo.
 - remove dependency on Data::Structure::Util, which does not work with perl
   5.20
 
+0.202  2014-11-28 17:50 CET
+- Status.pm: since 'dclone' might die (e.g., when a siteparam contains a REGEXP
+  literal), put the dclone call in a Try::Tiny block
+
