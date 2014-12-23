@@ -787,3 +787,9 @@ later are in the perl-CELL project repo.
 - Status.pm: since 'dclone' might die (e.g., when a siteparam contains a REGEXP
   literal), put the dclone call in a Try::Tiny block
 
+0.203  2014-12-23 15:38 CET
+- add (CELL) prefix to more App::CELL-internal log messages
+
+0.204  2014-12-23 18:38 CET
+- Config.pm: do not concatenate a variable whose value might be undef
+

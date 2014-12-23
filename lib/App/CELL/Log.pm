@@ -52,11 +52,11 @@ App::CELL::Log - the Logging part of CELL
 
 =head1 VERSION
 
-Version 0.202
+Version 0.204
 
 =cut
 
-our $VERSION = '0.202';
+our $VERSION = '0.204';
 
 
 
@@ -237,7 +237,7 @@ sub init {
     # process 'ident'
     if ( defined( $ARGS{ident} ) ) {
         if ( $ARGS{ident} eq $ident and $ident ne 'CELLtest' ) {
-            $log->info( "Logging already configured" );
+            $log->info( "Logging already configured", cell => 1 );
         } else {
             $ident = $ARGS{ident};
             $log_any_obj = Log::Any->get_logger(category => $ident);
@@ -252,6 +252,7 @@ sub init {
         $debug_mode = 1 if $ARGS{debug_mode};
         $debug_mode = 0 if not $ARGS{debug_mode};
     }
+    #$log->info( "debug_mode is $debug_mode", cell => 1 );
     
     # process 'show_caller'
     if ( exists( $ARGS{show_caller} ) ) {
@@ -346,12 +347,13 @@ Take a status object and log it.
 =cut
 
 sub status_obj {
-    my ( $self, $status_obj ) = @_;
+    my ( $self, $status_obj, $cell ) = @_;
     my ( $level, $text, $caller, %ARGS );
     $level  = $status_obj->level;
     $text   = $status_obj->text;
     $caller = $status_obj->caller;
-    %ARGS = ( caller => $caller ) if $caller;
+    $ARGS{caller} = $caller if $caller;
+    $ARGS{cell} = $cell if $cell;
     $text = "<STATUS OBJECT WITHOUT TEXT OR CODE>" if not $text;
     #( $level, $text ) = _sanitize_level( $level, $text );
 

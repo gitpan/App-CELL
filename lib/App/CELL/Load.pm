@@ -54,11 +54,11 @@ App::CELL::Load -- find and load message files and config files
 
 =head1 VERSION
 
-Version 0.202
+Version 0.204
 
 =cut
 
-our $VERSION = '0.202';
+our $VERSION = '0.204';
 
 
 
@@ -279,6 +279,7 @@ sub _report_load_status {
             code => 'CELL_DIR_WALKED_NOTHING_FOUND',
             args => [ $what, $dir_desc, $dir_path, $quantfiles ],
             caller => [ caller ],
+            cell => 1,
         );
     }
     # trigger a log message: note that we can't use an OK status here
@@ -288,6 +289,7 @@ sub _report_load_status {
         code => 'CELL_DIR_WALKED_ITEMS_LOADED',
         args => [ $quantitems, $what, $quantfiles, $dir_desc, $dir_path ],
         caller => [ caller ],
+        cell => 1,
     ) if ( $dir_desc eq 'sitedir' ) or ( $dir_desc eq 'sharedir' and $meta->CELL_META_LOAD_VERBOSE );
     return $return_status;
 }

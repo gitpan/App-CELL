@@ -52,11 +52,11 @@ App::CELL::Status - class for return value objects
 
 =head1 VERSION
 
-Version 0.202
+Version 0.204
 
 =cut
 
-our $VERSION = '0.202';
+our $VERSION = '0.204';
 
 
 
@@ -172,7 +172,7 @@ sub new {
     $self = bless \%ARGS, 'App::CELL::Status';
 
     # Log the message
-    $log->status_obj( $self ) if ( $ARGS{level} ne 'OK' and $ARGS{level} ne 'NOT_OK' );
+    $log->status_obj( $self, cell => ( $ARGS{cell} || 0 ) ) if ( $ARGS{level} ne 'OK' and $ARGS{level} ne 'NOT_OK' );
 
     # return the created object
     return $self;

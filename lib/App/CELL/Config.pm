@@ -50,11 +50,11 @@ parameters, and site parameters
 
 =head1 VERSION
 
-Version 0.202
+Version 0.204
 
 =cut
 
-our $VERSION = '0.202';
+our $VERSION = '0.204';
 
 
 
@@ -231,11 +231,9 @@ sub set {
                         code => 'CELL_OVERWRITE_META_PARAM',
                         args => [ $param, $value ],
                     );
-            $log->debug( "Overwriting \$meta->$param with ->$value<-", 
-                         cell => 1 );
+            #$log->debug( "Overwriting \$meta->$param with ->$value<-", cell => 1 );
         } else {
-            $log->debug( "Setting new \$meta->$param to ->$value<-",
-                         cell => 1 );
+            #$log->debug( "Setting new \$meta->$param to ->$value<-", cell => 1 );
         }
         $meta->{$param} = {
                                'File' => (caller)[1],
